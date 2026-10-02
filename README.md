@@ -1,6 +1,6 @@
 # Coastal Farm — playable prototype
 
-A Godot 4.5.1 project exploring a connected Japanese coastal hillside farm. Visual pass v2 uses a detailed illustrated farm environment, a black-haired farmer, live crop overlays, and a single Mount Kaimon-inspired mountain. The environment is visible in the editor and during play. Actual game screenshots are in docs/visual-pass-phone.png and docs/visual-pass-tablet.png.
+A Godot 4.5.1 project exploring a connected Japanese coastal hillside farm. Corner layout v4 uses a simplified farm environment with fewer flowers, broader foliage shapes and a calmer palette, a black-haired farmer, live crop overlays, and a single Mount Kaimon-inspired mountain. The environment is visible in the editor and during play. Actual game screenshots are in docs/corner-phone.png (current); earlier previews are retained.
 
 ## Open and play
 
@@ -17,10 +17,11 @@ The on-screen joystick supports dragging and simultaneous touches with the actio
 ## Current scope
 
 - Connected 2400 × 1600 map and following camera.
+- Larger phone-readable farmer with a four-frame front-facing walk cycle and still idle pose. Side movement mirrors the sprite; dedicated side/back animations remain for later.
 - Building, terrace and waterfront collision, 15 crop beds, tool selection, farming loop and local persistence.
-- Illustrative future animal-yard and woodland areas; no unlock progression yet.
+- Starter house and crop field occupy the southwest corner. Open terraces to the east and north reserve room for expansion; unlock progression is not implemented yet. Older saves keep coins and crops and relocate the player to the new starter field.
 - Scenery is currently one static background plate. Decorative fences and plants do not all have collisions or depth sorting. Props will need separate assets for full interaction.
-- No building interiors, NPC systems, sound, inventory, finished walking animations, or final terrain tileset.
+- No building interiors, NPC systems, sound, inventory, directional walking animations, or final terrain tileset.
 - iOS source project only: this ZIP is not an installable iPhone app. Device export needs a Mac, Xcode, Godot export templates, and Apple signing setup.
 
 ## Validation
@@ -30,4 +31,7 @@ Verified with Godot 4.5.1: clean asset import and game startup, planting cost, w
 ## Working on another computer
 
 Clone or download this private repository while signed into your GitHub account, then import the same `project.godot`. Commit/push work before switching computers; pull updates on the other computer. The `.godot` import cache is excluded and rebuilt automatically. Concept PNGs and project assets are included; they currently fit in ordinary Git. Never commit credentials or Apple signing certificates.
+
+
+
 

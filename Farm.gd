@@ -8,6 +8,11 @@ const JoystickScript = preload("res://Joystick.gd")
 var player: CharacterBody2D
 var camera: Camera2D
 var farmer: Sprite2D
+const WALK_TEXTURE = preload("res://assets/farmer-walk.png")
+const IDLE_TEXTURE = preload("res://assets/farmer-v2.png")
+var walk_regions: Array[Rect2] = []
+var walk_clock := 0.0
+var walk_frame := -2
 var joystick: Control
 var hud: Control
 var date_label: Label
@@ -30,12 +35,12 @@ func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color("77a5be"))
 	for row in range(3):
 		for col in range(5):
-			plots.append({"position": Vector2(760 + col * 68, 780 + row * 68), "stage": 0, "growth": 0.0})
+			plots.append({"position": Vector2(300 + col * 68, 1120 + row * 68), "stage": 0, "growth": 0.0})
 	# Buildings, waterfront, and crop terrace walls aligned with the painted map.
-	for rect in [Rect2(0, 510, 2400, 24), Rect2(0, 1576, 2400, 24), Rect2(0, 510, 24, 1090), Rect2(2376, 510, 24, 1090), Rect2(285, 245, 465, 255), Rect2(1740, 620, 320, 190), Rect2(0, 1150, 700, 355), Rect2(560, 730, 20, 240), Rect2(560, 960, 720, 22), Rect2(560, 685, 720, 18)]:
+	for rect in [Rect2(0, 510, 2400, 24), Rect2(0, 1576, 2400, 24), Rect2(0, 510, 24, 1090), Rect2(2376, 510, 24, 1090), Rect2(30, 650, 550, 180), Rect2(1380, 390, 270, 125), Rect2(1690, 1160, 690, 320), Rect2(65, 1080, 24, 260), Rect2(70, 1340, 840, 24), Rect2(70, 1020, 760, 24)]:
 		obstacle(rect)
 	player = CharacterBody2D.new()
-	player.position = Vector2(900, 780)
+	player.position = Vector2(450, 1120)
 	player.z_index = 5
 	add_child(player)
 	var collider := CollisionShape2D.new()
@@ -47,9 +52,15 @@ func _ready() -> void:
 	farmer.texture = preload("res://assets/farmer-v2.png")
 	farmer.region_enabled = true
 	farmer.region_rect = farmer.texture.get_image().get_used_rect()
-	farmer.scale = Vector2.ONE * (90.0 / farmer.region_rect.size.y)
-	farmer.position.y = -45
+	farmer.scale = Vector2.ONE * (180.0 / farmer.region_rect.size.y)
+	farmer.position.y = -90
 	player.add_child(farmer)
+	var sheet_image := WALK_TEXTURE.get_image()
+	var cell := sheet_image.get_size() / 2
+	for index in range(4):
+		var origin := Vector2i(index % 2, index / 2) * cell
+		var bounds := sheet_image.get_region(Rect2i(origin, cell)).get_used_rect()
+		walk_regions.append(Rect2(bounds.position + origin, bounds.size))
 	camera = Camera2D.new()
 	camera.offset = Vector2(0, -100)
 	camera.zoom = Vector2(0.70, 0.70)
@@ -187,9 +198,10 @@ func _physics_process(delta: float) -> void:
 	if Input.is_physical_key_pressed(KEY_S): direction.y += 1
 	direction += joystick.direction
 	player.velocity = direction.limit_length() * SPEED
+	var previous_position := player.position
 	player.move_and_slide()
 	if absf(direction.x) > 0.1: farmer.flip_h = direction.x < 0
-	farmer.position.y = -45 + sin(Time.get_ticks_msec() * 0.015) * 1.5 if direction.length() > 0 else -45
+	update_walk(delta, player.position.distance_to(previous_position) > 0.01)
 	nearest = -1
 	var distance := 78.0
 	for i in range(plots.size()):
@@ -250,7 +262,7 @@ func save_game(show_message: bool = true) -> void:
 		crop_data.append({"stage": plot.stage, "growth": plot.growth})
 	var file := FileAccess.open(SAVE_FILE, FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({"version": 1, "coins": coins, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
+		file.store_string(JSON.stringify({"version": 2, "coins": coins, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
 		if show_message: say("Farm saved.")
 	elif show_message: say("Could not save. Check storage permissions.")
 
@@ -260,7 +272,9 @@ func load_game() -> void:
 	if not parsed is Dictionary: return
 	coins = maxi(0, int(parsed.get("coins", 500)))
 	harvests = maxi(0, int(parsed.get("harvests", 0)))
-	player.position = Vector2(clampf(float(parsed.get("x", 820)), 60, 2340), clampf(float(parsed.get("y", 710)), 730, 1520))
+	player.position = Vector2(450, 1120)
+	if int(parsed.get("version", 1)) >= 2:
+		player.position = Vector2(clampf(float(parsed.get("x", 450)), 60, 2340), clampf(float(parsed.get("y", 1120)), 550, 1520))
 	var crops = parsed.get("plots", [])
 	if crops is Array:
 		for i in range(mini(crops.size(), plots.size())):
@@ -268,6 +282,16 @@ func load_game() -> void:
 				plots[i].stage = clampi(int(crops[i].get("stage", 0)), 0, 3)
 				plots[i].growth = clampf(float(crops[i].get("growth", 0)), 0, GROW_SECONDS)
 	say("Welcome back. Your farm has been restored.")
+
+func update_walk(delta: float, moving: bool) -> void:
+	walk_clock = walk_clock + delta if moving else 0.0
+	var next_frame := int(walk_clock * 8.0) % 4 if moving else -1
+	if next_frame == walk_frame: return
+	walk_frame = next_frame
+	farmer.texture = WALK_TEXTURE if moving else IDLE_TEXTURE
+	farmer.region_rect = walk_regions[next_frame] if moving else Rect2(IDLE_TEXTURE.get_image().get_used_rect())
+	farmer.scale = Vector2.ONE * (180.0 / farmer.region_rect.size.y)
+	farmer.position.y = -90
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_PAUSED and is_instance_valid(player):
@@ -309,3 +333,6 @@ func crop(pos: Vector2, stage: int) -> void:
 	if stage == 3:
 		draw_circle(pos + Vector2(0, -5), 8, Color("f3d8a1"))
 		draw_circle(pos + Vector2(-3, -8), 4, Color("fff1c4"))
+
+
+
