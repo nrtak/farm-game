@@ -3,3 +3,7 @@ Farmer generated using built-in imagegen: single friendly front-facing farmer, s
 Terrain, trees, crops, mountain and UI are drawn in Godot as prototype art.
 
 Visual pass v2: farm-environment-v2.png generated with built-in imagegen from the approved lush coastal farm reference. One Mount Kaimon-inspired cone, timber house, orchard, empty tilled field, barn, pond and woodland; no baked interface, crops or player. Main.tscn scales the plate to the 2400 x 1600 world. farmer-v2.png is a generated transparent black-haired farmer in cream shirt, blue trousers and brown suspenders. Live crops and UI are drawn in Godot. Earlier individual house and straw-hat farmer are retained as prototype source art.
+
+Visual pass v3: reference-based imagegen edit of v2, preserving major scene footprints while reducing flowers, saturated accents and micro-detail for phone readability. farm-environment-v3.png is now the active scene background; v2 is retained.
+
+Corner layout v4: reference-based imagegen layout edit of the calmer farm. Starter house and empty field moved southwest; large open terraces east and north, future barn uphill, pond southeast, one Mount Kaimon cone. farm-environment-v4.png is the active background. Live crops and major obstacle collisions repositioned in Godot.
