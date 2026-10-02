@@ -28,19 +28,14 @@ var rocks := [Vector2(430, 810), Vector2(1410, 770), Vector2(1640, 1230)]
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color("77a5be"))
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 214
-	for i in range(1500):
-		grass.append(Vector2(rng.randf_range(50, 2350), rng.randf_range(510, 1550)))
 	for row in range(3):
 		for col in range(5):
 			plots.append({"position": Vector2(760 + col * 68, 780 + row * 68), "stage": 0, "growth": 0.0})
-	for rect in [Rect2(0, 490, 2400, 24), Rect2(0, 1576, 2400, 24), Rect2(0, 490, 24, 1110), Rect2(2376, 490, 24, 1110), Rect2(390, 520, 350, 180), Rect2(1730, 680, 240, 190), Rect2(1350, 1150, 60, 250)]:
+	# Buildings, waterfront, and crop terrace walls aligned with the painted map.
+	for rect in [Rect2(0, 510, 2400, 24), Rect2(0, 1576, 2400, 24), Rect2(0, 510, 24, 1090), Rect2(2376, 510, 24, 1090), Rect2(285, 245, 465, 255), Rect2(1740, 620, 320, 190), Rect2(0, 1150, 700, 355), Rect2(560, 730, 20, 240), Rect2(560, 960, 720, 22), Rect2(560, 685, 720, 18)]:
 		obstacle(rect)
-	for rock in rocks:
-		obstacle(Rect2(rock - Vector2(30, 18), Vector2(60, 36)))
 	player = CharacterBody2D.new()
-	player.position = Vector2(820, 710)
+	player.position = Vector2(900, 780)
 	player.z_index = 5
 	add_child(player)
 	var collider := CollisionShape2D.new()
@@ -49,12 +44,15 @@ func _ready() -> void:
 	collider.shape = shape
 	player.add_child(collider)
 	farmer = Sprite2D.new()
-	farmer.texture = preload("res://assets/farmer.png")
-	farmer.scale = Vector2(0.08, 0.08)
-	farmer.position.y = -24
+	farmer.texture = preload("res://assets/farmer-v2.png")
+	farmer.region_enabled = true
+	farmer.region_rect = farmer.texture.get_image().get_used_rect()
+	farmer.scale = Vector2.ONE * (90.0 / farmer.region_rect.size.y)
+	farmer.position.y = -45
 	player.add_child(farmer)
 	camera = Camera2D.new()
-	camera.offset = Vector2(0, -90)
+	camera.offset = Vector2(0, -100)
+	camera.zoom = Vector2(0.70, 0.70)
 	camera.position_smoothing_enabled = true
 	camera.position_smoothing_speed = 7
 	camera.limit_left = 0
@@ -62,12 +60,6 @@ func _ready() -> void:
 	camera.limit_right = 2400
 	camera.limit_bottom = 1600
 	player.add_child(camera)
-	var home := Sprite2D.new()
-	home.texture = preload("res://assets/farmhouse.png")
-	var texture_size := home.texture.get_size()
-	home.scale = Vector2.ONE * (460.0 / texture_size.x)
-	home.position = Vector2(565, 550)
-	add_child(home)
 	make_ui()
 	load_game()
 	get_viewport().size_changed.connect(layout_ui)
@@ -197,7 +189,7 @@ func _physics_process(delta: float) -> void:
 	player.velocity = direction.limit_length() * SPEED
 	player.move_and_slide()
 	if absf(direction.x) > 0.1: farmer.flip_h = direction.x < 0
-	farmer.position.y = -24 + sin(Time.get_ticks_msec() * 0.015) * 1.5 if direction.length() > 0 else -24
+	farmer.position.y = -45 + sin(Time.get_ticks_msec() * 0.015) * 1.5 if direction.length() > 0 else -45
 	nearest = -1
 	var distance := 78.0
 	for i in range(plots.size()):
@@ -282,61 +274,38 @@ func _notification(what: int) -> void:
 		save_game(false)
 
 func _draw() -> void:
-	# Sky, sea and a single smooth Kaimon-inspired coastal mountain.
-	draw_rect(Rect2(0, 0, 2400, 510), Color("9cc8db"))
-	draw_rect(Rect2(0, 280, 2400, 240), Color("518aa9"))
-	draw_colored_polygon(PackedVector2Array([Vector2(1200, 310), Vector2(1340, 285), Vector2(1480, 238), Vector2(1570, 180), Vector2(1640, 98), Vector2(1670, 82), Vector2(1700, 98), Vector2(1770, 180), Vector2(1860, 238), Vector2(2000, 285), Vector2(2140, 310)]), Color("527b72"))
-	for i in range(30):
-		draw_line(Vector2(100 + i * 78, 360 + (i % 5) * 25), Vector2(145 + i * 78, 360 + (i % 5) * 25), Color("84b4c7"), 2)
-	draw_rect(Rect2(0, 490, 2400, 1110), Color("75945b"))
-	draw_rect(Rect2(260, 700, 1720, 74), Color("c5b080"))
-	draw_rect(Rect2(1120, 720, 82, 850), Color("c5b080"))
-	draw_rect(Rect2(290, 1110, 1600, 64), Color("c5b080"))
-	for point in grass:
-		if (point.y > 690 and point.y < 788) or (point.x > 1100 and point.x < 1220) or (point.y > 1100 and point.y < 1185): continue
-		if Rect2(710, 740, 420, 250).has_point(point): continue
-		draw_line(point, point + Vector2(-3, -7), Color("567844"), 2)
-		if int(point.x) % 7 == 0:
-			draw_circle(point + Vector2(0, -8), 3, Color("f4df9c"))
-	# Terrace retaining wall.
-	draw_rect(Rect2(700, 997, 420, 23), Color("888675"))
-	for i in range(14): draw_rect(Rect2(700 + i * 30, 997, 28, 21), Color("a19d84"), false, 2)
-	for i in range(9):
-		tree(Vector2(120 + i * 260, 560))
-	for pos in [Vector2(150, 920), Vector2(210, 1330), Vector2(2110, 980), Vector2(2010, 1260), Vector2(2180, 1410)]: tree(pos)
-	for rock in rocks:
-		draw_circle(rock, 32, Color("6d776c"))
-		draw_circle(rock + Vector2(-7, -8), 22, Color("9a9e8a"))
-	draw_rect(Rect2(1350, 1150, 60, 250), Color("654933"))
-	for i in range(7): draw_line(Vector2(1350, 1160 + i * 35), Vector2(1410, 1160 + i * 35), Color("977348"), 3)
-	# Placeholder expansion building and gates.
-	draw_rect(Rect2(1730, 680, 240, 190), Color("a78056"))
-	draw_colored_polygon(PackedVector2Array([Vector2(1710, 680), Vector2(1850, 610), Vector2(1990, 680)]), Color("665d52"))
-	draw_rect(Rect2(1810, 770, 75, 100), Color("514b3d"))
-	var font := ThemeDB.fallback_font
-	draw_string(font, Vector2(1740, 920), "Future animal yard", HORIZONTAL_ALIGNMENT_LEFT, -1, 23, Color("fff0cb"))
-	draw_string(font, Vector2(1460, 1280), "Woodland • future expansion", HORIZONTAL_ALIGNMENT_LEFT, -1, 23, Color("fff0cb"))
-	for i in range(10):
-		var x := 1700 + i * 32
-		draw_line(Vector2(x, 960), Vector2(x, 1020), Color("745d3d"), 8)
-	draw_line(Vector2(1700, 975), Vector2(1990, 975), Color("9b7c50"), 8)
+	# Dynamic beds and crops sit over the static environment, never baked into it.
 	for i in range(plots.size()):
 		var plot: Dictionary = plots[i]
 		var pos: Vector2 = plot.position
-		draw_rect(Rect2(pos - Vector2(29, 29), Vector2(58, 58)), Color("574532") if plot.stage == 2 else Color("816044"))
-		for offset in [-16, 0, 16]: draw_line(pos + Vector2(-22, offset), pos + Vector2(22, offset), Color("9a7550"), 2)
-		if i == nearest: draw_rect(Rect2(pos - Vector2(30, 30), Vector2(60, 60)), Color("ffe0a0"), false, 3)
+		var rng := RandomNumberGenerator.new()
+		rng.seed = i + 72
 		if plot.stage > 0:
-			draw_line(pos + Vector2(0, 10), pos + Vector2(0, -9), Color("2e613e"), 4)
-			draw_circle(pos + Vector2(-7, -3), 7, Color("85b756"))
-			draw_circle(pos + Vector2(7, -7), 7, Color("85b756"))
-		if plot.stage == 1: draw_circle(pos + Vector2(17, -17), 4, Color("dfba72"))
+			draw_colored_polygon(PackedVector2Array([pos + Vector2(-28, -25), pos + Vector2(26, -28), pos + Vector2(29, 24), pos + Vector2(-25, 28)]), Color(0.24, 0.16, 0.10, 0.38 if plot.stage == 2 else 0.20))
+		for row in range(3):
+			var y := -15 + row * 15
+			draw_line(pos + Vector2(-22, y), pos + Vector2(22, y + 1), Color(0.28, 0.18, 0.10, 0.3), 2)
+		for j in range(24):
+			var dirt := pos + Vector2(rng.randf_range(-25, 25), rng.randf_range(-23, 23))
+			draw_rect(Rect2(dirt, Vector2(2, 1)), Color(0.78, 0.58, 0.34, 0.35))
+		if i == nearest:
+			draw_rect(Rect2(pos - Vector2(29, 29), Vector2(58, 58)), Color(1.0, 0.89, 0.55, 0.8), false, 2)
+		if plot.stage > 0:
+			for offset in [Vector2(-12, 5), Vector2(13, -9)]:
+				crop(pos + offset, plot.stage)
+		if plot.stage == 1:
+			draw_circle(pos + Vector2(22, -23), 3, Color("cfab76"))
 		if plot.stage == 2:
-			draw_rect(Rect2(pos + Vector2(-22, 21), Vector2(44 * minf(plot.growth / GROW_SECONDS, 1), 3)), Color("89cbd8"))
-		if plot.stage == 3: draw_circle(pos + Vector2(0, -11), 10, Color("ecc161"))
+			draw_rect(Rect2(pos + Vector2(-22, 24), Vector2(44 * minf(plot.growth / GROW_SECONDS, 1), 2)), Color("9acbd0"))
 
-func tree(pos: Vector2) -> void:
-	draw_rect(Rect2(pos - Vector2(8, 35), Vector2(16, 45)), Color("77583c"))
-	draw_circle(pos + Vector2(0, -66), 55, Color("395c3d"))
-	draw_circle(pos + Vector2(-19, -78), 35, Color("547b43"))
-	draw_circle(pos + Vector2(18, -90), 32, Color("769449"))
+func crop(pos: Vector2, stage: int) -> void:
+	var spread := 1.3 if stage == 3 else 0.8
+	draw_circle(pos + Vector2(1, 3), 10 * spread, Color(0.14, 0.22, 0.10, 0.30))
+	draw_line(pos, pos + Vector2(0, -15 * spread), Color("36542b"), 3)
+	for side in [-1, 1]:
+		var tip := pos + Vector2(side * 12, -15) * spread
+		draw_colored_polygon(PackedVector2Array([pos, tip + Vector2(-3, -5), tip + Vector2(3, -6), tip + Vector2(5, 0), pos + Vector2(0, -7)]), Color("b7c269") if stage == 3 else Color("5d933d"))
+		draw_line(pos + Vector2(0, -3), tip, Color("98b54c"), 2)
+	if stage == 3:
+		draw_circle(pos + Vector2(0, -5), 8, Color("f3d8a1"))
+		draw_circle(pos + Vector2(-3, -8), 4, Color("fff1c4"))
