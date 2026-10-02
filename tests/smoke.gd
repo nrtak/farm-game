@@ -35,12 +35,12 @@ func run() -> void:
 	farm.load_game()
 	assert(farm.coins == 515, "Save must restore state")
 	# Test actual physics collision against the farmhouse front.
-	farm.player.position = Vector2(565, 730)
+	farm.player.position = Vector2(520, 555)
 	for i in range(30):
 		farm.player.velocity = Vector2(0, -200)
 		farm.player.move_and_slide()
 		await physics_frame
-	assert(farm.player.position.y >= 710, "Farmhouse must block movement")
+	assert(farm.player.position.y >= 545, "Waterfront must block movement")
 	for resolution in [Vector2i(1170, 540), Vector2i(960, 720)]:
 		root.size = resolution
 		await process_frame
