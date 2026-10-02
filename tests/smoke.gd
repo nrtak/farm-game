@@ -8,6 +8,12 @@ func run() -> void:
 	root.add_child(farm)
 	await process_frame
 	farm.set_physics_process(false)
+	farm.update_walk(0.0, true)
+	assert(farm.walk_frame == 0, "Moving begins walk cycle")
+	farm.update_walk(0.26, true)
+	assert(farm.walk_frame == 2, "Stride must alternate")
+	farm.update_walk(0.1, false)
+	assert(farm.walk_frame == -1 and farm.farmer.texture == farm.IDLE_TEXTURE, "Stopping restores idle")
 	farm.coins = 500
 	farm.harvests = 0
 	farm.nearest = 0
@@ -34,8 +40,8 @@ func run() -> void:
 	farm.coins = 0
 	farm.load_game()
 	assert(farm.coins == 515, "Save must restore state")
-	# Test actual physics collision against the farmhouse front.
-	farm.player.position = Vector2(520, 555)
+	# Test actual physics collision against the map boundary.
+	farm.player.position = Vector2(900, 555)
 	for i in range(30):
 		farm.player.velocity = Vector2(0, -200)
 		farm.player.move_and_slide()
@@ -51,7 +57,7 @@ func run() -> void:
 		assert(farm.tool_bar.position.x > farm.joystick.position.x + farm.joystick.size.x, "Toolbar avoids movement controls")
 	farm.coins = 500
 	farm.harvests = 0
-	farm.player.position = Vector2(820, 710)
+	farm.player.position = Vector2(450, 1120)
 	for plot in farm.plots:
 		plot.stage = 0
 		plot.growth = 0.0
@@ -60,3 +66,4 @@ func run() -> void:
 	farm.queue_free()
 	await process_frame
 	quit(0)
+
