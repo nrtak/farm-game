@@ -1,0 +1,3 @@
+House generated using built-in imagegen: isolated transparent Japanese timber farmhouse, gray tiled roof, veranda, sliding windows, potted flowers, sparse vines, elevated RPG view, no landscape/text.
+Farmer generated using built-in imagegen: single friendly front-facing farmer, straw hat, blue overalls, cream shirt, brown boots, earthy pixel-art-inspired shapes, transparent background.
+Terrain, trees, crops, mountain and UI are drawn in Godot as prototype art.
