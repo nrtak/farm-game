@@ -8,12 +8,19 @@ func run() -> void:
 	root.add_child(farm)
 	await process_frame
 	farm.set_physics_process(false)
+	farm.choose_character("boy")
 	farm.update_walk(0.0, true)
 	assert(farm.walk_frame == 0, "Moving begins walk cycle")
-	farm.update_walk(0.26, true)
-	assert(farm.walk_frame == 2, "Stride must alternate")
+	farm.update_walk(0.13, true)
+	assert(farm.walk_frame == 1, "Stride must alternate")
 	farm.update_walk(0.1, false)
-	assert(farm.walk_frame == -1 and farm.farmer.texture == farm.IDLE_TEXTURE, "Stopping restores idle")
+	assert(farm.walk_frame == 0 and farm.walk_clock == 0.0, "Stopping restores idle")
+	for index in range(8):
+		var heading := Vector2.DOWN.rotated(index * PI / 4.0)
+		farm.update_walk(0.0, true, heading)
+		assert(farm.facing_direction == index, "Eight clock directions must select correct facing")
+		farm.update_walk(0.0, false)
+		assert(farm.walk_frame == index * 2, "Idle retains last facing")
 	farm.coins = 500
 	farm.harvests = 0
 	farm.nearest = 0
@@ -40,6 +47,15 @@ func run() -> void:
 	farm.coins = 0
 	farm.load_game()
 	assert(farm.coins == 515, "Save must restore state")
+	farm.show_character_picker()
+	assert(farm.choosing_character, "Picker opens")
+	farm.choose_character("girl")
+	farm.update_walk(0.13, true, Vector2.RIGHT)
+	assert(farm.farmer.texture == farm.GIRL_TEXTURE and farm.facing_direction == 6, "Girl walks east")
+	farm.set_character("boy")
+	farm.load_game()
+	assert(farm.character_choice == "girl" and farm.coins == 515, "Choice and progress persist")
+	farm.choose_character("boy")
 	# Test actual physics collision against the map boundary.
 	farm.player.position = Vector2(900, 555)
 	for i in range(30):
@@ -66,4 +82,5 @@ func run() -> void:
 	farm.queue_free()
 	await process_frame
 	quit(0)
+
 
