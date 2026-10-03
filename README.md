@@ -8,7 +8,7 @@ A Godot 4.5.1 project exploring a connected Japanese coastal hillside farm. Fiel
 2. Extract it. In Godot 4.5.1 or newer, choose **Import** and select `project.godot`.
 3. Open the project and press **F5**.
 
-Move with WASD or arrows. Select Seed, Water, or Harvest with the buttons or keys 1, 2, 3. Stand close to a highlighted bed and press Space, E, Enter, or the action button.
+Move with WASD or arrows. Select Seed, Water, or Harvest with the buttons or keys 1, 2, 3. Stand close to a highlighted bed and press Space, E, Enter, or the action button. After action messages fade, the hint describes the nearby bed and shows a countdown while a watered crop grows.
 
 Seeds cost 5g. Plant, then water. A watered crop matures in 12 seconds; harvesting earns 20g. Unwatered crops wait. Saves are automatic after actions and every 10 seconds; the Save button also saves. Saves are local to each device, stored in Godot's `user://farm_save.json`, and are not synced through GitHub.
 
@@ -27,18 +27,10 @@ The on-screen joystick supports dragging and simultaneous touches with the actio
 
 ## Validation
 
-Verified with Godot 4.5.1: clean asset import and game startup, planting cost, water requirement, timed growth, harvest payout and replanting, repeated-action protection, save/load, waterfront collision, and phone/tablet control bounds. Rendered desktop screenshots are in `docs/`. Automated checks are in `tests/smoke.gd`: run Godot with `--headless --path . --script res://tests/smoke.gd`. Run checks with a separate user-data profile because they write a test save.
+The existing farming loop was previously verified with Godot 4.5.1: clean asset import and game startup, planting cost, water requirement, timed growth, harvest payout and replanting, repeated-action protection, save/load, waterfront collision, and phone/tablet control bounds. Rendered desktop screenshots are in `docs/`. Automated checks are in `tests/smoke.gd`: run Godot with `--headless --path . --script res://tests/smoke.gd`. Run checks with a separate user-data profile because they write a test save.
+
+The nearby-bed hints and growth countdown still need a Godot runtime check.
 
 ## Working on another computer
 
 Clone or download this private repository while signed into your GitHub account, then import the same `project.godot`. Commit/push work before switching computers; pull updates on the other computer. The `.godot` import cache is excluded and rebuilt automatically. Concept PNGs and project assets are included; they currently fit in ordinary Git. Never commit credentials or Apple signing certificates.
-
-
-
-
-
-
-
-## Continue in a new chat or computer
-
-Open this downloaded repository folder in Codex. Ask: Continue the nrtak/farm-game Godot project; read README.md and inspect the current files first. Approved direction: calm simplified Japanese coastal farm, one Mount Kaimon-like mountain, southwest starter house and field with expansion space east and north, large phone-readable Fieldwork B boy and girl in sage shirts and dark overalls, saved character selection and eight directional walking. Preserve the tested seed/water/harvest/save loop. Scenery remains a single background plate; next work includes refined directional idle poses, separate interactive props and unlock progression. Game progress saves locally and must be transferred separately if desired. Chat references can provide history but do not replace the repository files.
