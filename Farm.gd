@@ -226,8 +226,24 @@ func _physics_process(delta: float) -> void:
 		save_game(false)
 		save_time = 0
 	date_label.text = "Spring 1  |  Year 1\n%dg   •   Harvested %d" % [coins, harvests]
-	message_label.text = toast if toast_time > 0 else "Choose a tool, then use it beside a crop bed."
+	message_label.text = toast if toast_time > 0 else crop_hint()
 	queue_redraw()
+
+func crop_hint() -> String:
+	if nearest < 0 or nearest >= plots.size():
+		return "Move beside a crop bed to tend it."
+	var plot: Dictionary = plots[nearest]
+	match int(plot.stage):
+		0:
+			return "Empty bed. Select Seed and Plant (5g)." if coins >= 5 else "Seeds cost 5g. Harvest a ripe crop to earn coins."
+		1:
+			return "This seed needs water. Select Water and use it."
+		2:
+			var seconds := maxi(1, int(ceil(GROW_SECONDS - float(plot.growth))))
+			return "Growing. Ready in %ds." % seconds
+		3:
+			return "Ready! Select Harvest to collect 20g."
+	return "Choose a tool, then use it beside a crop bed."
 
 func say(text: String) -> void:
 	toast = text
@@ -410,7 +426,6 @@ func crop(pos: Vector2, stage: int) -> void:
 	if stage == 3:
 		draw_circle(pos + Vector2(0, -5), 8, Color("f3d8a1"))
 		draw_circle(pos + Vector2(-3, -8), 4, Color("fff1c4"))
-
 
 
 
