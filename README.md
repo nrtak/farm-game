@@ -1,6 +1,6 @@
 # Coastal Farm — playable prototype
 
-A Godot 4.5.1 project exploring a connected Japanese coastal hillside farm. Corner layout v4 uses a simplified farm environment with fewer flowers, broader foliage shapes and a calmer palette, a black-haired farmer, live crop overlays, and a single Mount Kaimon-inspired mountain. The environment is visible in the editor and during play. Actual game screenshots are in docs/corner-phone.png (current); earlier previews are retained.
+A Godot 4.5.1 project exploring a connected Japanese coastal hillside farm. Fieldwork characters v5 uses a simplified farm environment with fewer flowers, broader foliage shapes and a calmer palette, Fieldwork B boy and girl farmers, live crop overlays, and a single Mount Kaimon-inspired mountain. The environment is visible in the editor and during play. Actual game screenshots are in docs/corner-phone.png (current); earlier previews are retained.
 
 ## Open and play
 
@@ -17,11 +17,12 @@ The on-screen joystick supports dragging and simultaneous touches with the actio
 ## Current scope
 
 - Connected 2400 × 1600 map and following camera.
-- Larger phone-readable farmer with a four-frame front-facing walk cycle and still idle pose. Side movement mirrors the sprite; dedicated side/back animations remain for later.
+- New games offer a Boy/Girl choice; the Farmer button changes it later without resetting progress. The local save remembers the choice.
+- Larger phone-readable farmer with eight facing directions and two alternating stride frames per direction. Movement is continuous; artwork selects the nearest 45-degree direction. Stopping holds the last facing pose.
 - Building, terrace and waterfront collision, 15 crop beds, tool selection, farming loop and local persistence.
 - Starter house and crop field occupy the southwest corner. Open terraces to the east and north reserve room for expansion; unlock progression is not implemented yet. Older saves keep coins and crops and relocate the player to the new starter field.
 - Scenery is currently one static background plate. Decorative fences and plants do not all have collisions or depth sorting. Props will need separate assets for full interaction.
-- No building interiors, NPC systems, sound, inventory, directional walking animations, or final terrain tileset.
+- No building interiors, NPC systems, sound, inventory, polished idle and longer animation cycles, or final terrain tileset.
 - iOS source project only: this ZIP is not an installable iPhone app. Device export needs a Mac, Xcode, Godot export templates, and Apple signing setup.
 
 ## Validation
@@ -35,3 +36,9 @@ Clone or download this private repository while signed into your GitHub account,
 
 
 
+
+
+
+## Continue in a new chat or computer
+
+Open this downloaded repository folder in Codex. Ask: Continue the nrtak/farm-game Godot project; read README.md and inspect the current files first. Approved direction: calm simplified Japanese coastal farm, one Mount Kaimon-like mountain, southwest starter house and field with expansion space east and north, large phone-readable Fieldwork B boy and girl in sage shirts and dark overalls, saved character selection and eight directional walking. Preserve the tested seed/water/harvest/save loop. Scenery remains a single background plate; next work includes refined directional idle poses, separate interactive props and unlock progression. Game progress saves locally and must be transferred separately if desired. Chat references can provide history but do not replace the repository files.

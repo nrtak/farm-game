@@ -8,11 +8,17 @@ const JoystickScript = preload("res://Joystick.gd")
 var player: CharacterBody2D
 var camera: Camera2D
 var farmer: Sprite2D
-const WALK_TEXTURE = preload("res://assets/farmer-walk.png")
+const WALK_TEXTURE = preload("res://assets/fieldwork-boy.png")
+const GIRL_TEXTURE = preload("res://assets/fieldwork-girl.png")
+var active_texture: Texture2D = WALK_TEXTURE
+var character_choice := "boy"
+var choosing_character := false
+var character_picker: Control
 const IDLE_TEXTURE = preload("res://assets/farmer-v2.png")
 var walk_regions: Array[Rect2] = []
 var walk_clock := 0.0
 var walk_frame := -2
+var facing_direction := 0
 var joystick: Control
 var hud: Control
 var date_label: Label
@@ -55,12 +61,7 @@ func _ready() -> void:
 	farmer.scale = Vector2.ONE * (180.0 / farmer.region_rect.size.y)
 	farmer.position.y = -90
 	player.add_child(farmer)
-	var sheet_image := WALK_TEXTURE.get_image()
-	var cell := sheet_image.get_size() / 2
-	for index in range(4):
-		var origin := Vector2i(index % 2, index / 2) * cell
-		var bounds := sheet_image.get_region(Rect2i(origin, cell)).get_used_rect()
-		walk_regions.append(Rect2(bounds.position + origin, bounds.size))
+	set_character("boy")
 	camera = Camera2D.new()
 	camera.offset = Vector2(0, -100)
 	camera.zoom = Vector2(0.70, 0.70)
@@ -75,6 +76,7 @@ func _ready() -> void:
 	load_game()
 	get_viewport().size_changed.connect(layout_ui)
 	layout_ui()
+	if not FileAccess.file_exists(SAVE_FILE): show_character_picker()
 	queue_redraw()
 
 func obstacle(rect: Rect2) -> void:
@@ -153,6 +155,9 @@ func make_ui() -> void:
 	var save_button := make_button("Save", save_game)
 	save_button.name = "SaveButton"
 	hud.add_child(save_button)
+	var character_button := make_button("Farmer", show_character_picker)
+	character_button.name = "CharacterButton"
+	hud.add_child(character_button)
 	select_tool(0)
 
 func layout_ui() -> void:
@@ -176,6 +181,7 @@ func layout_ui() -> void:
 	message_label.position = Vector2(margin.x, margin.y + 76)
 	message_label.size = Vector2(view.x - margin.x - right, 40)
 	hud.get_node("SaveButton").position = Vector2(view.x - right - 95, margin.y)
+	hud.get_node("CharacterButton").position = Vector2(view.x - right - 200, margin.y)
 
 func select_tool(index: int) -> void:
 	selected_tool = index
@@ -191,6 +197,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		if event.physical_keycode in [KEY_SPACE, KEY_E, KEY_ENTER]: interact()
 
 func _physics_process(delta: float) -> void:
+	if choosing_character: return
 	var direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	if Input.is_physical_key_pressed(KEY_A): direction.x -= 1
 	if Input.is_physical_key_pressed(KEY_D): direction.x += 1
@@ -200,8 +207,8 @@ func _physics_process(delta: float) -> void:
 	player.velocity = direction.limit_length() * SPEED
 	var previous_position := player.position
 	player.move_and_slide()
-	if absf(direction.x) > 0.1: farmer.flip_h = direction.x < 0
-	update_walk(delta, player.position.distance_to(previous_position) > 0.01)
+	farmer.flip_h = false
+	update_walk(delta, player.position.distance_to(previous_position) > 0.01, direction)
 	nearest = -1
 	var distance := 78.0
 	for i in range(plots.size()):
@@ -227,6 +234,7 @@ func say(text: String) -> void:
 	toast_time = 4.0
 
 func interact() -> void:
+	if choosing_character: return
 	if nearest < 0:
 		say("Move closer to a crop bed.")
 		return
@@ -257,12 +265,13 @@ func interact() -> void:
 	save_game(false)
 
 func save_game(show_message: bool = true) -> void:
+	if choosing_character: return
 	var crop_data: Array = []
 	for plot in plots:
 		crop_data.append({"stage": plot.stage, "growth": plot.growth})
 	var file := FileAccess.open(SAVE_FILE, FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({"version": 2, "coins": coins, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
+		file.store_string(JSON.stringify({"version": 2, "character": character_choice, "coins": coins, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
 		if show_message: say("Farm saved.")
 	elif show_message: say("Could not save. Check storage permissions.")
 
@@ -271,6 +280,7 @@ func load_game() -> void:
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(SAVE_FILE))
 	if not parsed is Dictionary: return
 	coins = maxi(0, int(parsed.get("coins", 500)))
+	set_character(str(parsed.get("character", "boy")))
 	harvests = maxi(0, int(parsed.get("harvests", 0)))
 	player.position = Vector2(450, 1120)
 	if int(parsed.get("version", 1)) >= 2:
@@ -283,15 +293,82 @@ func load_game() -> void:
 				plots[i].growth = clampf(float(crops[i].get("growth", 0)), 0, GROW_SECONDS)
 	say("Welcome back. Your farm has been restored.")
 
-func update_walk(delta: float, moving: bool) -> void:
+func update_walk(delta: float, moving: bool, direction: Vector2 = Vector2.ZERO) -> void:
+	if direction.length() > 0.15:
+		facing_direction = posmod(int(round((direction.angle() - PI / 2.0) / (PI / 4.0))), 8)
 	walk_clock = walk_clock + delta if moving else 0.0
-	var next_frame := int(walk_clock * 8.0) % 4 if moving else -1
+	var step := int(walk_clock * 8.0) % 2 if moving else 0
+	var next_frame := facing_direction * 2 + step
 	if next_frame == walk_frame: return
 	walk_frame = next_frame
-	farmer.texture = WALK_TEXTURE if moving else IDLE_TEXTURE
-	farmer.region_rect = walk_regions[next_frame] if moving else Rect2(IDLE_TEXTURE.get_image().get_used_rect())
+	farmer.texture = active_texture
+	farmer.region_rect = walk_regions[next_frame]
 	farmer.scale = Vector2.ONE * (180.0 / farmer.region_rect.size.y)
 	farmer.position.y = -90
+func set_character(choice: String) -> void:
+	character_choice = "girl" if choice == "girl" else "boy"
+	active_texture = GIRL_TEXTURE if character_choice == "girl" else WALK_TEXTURE
+	walk_regions.clear()
+	var sheet_image := active_texture.get_image()
+	var cell := sheet_image.get_size() / 4
+	for index in range(16):
+		var origin := Vector2i(index % 4, index / 4) * cell
+		var bounds := sheet_image.get_region(Rect2i(origin, cell)).get_used_rect()
+		walk_regions.append(Rect2(bounds.position + origin, bounds.size))
+	walk_frame = -2
+	update_walk(0.0, false)
+
+func choose_character(choice: String) -> void:
+	set_character(choice)
+	choosing_character = false
+	joystick.direction = Vector2.ZERO
+	if is_instance_valid(character_picker): character_picker.queue_free()
+	save_game(false)
+	say("Welcome home. Your farmer is ready.")
+
+func show_character_picker() -> void:
+	if choosing_character: return
+	choosing_character = true
+	player.velocity = Vector2.ZERO
+	joystick.direction = Vector2.ZERO
+	character_picker = ColorRect.new()
+	character_picker.color = Color(0.08, 0.13, 0.10, 0.85)
+	hud.add_child(character_picker)
+	character_picker.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var center := CenterContainer.new()
+	character_picker.add_child(center)
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", parchment())
+	center.add_child(panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 16)
+	panel.add_child(column)
+	var title := Label.new()
+	title.text = "Choose your farmer"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_color_override("font_color", Color("493b2d"))
+	title.add_theme_font_size_override("font_size", 24)
+	column.add_child(title)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 24)
+	column.add_child(row)
+	for choice in ["boy", "girl"]:
+		var option := VBoxContainer.new()
+		row.add_child(option)
+		var texture: Texture2D = GIRL_TEXTURE if choice == "girl" else WALK_TEXTURE
+		var atlas := AtlasTexture.new()
+		atlas.atlas = texture
+		atlas.region = Rect2(Vector2.ZERO, texture.get_size() / 4.0)
+		var preview := TextureRect.new()
+		preview.texture = atlas
+		preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		preview.custom_minimum_size = Vector2(150, 180)
+		option.add_child(preview)
+		var button := make_button("Girl" if choice == "girl" else "Boy", choose_character.bind(choice))
+		button.custom_minimum_size = Vector2(150, 58)
+		option.add_child(button)
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_PAUSED and is_instance_valid(player):
@@ -333,6 +410,9 @@ func crop(pos: Vector2, stage: int) -> void:
 	if stage == 3:
 		draw_circle(pos + Vector2(0, -5), 8, Color("f3d8a1"))
 		draw_circle(pos + Vector2(-3, -8), 4, Color("fff1c4"))
+
+
+
 
 
 
