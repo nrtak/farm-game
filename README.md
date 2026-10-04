@@ -18,7 +18,7 @@ The on-screen joystick supports dragging and simultaneous touches with the actio
 
 - Connected 2400 × 1600 map and following camera.
 - New games offer a Boy/Girl choice; the Farmer button changes it later without resetting progress. The local save remembers the choice.
-- Larger phone-readable farmer with eight facing directions and two alternating stride frames per direction. Movement is continuous; artwork selects the nearest 45-degree direction. Stopping holds the last facing pose.
+- Larger phone-readable farmer with eight facing directions and two distinct stride poses per direction for both characters. Left, right and upward walking use clearly alternating arms and legs; one consistent sprite scale keeps the feet anchored between frames. Movement is continuous; artwork selects the nearest 45-degree direction. Stopping holds the last facing pose.
 - Building and waterfront collision, 15 crop beds, tool selection, farming loop and local persistence. The former starter-field terrace barriers have been removed.
 - Starter house and crop field occupy the southwest corner. Open level ground to the east and north reserves room for expansion; unlock progression is not implemented yet. Older saves keep coins and crops and relocate the player to the new starter field.
 - Scenery is currently one static background plate. Decorative fences and plants do not all have collisions or depth sorting. Props will need separate assets for full interaction.
@@ -29,7 +29,7 @@ The on-screen joystick supports dragging and simultaneous touches with the actio
 
 The existing farming loop was previously verified with Godot 4.5.1: clean asset import and game startup, planting cost, water requirement, timed growth, harvest payout and replanting, repeated-action protection, save/load, waterfront collision, and phone/tablet control bounds. Rendered desktop screenshots are in `docs/`. Automated checks are in `tests/smoke.gd`: run Godot with `--headless --path . --script res://tests/smoke.gd`. Run checks with a separate user-data profile because they write a test save.
 
-The flat environment, revised crop-bed placement, removed terrace barriers, nearby-bed hints and growth countdown still need a Godot runtime check.
+The flat environment, revised crop-bed placement, removed terrace barriers, nearby-bed hints, growth countdown and revised walking sprites still need a Godot runtime check. The smoke checks also cover both characters switching stride frames in all eight directions, consistent scale and anchored feet.
 
 ## Working on another computer
 
