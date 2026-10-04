@@ -4,6 +4,15 @@ const WORLD := Vector2(2400, 1600)
 const GROW_SECONDS := 12.0
 const SPEED := 200.0
 const SAVE_FILE := "user://farm_save.json"
+const MAP_SCALE := 1.5625
+const PLAYER_RADIUS := 12.0
+# Coordinates follow the visible silhouettes on the 1536 x 1024 map.
+const SOLID_OUTLINES := [
+	[Vector2(5, 550), Vector2(50, 475), Vector2(130, 390), Vector2(325, 390), Vector2(415, 485), Vector2(380, 600), Vector2(120, 630), Vector2(5, 615)],
+	[Vector2(925, 295), Vector2(990, 250), Vector2(1090, 265), Vector2(1130, 305), Vector2(1115, 378), Vector2(935, 375)],
+	[Vector2(875, 0), Vector2(1536, 0), Vector2(1536, 520), Vector2(1370, 450), Vector2(1260, 415), Vector2(1150, 375), Vector2(1140, 245), Vector2(900, 215)],
+	[Vector2(1115, 875), Vector2(1220, 815), Vector2(1400, 785), Vector2(1536, 805), Vector2(1536, 1024), Vector2(1320, 1024), Vector2(1220, 950)]
+]
 const JoystickScript = preload("res://Joystick.gd")
 var player: CharacterBody2D
 var camera: Camera2D
@@ -42,16 +51,21 @@ func _ready() -> void:
 	for row in range(3):
 		for col in range(5):
 			plots.append({"position": Vector2(300 + col * 68, 1200 + row * 68), "stage": 0, "growth": 0.0})
-	# Buildings and waterfront remain solid; the level starter meadow is open.
-	for rect in [Rect2(0, 510, 2400, 24), Rect2(0, 1576, 2400, 24), Rect2(0, 510, 24, 1090), Rect2(2376, 510, 24, 1090), Rect2(30, 650, 550, 180), Rect2(1380, 390, 270, 125), Rect2(1690, 1160, 690, 320)]:
+	for rect in [Rect2(-24, -24, 2448, 24), Rect2(-24, 1600, 2448, 24), Rect2(-24, 0, 24, 1600), Rect2(2400, 0, 24, 1600)]:
 		obstacle(rect)
+	for outline in SOLID_OUTLINES:
+		var body := StaticBody2D.new()
+		var collision := CollisionPolygon2D.new()
+		collision.polygon = world_outline(outline)
+		body.add_child(collision)
+		add_child(body)
 	player = CharacterBody2D.new()
 	player.position = Vector2(450, 1120)
 	player.z_index = 5
 	add_child(player)
 	var collider := CollisionShape2D.new()
 	var shape := CircleShape2D.new()
-	shape.radius = 12
+	shape.radius = PLAYER_RADIUS
 	collider.shape = shape
 	player.add_child(collider)
 	farmer = Sprite2D.new()
@@ -88,6 +102,25 @@ func obstacle(rect: Rect2) -> void:
 	collision.shape = shape
 	body.add_child(collision)
 	add_child(body)
+
+func world_outline(outline: Array) -> PackedVector2Array:
+	var points := PackedVector2Array()
+	for point in outline:
+		points.append(point * MAP_SCALE)
+	return points
+
+func is_walkable(position: Vector2) -> bool:
+	if not Rect2(Vector2.ONE * PLAYER_RADIUS, WORLD - Vector2.ONE * PLAYER_RADIUS * 2.0).has_point(position):
+		return false
+	for outline in SOLID_OUTLINES:
+		var points := world_outline(outline)
+		if Geometry2D.is_point_in_polygon(position, points):
+			return false
+		for index in range(points.size()):
+			var closest := Geometry2D.get_closest_point_to_segment(position, points[index], points[(index + 1) % points.size()])
+			if position.distance_to(closest) <= PLAYER_RADIUS:
+				return false
+	return true
 
 func parchment() -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
@@ -148,7 +181,7 @@ func make_ui() -> void:
 	hud.add_child(tool_bar)
 	for i in range(3):
 		var index := i
-		var button := make_button(["1 Seed", "2 Water", "3 Harvest"][i], func(): select_tool(index))
+		var button := make_button(["Seed", "Water", "Harvest"][i], func(): select_tool(index))
 		button.custom_minimum_size = Vector2(104, 58)
 		tool_bar.add_child(button)
 		tool_buttons.append(button)
@@ -300,7 +333,9 @@ func load_game() -> void:
 	harvests = maxi(0, int(parsed.get("harvests", 0)))
 	player.position = Vector2(450, 1120)
 	if int(parsed.get("version", 1)) >= 2:
-		player.position = Vector2(clampf(float(parsed.get("x", 450)), 60, 2340), clampf(float(parsed.get("y", 1120)), 550, 1520))
+		var saved_position := Vector2(float(parsed.get("x", 450)), float(parsed.get("y", 1120)))
+		if is_walkable(saved_position):
+			player.position = saved_position
 	var crops = parsed.get("plots", [])
 	if crops is Array:
 		for i in range(mini(crops.size(), plots.size())):
