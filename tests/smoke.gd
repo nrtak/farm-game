@@ -73,13 +73,26 @@ func run() -> void:
 	farm.load_game()
 	assert(farm.character_choice == "girl" and farm.coins == 515, "Choice and progress persist")
 	farm.choose_character("boy")
-	# Test actual physics collision against the map boundary.
-	farm.player.position = Vector2(900, 555)
-	for i in range(30):
-		farm.player.velocity = Vector2(0, -200)
-		farm.player.move_and_slide()
-		await physics_frame
-	assert(farm.player.position.y >= 545, "Waterfront must block movement")
+	await physics_frame
+	# Sweep the real player collider toward each building from every side.
+	for target in [Vector2(220, 510), Vector2(1030, 325)]:
+		for direction in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
+			farm.player.position = (target + direction * 250.0) * farm.MAP_SCALE
+			var hit = farm.player.move_and_collide(-direction * 250.0 * farm.MAP_SCALE, true)
+			assert(hit != null, "Buildings must block approach from every side")
+	farm.player.position = Vector2(1200, 650) * farm.MAP_SCALE
+	assert(farm.player.move_and_collide(Vector2(250, -300) * farm.MAP_SCALE, true) != null, "Coastal scenery must block movement")
+	farm.player.position = Vector2(700, 600) * farm.MAP_SCALE
+	assert(farm.player.move_and_collide(Vector2(100, 0) * farm.MAP_SCALE, true) == null, "Expansion meadow must stay open")
+	for plot in farm.plots:
+		assert(farm.is_walkable(plot.position), "All crop beds must remain reachable")
+	for index in range(3):
+		assert(farm.tool_buttons[index].text == ["Seed", "Water", "Harvest"][index], "Tool labels must omit shortcut numbers")
+	# Saves from the earlier map must not place the player inside solid scenery.
+	farm.player.position = Vector2(220, 510) * farm.MAP_SCALE
+	farm.save_game(false)
+	farm.load_game()
+	assert(farm.player.position == Vector2(450, 1120), "Blocked saved positions return to the starter field")
 	for resolution in [Vector2i(1170, 540), Vector2i(960, 720)]:
 		root.size = resolution
 		await process_frame
