@@ -1,6 +1,6 @@
 # Coastal Farm — playable prototype
 
-A Godot 4.5.1 project exploring a connected Japanese coastal hillside farm. Fieldwork characters v5 uses a simplified farm environment with fewer flowers, broader foliage shapes and a calmer palette, Fieldwork B boy and girl farmers, live crop overlays, and a single Mount Kaimon-inspired mountain. The environment is visible in the editor and during play. Actual game screenshots are in docs/corner-phone.png (current); earlier previews are retained.
+A Godot 4.5.1 project exploring a Japanese coastal farm. The farmhouse and starter field share a broad, level meadow with open space to the east and north for future buildings and crops. The calm painterly environment keeps the coastal view, pond, single Mount Kaimon-inspired mountain, and Fieldwork B boy and girl farmers. The environment is visible in the editor and during play. Screenshots in docs/ show the earlier terraced map.
 
 ## Open and play
 
@@ -19,8 +19,8 @@ The on-screen joystick supports dragging and simultaneous touches with the actio
 - Connected 2400 × 1600 map and following camera.
 - New games offer a Boy/Girl choice; the Farmer button changes it later without resetting progress. The local save remembers the choice.
 - Larger phone-readable farmer with eight facing directions and two alternating stride frames per direction. Movement is continuous; artwork selects the nearest 45-degree direction. Stopping holds the last facing pose.
-- Building, terrace and waterfront collision, 15 crop beds, tool selection, farming loop and local persistence.
-- Starter house and crop field occupy the southwest corner. Open terraces to the east and north reserve room for expansion; unlock progression is not implemented yet. Older saves keep coins and crops and relocate the player to the new starter field.
+- Building and waterfront collision, 15 crop beds, tool selection, farming loop and local persistence. The former starter-field terrace barriers have been removed.
+- Starter house and crop field occupy the southwest corner. Open level ground to the east and north reserves room for expansion; unlock progression is not implemented yet. Older saves keep coins and crops and relocate the player to the new starter field.
 - Scenery is currently one static background plate. Decorative fences and plants do not all have collisions or depth sorting. Props will need separate assets for full interaction.
 - No building interiors, NPC systems, sound, inventory, polished idle and longer animation cycles, or final terrain tileset.
 - iOS source project only: this ZIP is not an installable iPhone app. Device export needs a Mac, Xcode, Godot export templates, and Apple signing setup.
@@ -29,7 +29,7 @@ The on-screen joystick supports dragging and simultaneous touches with the actio
 
 The existing farming loop was previously verified with Godot 4.5.1: clean asset import and game startup, planting cost, water requirement, timed growth, harvest payout and replanting, repeated-action protection, save/load, waterfront collision, and phone/tablet control bounds. Rendered desktop screenshots are in `docs/`. Automated checks are in `tests/smoke.gd`: run Godot with `--headless --path . --script res://tests/smoke.gd`. Run checks with a separate user-data profile because they write a test save.
 
-The nearby-bed hints and growth countdown still need a Godot runtime check.
+The flat environment, revised crop-bed placement, removed terrace barriers, nearby-bed hints and growth countdown still need a Godot runtime check.
 
 ## Working on another computer
 
