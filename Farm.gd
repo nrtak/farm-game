@@ -41,9 +41,9 @@ func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color("77a5be"))
 	for row in range(3):
 		for col in range(5):
-			plots.append({"position": Vector2(300 + col * 68, 1120 + row * 68), "stage": 0, "growth": 0.0})
-	# Buildings, waterfront, and crop terrace walls aligned with the painted map.
-	for rect in [Rect2(0, 510, 2400, 24), Rect2(0, 1576, 2400, 24), Rect2(0, 510, 24, 1090), Rect2(2376, 510, 24, 1090), Rect2(30, 650, 550, 180), Rect2(1380, 390, 270, 125), Rect2(1690, 1160, 690, 320), Rect2(65, 1080, 24, 260), Rect2(70, 1340, 840, 24), Rect2(70, 1020, 760, 24)]:
+			plots.append({"position": Vector2(300 + col * 68, 1200 + row * 68), "stage": 0, "growth": 0.0})
+	# Buildings and waterfront remain solid; the level starter meadow is open.
+	for rect in [Rect2(0, 510, 2400, 24), Rect2(0, 1576, 2400, 24), Rect2(0, 510, 24, 1090), Rect2(2376, 510, 24, 1090), Rect2(30, 650, 550, 180), Rect2(1380, 390, 270, 125), Rect2(1690, 1160, 690, 320)]:
 		obstacle(rect)
 	player = CharacterBody2D.new()
 	player.position = Vector2(450, 1120)
@@ -426,7 +426,6 @@ func crop(pos: Vector2, stage: int) -> void:
 	if stage == 3:
 		draw_circle(pos + Vector2(0, -5), 8, Color("f3d8a1"))
 		draw_circle(pos + Vector2(-3, -8), 4, Color("fff1c4"))
-
 
 
 
