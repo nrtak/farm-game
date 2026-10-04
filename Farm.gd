@@ -8,8 +8,8 @@ const JoystickScript = preload("res://Joystick.gd")
 var player: CharacterBody2D
 var camera: Camera2D
 var farmer: Sprite2D
-const WALK_TEXTURE = preload("res://assets/fieldwork-boy.png")
-const GIRL_TEXTURE = preload("res://assets/fieldwork-girl.png")
+const WALK_TEXTURE = preload("res://assets/fieldwork-boy-v2.png")
+const GIRL_TEXTURE = preload("res://assets/fieldwork-girl-v2.png")
 var active_texture: Texture2D = WALK_TEXTURE
 var character_choice := "boy"
 var choosing_character := false
@@ -319,18 +319,21 @@ func update_walk(delta: float, moving: bool, direction: Vector2 = Vector2.ZERO) 
 	walk_frame = next_frame
 	farmer.texture = active_texture
 	farmer.region_rect = walk_regions[next_frame]
-	farmer.scale = Vector2.ONE * (180.0 / farmer.region_rect.size.y)
-	farmer.position.y = -90
+	# Keep one scale across stride frames, with the feet anchored to the player.
+	farmer.position.y = -farmer.region_rect.size.y * farmer.scale.y * 0.5
 func set_character(choice: String) -> void:
 	character_choice = "girl" if choice == "girl" else "boy"
 	active_texture = GIRL_TEXTURE if character_choice == "girl" else WALK_TEXTURE
 	walk_regions.clear()
 	var sheet_image := active_texture.get_image()
 	var cell := sheet_image.get_size() / 4
+	var tallest_frame := 1.0
 	for index in range(16):
 		var origin := Vector2i(index % 4, index / 4) * cell
 		var bounds := sheet_image.get_region(Rect2i(origin, cell)).get_used_rect()
 		walk_regions.append(Rect2(bounds.position + origin, bounds.size))
+		tallest_frame = maxf(tallest_frame, bounds.size.y)
+	farmer.scale = Vector2.ONE * (180.0 / tallest_frame)
 	walk_frame = -2
 	update_walk(0.0, false)
 
@@ -426,7 +429,6 @@ func crop(pos: Vector2, stage: int) -> void:
 	if stage == 3:
 		draw_circle(pos + Vector2(0, -5), 8, Color("f3d8a1"))
 		draw_circle(pos + Vector2(-3, -8), 4, Color("fff1c4"))
-
 
 
 
