@@ -21,6 +21,23 @@ func run() -> void:
 		assert(farm.facing_direction == index, "Eight clock directions must select correct facing")
 		farm.update_walk(0.0, false)
 		assert(farm.walk_frame == index * 2, "Idle retains last facing")
+	# Both farmers must alternate every facing without changing size or foot height.
+	for choice in ["boy", "girl"]:
+		farm.set_character(choice)
+		for index in range(8):
+			var heading := Vector2.DOWN.rotated(index * PI / 4.0)
+			farm.update_walk(0.0, false, heading)
+			farm.update_walk(0.0, true, heading)
+			assert(farm.walk_frame == index * 2, "First stride must match facing")
+			var stride_scale: Vector2 = farm.farmer.scale
+			farm.update_walk(0.13, true, heading)
+			assert(farm.walk_frame == index * 2 + 1, "Both farmers must switch stride in all directions")
+			assert(farm.farmer.scale == stride_scale, "Stride must not resize the farmer")
+			var foot_y: float = farm.farmer.position.y + farm.farmer.region_rect.size.y * farm.farmer.scale.y * 0.5
+			assert(is_zero_approx(foot_y), "Stride feet must stay anchored to the player")
+			farm.update_walk(0.0, false)
+			assert(farm.walk_frame == index * 2, "Both farmers retain facing when stopped")
+	farm.set_character("boy")
 	farm.coins = 500
 	farm.harvests = 0
 	farm.nearest = 0
@@ -82,5 +99,4 @@ func run() -> void:
 	farm.queue_free()
 	await process_frame
 	quit(0)
-
 
