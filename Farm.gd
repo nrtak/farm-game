@@ -321,6 +321,20 @@ func update_walk(delta: float, moving: bool, direction: Vector2 = Vector2.ZERO) 
 	farmer.region_rect = walk_regions[next_frame]
 	# Keep one scale across stride frames, with the feet anchored to the player.
 	farmer.position.y = -farmer.region_rect.size.y * farmer.scale.y * 0.5
+func sprite_bounds(image: Image) -> Rect2i:
+	# Ignore nearly transparent export noise when measuring a stride.
+	var first := image.get_size()
+	var last := Vector2i(-1, -1)
+	for y in range(image.get_height()):
+		for x in range(image.get_width()):
+			if image.get_pixel(x, y).a < 0.1:
+				continue
+			first.x = mini(first.x, x)
+			first.y = mini(first.y, y)
+			last.x = maxi(last.x, x)
+			last.y = maxi(last.y, y)
+	return Rect2i(first, last - first + Vector2i.ONE) if last.x >= 0 else Rect2i(Vector2i.ZERO, image.get_size())
+
 func set_character(choice: String) -> void:
 	character_choice = "girl" if choice == "girl" else "boy"
 	active_texture = GIRL_TEXTURE if character_choice == "girl" else WALK_TEXTURE
@@ -330,7 +344,7 @@ func set_character(choice: String) -> void:
 	var tallest_frame := 1.0
 	for index in range(16):
 		var origin := Vector2i(index % 4, index / 4) * cell
-		var bounds := sheet_image.get_region(Rect2i(origin, cell)).get_used_rect()
+		var bounds := sprite_bounds(sheet_image.get_region(Rect2i(origin, cell)))
 		walk_regions.append(Rect2(bounds.position + origin, bounds.size))
 		tallest_frame = maxf(tallest_frame, bounds.size.y)
 	farmer.scale = Vector2.ONE * (180.0 / tallest_frame)
@@ -429,6 +443,5 @@ func crop(pos: Vector2, stage: int) -> void:
 	if stage == 3:
 		draw_circle(pos + Vector2(0, -5), 8, Color("f3d8a1"))
 		draw_circle(pos + Vector2(-3, -8), 4, Color("fff1c4"))
-
 
 
