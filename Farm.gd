@@ -19,7 +19,16 @@ var camera: Camera2D
 var farmer: Sprite2D
 const WALK_TEXTURE = preload("res://assets/fieldwork-boy-v2.png")
 const GIRL_TEXTURE = preload("res://assets/fieldwork-girl-v2.png")
+const BOY_SIDE_TEXTURE = preload("res://assets/fieldwork-boy-side-v3.png")
+const GIRL_SIDE_TEXTURE = preload("res://assets/fieldwork-girl-side-v3.png")
+const STRIDE_DISTANCE := 24.0
 var active_texture: Texture2D = WALK_TEXTURE
+var side_texture: Texture2D
+var side_regions: Array[Rect2] = []
+var side_offsets: Array[Vector2] = []
+var walk_distance := 0.0
+var side_scale := 1.0
+var front_scale := 1.0
 var character_choice := "boy"
 var choosing_character := false
 var character_picker: Control
@@ -240,8 +249,8 @@ func _physics_process(delta: float) -> void:
 	player.velocity = direction.limit_length() * SPEED
 	var previous_position := player.position
 	player.move_and_slide()
-	farmer.flip_h = false
-	update_walk(delta, player.position.distance_to(previous_position) > 0.01, direction)
+	var travel := player.position.distance_to(previous_position)
+	update_walk(delta, travel > 0.01, direction, travel)
 	nearest = -1
 	var distance := 78.0
 	for i in range(plots.size()):
@@ -344,18 +353,31 @@ func load_game() -> void:
 				plots[i].growth = clampf(float(crops[i].get("growth", 0)), 0, GROW_SECONDS)
 	say("Welcome back. Your farm has been restored.")
 
-func update_walk(delta: float, moving: bool, direction: Vector2 = Vector2.ZERO) -> void:
+func update_walk(delta: float, moving: bool, direction: Vector2 = Vector2.ZERO, travel: float = -1.0) -> void:
 	if direction.length() > 0.15:
 		facing_direction = posmod(int(round((direction.angle() - PI / 2.0) / (PI / 4.0))), 8)
 	walk_clock = walk_clock + delta if moving else 0.0
-	var step := int(walk_clock * 8.0) % 2 if moving else 0
-	var next_frame := facing_direction * 2 + step
+	walk_distance = walk_distance + (travel if travel >= 0.0 else delta * SPEED) if moving else 0.0
+	var step := int(walk_distance / STRIDE_DISTANCE) % 4 if moving else 0
+	var next_frame := facing_direction * 4 + step
 	if next_frame == walk_frame: return
 	walk_frame = next_frame
-	farmer.texture = active_texture
-	farmer.region_rect = walk_regions[next_frame]
-	# Keep one scale across stride frames, with the feet anchored to the player.
-	farmer.position.y = -farmer.region_rect.size.y * farmer.scale.y * 0.5
+	farmer.flip_h = facing_direction in [5, 6, 7]
+	if facing_direction in [0, 4]:
+		farmer.scale = Vector2.ONE * front_scale
+		farmer.texture = active_texture
+		farmer.region_rect = walk_regions[facing_direction * 2 + step % 2]
+		farmer.position = Vector2(0, -farmer.region_rect.size.y * farmer.scale.y * 0.5)
+	else:
+		var row: int = {1: 1, 2: 0, 3: 2, 5: 2, 6: 0, 7: 1}[facing_direction]
+		var index := row * 4 + step
+		farmer.texture = side_texture
+		farmer.region_rect = side_regions[index]
+		# Preserve the cell's hip center and shared ground line instead of
+		# re-centering each trimmed pose, which makes boots slide sideways.
+		farmer.position = side_offsets[index] * side_scale
+		if farmer.flip_h: farmer.position.x = -farmer.position.x
+		farmer.scale = Vector2.ONE * side_scale
 func sprite_bounds(image: Image) -> Rect2i:
 	# Ignore nearly transparent export noise when measuring a stride.
 	var first := image.get_size()
@@ -373,6 +395,7 @@ func sprite_bounds(image: Image) -> Rect2i:
 func set_character(choice: String) -> void:
 	character_choice = "girl" if choice == "girl" else "boy"
 	active_texture = GIRL_TEXTURE if character_choice == "girl" else WALK_TEXTURE
+	side_texture = GIRL_SIDE_TEXTURE if character_choice == "girl" else BOY_SIDE_TEXTURE
 	walk_regions.clear()
 	var sheet_image := active_texture.get_image()
 	var cell := sheet_image.get_size() / 4
@@ -382,9 +405,31 @@ func set_character(choice: String) -> void:
 		var bounds := sprite_bounds(sheet_image.get_region(Rect2i(origin, cell)))
 		walk_regions.append(Rect2(bounds.position + origin, bounds.size))
 		tallest_frame = maxf(tallest_frame, bounds.size.y)
-	farmer.scale = Vector2.ONE * (180.0 / tallest_frame)
+	front_scale = 180.0 / tallest_frame
+	farmer.scale = Vector2.ONE * front_scale
+	build_side_regions()
 	walk_frame = -2
 	update_walk(0.0, false)
+
+func build_side_regions() -> void:
+	side_regions.clear()
+	side_offsets.clear()
+	var sheet := side_texture.get_image()
+	var cell := Vector2i(sheet.get_width() / 4, sheet.get_height() / 3)
+	var tallest := 1.0
+	for row in range(3):
+		var bounds_list: Array[Rect2i] = []
+		var ground := 0.0
+		for phase in range(4):
+			var bounds := sprite_bounds(sheet.get_region(Rect2i(Vector2i(phase, row) * cell, cell)))
+			bounds_list.append(bounds)
+			ground = maxf(ground, bounds.end.y)
+			tallest = maxf(tallest, bounds.size.y)
+		for phase in range(4):
+			var bounds := bounds_list[phase]
+			side_regions.append(Rect2(bounds.position + Vector2i(phase, row) * cell, bounds.size))
+			side_offsets.append(Vector2(bounds.get_center()) - Vector2(cell.x * 0.5, ground))
+	side_scale = 180.0 / tallest
 
 func choose_character(choice: String) -> void:
 	set_character(choice)
