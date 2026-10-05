@@ -11,6 +11,8 @@ func run() -> void:
 	farm.choose_character("boy")
 	farm.set_location(false, Vector2(450, 1120))
 	farm.day = 1
+	farm.clock_minutes = farm.WAKE_MINUTE
+	farm.health = farm.MAX_HEALTH
 	farm.update_walk(0.0, true)
 	assert(farm.walk_frame == 0, "Moving begins walk cycle")
 	farm.update_walk(0.13, true)
@@ -152,15 +154,65 @@ func run() -> void:
 	legacy.close()
 	farm.load_game()
 	assert(not farm.inside_house and farm.day == 1 and farm.coins == 321 and farm.character_choice == "girl" and farm.plots[0].stage == 1, "Legacy saves migrate without losing farm progress")
+	assert(farm.health == 100 and farm.clock_text() == "6:00 AM", "Legacy saves start rested at 6 AM")
+	farm.window_focused = true
+	farm.advance_clock(600.0)
+	assert(farm.clock_text() == "4:00 PM" and farm.health == 100, "Ten real minutes reach 4 PM without passive daytime drain")
+	farm.toggle_pause()
+	farm.advance_clock(60.0)
+	assert(farm.clock_text() == "4:00 PM", "Pause freezes clock")
+	farm.toggle_pause()
+	farm.clock_minutes = 1250.0
+	farm.advance_clock(20.0)
+	assert(is_equal_approx(farm.health, 99.0), "Only minutes after 9 PM drain Health")
+	farm.clock_minutes = 1435.0
+	farm.advance_clock(10.0)
+	assert(farm.day == 2 and farm.clock_text() == "12:05 AM", "Midnight advances date without ending the day")
+	farm.set_location(true, farm.ROOM_ORIGIN + farm.interior.BED_APPROACH)
+	farm.offer_sleep()
+	var frozen_time: float = farm.clock_minutes
+	farm.advance_clock(30.0)
+	assert(farm.clock_minutes == frozen_time, "Sleep dialog freezes clock")
+	farm.sleep_until_morning()
+	assert(farm.day == 2 and farm.health == 100 and farm.clock_text() == "6:00 AM", "After-midnight sleep wakes on the same date fully rested")
+	farm.set_location(false, Vector2(450, 1120))
+	farm.nearest = 0
+	farm.plots[0].stage = 0
+	farm.select_tool(0)
+	farm.health = 1.0
+	var balance: int = farm.coins
+	farm.interact()
+	assert(farm.plots[0].stage == 0 and farm.coins == balance and farm.health == 1, "Insufficient Health cannot spend money or plant")
+	farm.health = 10.0
+	farm.interact()
+	assert(farm.health == 8, "Planting spends two Health")
+	farm.interact()
+	assert(farm.health == 8, "Invalid repeated work spends no Health")
+	farm.select_tool(1)
+	farm.interact()
+	assert(farm.health == 6, "Watering spends two Health")
+	farm.plots[0].stage = 3
+	farm.select_tool(2)
+	farm.interact()
+	assert(farm.health == 3, "Harvesting spends three Health")
+	farm.clock_minutes = 950.0
+	farm.save_game(false)
+	farm.health = 100
+	farm.clock_minutes = 360.0
+	farm.load_game()
+	assert(farm.health == 3 and farm.clock_minutes == 950, "Save restores exact Health and clock")
 	for resolution in [Vector2i(1170, 540), Vector2i(960, 720)]:
 		root.size = resolution
 		await process_frame
 		farm.layout_ui()
 		var view: Vector2 = farm.get_viewport_rect().size
 		assert(farm.action_button.position.x + farm.action_button.size.x <= view.x, "Action stays on screen")
+		assert(farm.health_bar.get_global_rect().end.y < farm.message_label.position.y, "Health does not overlap guidance")
 		assert(farm.joystick.position.y + farm.joystick.size.y <= view.y, "Movement stays on screen")
 		assert(farm.tool_bar.position.x > farm.joystick.position.x + farm.joystick.size.x, "Toolbar avoids movement controls")
 	farm.coins = 500
+	farm.health = 100
+	farm.clock_minutes = 360.0
 	farm.day = 1
 	farm.harvests = 0
 	farm.player.position = Vector2(450, 1120)
