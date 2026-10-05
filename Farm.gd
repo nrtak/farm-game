@@ -15,6 +15,16 @@ var farmhouse: Node2D
 var interior: Node2D
 var inside_house := false
 var day := 1
+const WAKE_MINUTE := 360.0
+const LATE_MINUTE := 1260.0
+const MAX_HEALTH := 100.0
+const WORK_COSTS := [2.0, 2.0, 3.0]
+var clock_minutes := WAKE_MINUTE
+var health := MAX_HEALTH
+var paused_by_player := false
+var window_focused := true
+var health_bar: ProgressBar
+var health_label: Label
 var sleep_prompt: Control
 var confirming_sleep := false
 # Coordinates follow the visible silhouettes on the 1536 x 1024 map.
@@ -194,6 +204,18 @@ func make_ui() -> void:
 	date_label.add_theme_color_override("font_color", Color("493b2d"))
 	date_label.add_theme_font_size_override("font_size", 20)
 	hud.add_child(date_label)
+	health_bar = ProgressBar.new()
+	health_bar.max_value = MAX_HEALTH
+	health_bar.show_percentage = false
+	health_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	health_bar.add_theme_stylebox_override("background", parchment())
+	hud.add_child(health_bar)
+	health_label = Label.new()
+	health_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	health_label.add_theme_color_override("font_color", Color("493b2d"))
+	health_label.add_theme_font_size_override("font_size", 16)
+	health_bar.add_child(health_label)
+	health_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	message_label = Label.new()
 	message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message_label.add_theme_color_override("font_color", Color("fff5dc"))
@@ -223,6 +245,9 @@ func make_ui() -> void:
 	var character_button := make_button("Farmer", show_character_picker)
 	character_button.name = "CharacterButton"
 	hud.add_child(character_button)
+	var pause_button := make_button("Pause", toggle_pause)
+	pause_button.name = "PauseButton"
+	hud.add_child(pause_button)
 	select_tool(0)
 
 func layout_ui() -> void:
@@ -239,14 +264,51 @@ func layout_ui() -> void:
 			right = (screen.x - safe.end.x) * ratio.x + 20
 			bottom = (screen.y - safe.end.y) * ratio.y + 24
 	date_label.position = margin
+	health_bar.position = margin + Vector2(0, 94)
+	health_bar.size = Vector2(240, 28)
 	joystick.position = Vector2(margin.x, view.y - bottom - 132)
 	action_button.position = Vector2(view.x - right - 138, view.y - bottom - 92)
 	action_button.size = Vector2(138, 72)
 	tool_bar.position = Vector2((view.x - 328) / 2, view.y - bottom - 66)
-	message_label.position = Vector2(margin.x, margin.y + 76)
+	message_label.position = Vector2(margin.x, margin.y + 132)
 	message_label.size = Vector2(view.x - margin.x - right, 40)
 	hud.get_node("SaveButton").position = Vector2(view.x - right - 95, margin.y)
 	hud.get_node("CharacterButton").position = Vector2(view.x - right - 200, margin.y)
+	hud.get_node("PauseButton").position = Vector2(view.x - right - 95, margin.y + 50)
+
+func toggle_pause() -> void:
+	paused_by_player = not paused_by_player
+	joystick.direction = Vector2.ZERO
+	player.velocity = Vector2.ZERO
+	hud.get_node("PauseButton").text = "Resume" if paused_by_player else "Pause"
+	refresh_hud()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT: window_focused = false
+	elif what == NOTIFICATION_APPLICATION_FOCUS_IN: window_focused = true
+	if what == NOTIFICATION_APPLICATION_PAUSED and is_instance_valid(player):
+		save_game(false)
+
+func clock_text() -> String:
+	var minute := int(clock_minutes)
+	var hour := int(minute / 60)
+	return "%d:%02d %s" % [12 if hour % 12 == 0 else hour % 12, minute % 60, "AM" if hour < 12 else "PM"]
+
+func advance_clock(seconds: float) -> void:
+	# One real second advances one game minute. Midnight rolls the calendar.
+	if choosing_character or confirming_sleep or paused_by_player or not window_focused: return
+	var remaining := maxf(0.0, seconds)
+	while remaining > 0.0:
+		var step := minf(remaining, 1440.0 - clock_minutes)
+		var night_minutes := maxf(0.0, clock_minutes + step - maxf(clock_minutes, LATE_MINUTE))
+		if clock_minutes < WAKE_MINUTE:
+			night_minutes += minf(step, WAKE_MINUTE - clock_minutes)
+		health = maxf(0.0, health - night_minutes * 0.1)
+		clock_minutes += step
+		remaining -= step
+		if clock_minutes >= 1440.0:
+			clock_minutes = 0.0
+			day += 1
 
 func select_tool(index: int) -> void:
 	selected_tool = index
@@ -263,7 +325,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		if event.physical_keycode in [KEY_SPACE, KEY_E, KEY_ENTER]: interact()
 
 func _physics_process(delta: float) -> void:
-	if choosing_character or confirming_sleep: return
+	if choosing_character or confirming_sleep or paused_by_player or not window_focused: return
+	advance_clock(delta)
 	var direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	if Input.is_physical_key_pressed(KEY_A): direction.x -= 1
 	if Input.is_physical_key_pressed(KEY_D): direction.x += 1
@@ -308,7 +371,14 @@ func calendar_text() -> String:
 	return "%s %d  |  Year %d" % [SEASONS[season_index], (day - 1) % 28 + 1, int((day - 1) / 112) + 1]
 
 func refresh_hud() -> void:
-	date_label.text = "%s\n%dg   •   Harvested %d" % [calendar_text(), coins, harvests]
+	date_label.text = "%s\n%s   •   ¥%d\nHarvested %d" % [calendar_text(), clock_text(), coins, harvests]
+	health_bar.value = health
+	health_label.text = "Health %d / 100" % int(ceil(health))
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color("a5be83") if health >= 50 else (Color("e7c786") if health >= 25 else Color("da927c"))
+	fill.set_corner_radius_all(4)
+	health_bar.add_theme_stylebox_override("fill", fill)
+	farmer.modulate = Color("d1c7bb") if health < 25 else Color.WHITE
 	tool_bar.visible = not inside_house
 	var action := interaction_action()
 	action_button.disabled = false
@@ -327,6 +397,9 @@ func refresh_hud() -> void:
 		_:
 			if inside_house: hint = "Walk beside the bed to sleep, or the front doorway to leave."
 	message_label.text = toast if toast_time > 0 else hint
+	if paused_by_player: message_label.text = "Paused. Press Resume to continue."
+	elif toast_time <= 0 and health < 25:
+		message_label.text = "Health is low. Rest in bed." if health >= WORK_COSTS[selected_tool] else "Too tired to work. Rest in bed."
 
 func set_location(indoors: bool, destination: Vector2) -> void:
 	inside_house = indoors
@@ -393,7 +466,9 @@ func cancel_sleep() -> void:
 func sleep_until_morning() -> void:
 	if not inside_house or not confirming_sleep: return
 	cancel_sleep()
-	day += 1
+	if clock_minutes >= WAKE_MINUTE: day += 1
+	clock_minutes = WAKE_MINUTE
+	health = MAX_HEALTH
 	for plot in plots:
 		if plot.stage == 2:
 			plot.growth = GROW_SECONDS
@@ -409,14 +484,14 @@ func crop_hint() -> String:
 	var plot: Dictionary = plots[nearest]
 	match int(plot.stage):
 		0:
-			return "Empty bed. Select Seed and Plant (5g)." if coins >= 5 else "Seeds cost 5g. Harvest a ripe crop to earn coins."
+			return "Empty bed. Select Seed and Plant (¥5)." if coins >= 5 else "Seeds cost ¥5. Harvest a ripe crop to earn yen."
 		1:
 			return "This seed needs water. Select Water and use it."
 		2:
 			var seconds := maxi(1, int(ceil(GROW_SECONDS - float(plot.growth))))
 			return "Growing. Ready in %ds." % seconds
 		3:
-			return "Ready! Select Harvest to collect 20g."
+			return "Ready! Select Harvest to collect ¥20."
 	return "Choose a tool, then use it beside a crop bed."
 
 func say(text: String) -> void:
@@ -424,7 +499,7 @@ func say(text: String) -> void:
 	toast_time = 4.0
 
 func interact() -> void:
-	if choosing_character or confirming_sleep: return
+	if choosing_character or confirming_sleep or paused_by_player: return
 	match interaction_action():
 		"enter":
 			enter_house()
@@ -439,29 +514,35 @@ func interact() -> void:
 	if nearest < 0:
 		say("Move closer to a crop bed.")
 		return
+	if health < WORK_COSTS[selected_tool]:
+		say("Too tired to work. Rest in bed to restore Health.")
+		return
 	var plot: Dictionary = plots[nearest]
 	match selected_tool:
 		0:
 			if plot.stage != 0: say("This bed is already planted.")
-			elif coins < 5: say("Seeds cost 5g.")
+			elif coins < 5: say("Seeds cost ¥5.")
 			else:
 				coins -= 5
+				health -= WORK_COSTS[0]
 				plot.stage = 1
 				plot.growth = 0.0
 				say("Planted! Select Water to help it grow.")
 		1:
 			if plot.stage == 1:
+				health -= WORK_COSTS[1]
 				plot.stage = 2
 				say("Watered. Ready to harvest in 12 seconds.")
 			elif plot.stage == 0: say("Plant a seed first.")
 			else: say("This crop already has enough water.")
 		2:
 			if plot.stage == 3:
+				health -= WORK_COSTS[2]
 				plot.stage = 0
 				plot.growth = 0.0
 				coins += 20
 				harvests += 1
-				say("Harvested! +20g. This bed can be replanted.")
+				say("Harvested! +¥20. This bed can be replanted.")
 			else: say("Harvest crops with golden leaves when ready.")
 	save_game(false)
 
@@ -472,7 +553,7 @@ func save_game(show_message: bool = true) -> void:
 		crop_data.append({"stage": plot.stage, "growth": plot.growth})
 	var file := FileAccess.open(SAVE_FILE, FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({"version": 3, "day": day, "location": "house" if inside_house else "farm", "character": character_choice, "coins": coins, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
+		file.store_string(JSON.stringify({"version": 4, "day": day, "clock_minutes": clock_minutes, "health": health, "location": "house" if inside_house else "farm", "character": character_choice, "coins": coins, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
 		if show_message: say("Farm saved.")
 	elif show_message: say("Could not save. Check storage permissions.")
 
@@ -484,6 +565,8 @@ func load_game() -> void:
 	set_character(str(parsed.get("character", "boy")))
 	harvests = maxi(0, int(parsed.get("harvests", 0)))
 	day = maxi(1, int(parsed.get("day", 1)))
+	clock_minutes = clampf(float(parsed.get("clock_minutes", WAKE_MINUTE)), 0.0, 1439.999)
+	health = clampf(float(parsed.get("health", MAX_HEALTH)), 0.0, MAX_HEALTH)
 	var destination := Vector2(450, 1120)
 	var indoors := str(parsed.get("location", "farm")) == "house"
 	if indoors: destination = ROOM_ORIGIN + interior.ENTRY
@@ -629,10 +712,6 @@ func show_character_picker() -> void:
 		var button := make_button("Girl" if choice == "girl" else "Boy", choose_character.bind(choice))
 		button.custom_minimum_size = Vector2(150, 58)
 		option.add_child(button)
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_PAUSED and is_instance_valid(player):
-		save_game(false)
 
 func _draw() -> void:
 	if inside_house: return
