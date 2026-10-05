@@ -9,6 +9,8 @@ func run() -> void:
 	await process_frame
 	farm.set_physics_process(false)
 	farm.choose_character("boy")
+	farm.set_location(false, Vector2(450, 1120))
+	farm.day = 1
 	farm.update_walk(0.0, true)
 	assert(farm.walk_frame == 0, "Moving begins walk cycle")
 	farm.update_walk(0.13, true)
@@ -99,6 +101,57 @@ func run() -> void:
 	farm.save_game(false)
 	farm.load_game()
 	assert(farm.player.position == Vector2(450, 1120), "Blocked saved positions return to the starter field")
+	# Context actions use the same controls as tending the field.
+	farm.player.position = farm.farmhouse.DOOR_POSITION
+	assert(farm.is_walkable(farm.player.position), "Front door must be reachable")
+	farm.refresh_hud()
+	assert(farm.action_button.text == "Enter", "Door offers entry")
+	farm.interact()
+	assert(farm.inside_house and farm.player.collision_mask == 2, "Entry switches to indoor collision")
+	assert(not farm.tool_bar.visible and farm.interior.visible and not farm.outdoor_world.visible, "Room replaces exterior and tools")
+	await physics_frame
+	farm.player.position = farm.ROOM_ORIGIN + Vector2(700, 350)
+	assert(farm.player.move_and_collide(Vector2(100, 0), true) != null, "Bed blocks walking")
+	farm.player.position = farm.ROOM_ORIGIN + farm.interior.BED_APPROACH
+	farm.plots[0].stage = 1
+	farm.plots[1].stage = 2
+	farm.plots[1].growth = 1.0
+	var saved_coins: int = farm.coins
+	farm.refresh_hud()
+	assert(farm.action_button.text == "Sleep", "Bed offers sleep")
+	farm.interact()
+	assert(farm.confirming_sleep and farm.day == 1, "Sleep requires in-game confirmation")
+	farm.cancel_sleep()
+	assert(farm.day == 1 and farm.plots[1].stage == 2, "Cancel preserves day and crop growth")
+	farm.interact()
+	farm.sleep_until_morning()
+	assert(farm.day == 2 and farm.plots[1].stage == 3 and farm.plots[0].stage == 1, "Only watered crops mature overnight")
+	assert(farm.coins == saved_coins, "Sleeping must preserve coins")
+	farm.sleep_until_morning()
+	assert(farm.day == 2, "Repeated confirmation cannot skip another day")
+	farm.day = 28
+	farm.offer_sleep()
+	farm.sleep_until_morning()
+	assert(farm.calendar_text() == "Summer 1  |  Year 1", "Season rolls over after 28 days")
+	farm.day = 112
+	farm.offer_sleep()
+	farm.sleep_until_morning()
+	assert(farm.calendar_text() == "Spring 1  |  Year 2", "Year rolls over after four seasons")
+	farm.save_game(false)
+	farm.set_location(false, Vector2(450, 1120))
+	farm.day = 1
+	farm.load_game()
+	assert(farm.inside_house and farm.day == 113 and farm.coins == saved_coins, "Save restores indoor location, calendar and money")
+	farm.player.position = farm.ROOM_ORIGIN + farm.interior.EXIT
+	farm.interact()
+	assert(not farm.inside_house and farm.player.collision_mask == 1 and farm.tool_bar.visible, "Exit restores outdoor movement and tools")
+	assert(farm.is_walkable(farm.player.position), "Exit must land on clear ground")
+	# Legacy saves have no calendar/location fields; preserve their crops and money.
+	var legacy := FileAccess.open(farm.SAVE_FILE, FileAccess.WRITE)
+	legacy.store_string(JSON.stringify({"version": 2, "coins": 321, "harvests": 4, "character": "girl", "x": 450, "y": 1120, "plots": [{"stage": 1, "growth": 0}]}))
+	legacy.close()
+	farm.load_game()
+	assert(not farm.inside_house and farm.day == 1 and farm.coins == 321 and farm.character_choice == "girl" and farm.plots[0].stage == 1, "Legacy saves migrate without losing farm progress")
 	for resolution in [Vector2i(1170, 540), Vector2i(960, 720)]:
 		root.size = resolution
 		await process_frame
@@ -108,6 +161,7 @@ func run() -> void:
 		assert(farm.joystick.position.y + farm.joystick.size.y <= view.y, "Movement stays on screen")
 		assert(farm.tool_bar.position.x > farm.joystick.position.x + farm.joystick.size.x, "Toolbar avoids movement controls")
 	farm.coins = 500
+	farm.day = 1
 	farm.harvests = 0
 	farm.player.position = Vector2(450, 1120)
 	for plot in farm.plots:
