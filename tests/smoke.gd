@@ -20,7 +20,7 @@ func run() -> void:
 		farm.update_walk(0.0, true, heading)
 		assert(farm.facing_direction == index, "Eight clock directions must select correct facing")
 		farm.update_walk(0.0, false)
-		assert(farm.walk_frame == index * 2, "Idle retains last facing")
+		assert(farm.walk_frame == index * 4, "Idle retains last facing")
 	# Both farmers must alternate every facing without changing size or foot height.
 	for choice in ["boy", "girl"]:
 		farm.set_character(choice)
@@ -28,15 +28,21 @@ func run() -> void:
 			var heading := Vector2.DOWN.rotated(index * PI / 4.0)
 			farm.update_walk(0.0, false, heading)
 			farm.update_walk(0.0, true, heading)
-			assert(farm.walk_frame == index * 2, "First stride must match facing")
+			assert(farm.walk_frame == index * 4, "First stride must match facing")
 			var stride_scale: Vector2 = farm.farmer.scale
 			farm.update_walk(0.13, true, heading)
-			assert(farm.walk_frame == index * 2 + 1, "Both farmers must switch stride in all directions")
+			assert(farm.walk_frame == index * 4 + 1, "Both farmers must switch stride in all directions")
 			assert(farm.farmer.scale == stride_scale, "Stride must not resize the farmer")
-			var foot_y: float = farm.farmer.position.y + farm.farmer.region_rect.size.y * farm.farmer.scale.y * 0.5
-			assert(is_zero_approx(foot_y), "Stride feet must stay anchored to the player")
+			for phase in [2, 3]:
+				farm.update_walk(0.0, true, heading, farm.STRIDE_DISTANCE)
+				assert(farm.walk_frame == index * 4 + phase, "Walk must include opposite contact and passing phases")
+				assert(farm.farmer.scale == stride_scale, "All four phases must retain scale")
+			var paused_frame: int = farm.walk_frame
+			farm.update_walk(1.0, true, heading, 0.0)
+			assert(farm.walk_frame == paused_frame, "No travel must not advance the stride")
+			assert(farm.farmer.flip_h == (index in [5, 6, 7]), "Rightward directions mirror the corresponding leftward cycle")
 			farm.update_walk(0.0, false)
-			assert(farm.walk_frame == index * 2, "Both farmers retain facing when stopped")
+			assert(farm.walk_frame == index * 4, "Both farmers retain facing when stopped")
 	farm.set_character("boy")
 	farm.coins = 500
 	farm.harvests = 0
@@ -68,7 +74,7 @@ func run() -> void:
 	assert(farm.choosing_character, "Picker opens")
 	farm.choose_character("girl")
 	farm.update_walk(0.13, true, Vector2.RIGHT)
-	assert(farm.farmer.texture == farm.GIRL_TEXTURE and farm.facing_direction == 6, "Girl walks east")
+	assert(farm.farmer.texture == farm.GIRL_SIDE_TEXTURE and farm.facing_direction == 6, "Girl walks east")
 	farm.set_character("boy")
 	farm.load_game()
 	assert(farm.character_choice == "girl" and farm.coins == 515, "Choice and progress persist")
