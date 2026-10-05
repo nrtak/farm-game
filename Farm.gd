@@ -6,6 +6,17 @@ const SPEED := 200.0
 const SAVE_FILE := "user://farm_save.json"
 const MAP_SCALE := 1.5625
 const PLAYER_RADIUS := 12.0
+const FarmhouseScene = preload("res://Farmhouse.tscn")
+const InteriorScene = preload("res://FarmhouseInterior.tscn")
+const ROOM_ORIGIN := Vector2(3000, 0)
+const SEASONS := ["Spring", "Summer", "Autumn", "Winter"]
+var outdoor_world: Node2D
+var farmhouse: Node2D
+var interior: Node2D
+var inside_house := false
+var day := 1
+var sleep_prompt: Control
+var confirming_sleep := false
 # Coordinates follow the visible silhouettes on the 1536 x 1024 map.
 const SOLID_OUTLINES := [
 	[Vector2(5, 550), Vector2(50, 475), Vector2(130, 390), Vector2(325, 390), Vector2(415, 485), Vector2(380, 600), Vector2(120, 630), Vector2(5, 615)],
@@ -57,17 +68,28 @@ var rocks := [Vector2(430, 810), Vector2(1410, 770), Vector2(1640, 1230)]
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color("77a5be"))
+	outdoor_world = Node2D.new()
+	outdoor_world.name = "OutdoorWorld"
+	add_child(outdoor_world)
+	$Environment.reparent(outdoor_world)
+	farmhouse = FarmhouseScene.instantiate()
+	outdoor_world.add_child(farmhouse)
+	interior = InteriorScene.instantiate()
+	interior.position = ROOM_ORIGIN
+	interior.visible = false
+	add_child(interior)
 	for row in range(3):
 		for col in range(5):
 			plots.append({"position": Vector2(300 + col * 68, 1200 + row * 68), "stage": 0, "growth": 0.0})
 	for rect in [Rect2(-24, -24, 2448, 24), Rect2(-24, 1600, 2448, 24), Rect2(-24, 0, 24, 1600), Rect2(2400, 0, 24, 1600)]:
 		obstacle(rect)
-	for outline in SOLID_OUTLINES:
+	# The separate farmhouse scene owns its facade collision.
+	for outline in SOLID_OUTLINES.slice(1):
 		var body := StaticBody2D.new()
 		var collision := CollisionPolygon2D.new()
 		collision.polygon = world_outline(outline)
 		body.add_child(collision)
-		add_child(body)
+		outdoor_world.add_child(body)
 	player = CharacterBody2D.new()
 	player.position = Vector2(450, 1120)
 	player.z_index = 5
@@ -99,6 +121,7 @@ func _ready() -> void:
 	load_game()
 	get_viewport().size_changed.connect(layout_ui)
 	layout_ui()
+	refresh_hud()
 	if not FileAccess.file_exists(SAVE_FILE): show_character_picker()
 	queue_redraw()
 
@@ -110,7 +133,7 @@ func obstacle(rect: Rect2) -> void:
 	shape.size = rect.size
 	collision.shape = shape
 	body.add_child(collision)
-	add_child(body)
+	outdoor_world.add_child(body)
 
 func world_outline(outline: Array) -> PackedVector2Array:
 	var points := PackedVector2Array()
@@ -230,6 +253,7 @@ func select_tool(index: int) -> void:
 	for i in range(tool_buttons.size()):
 		tool_buttons[i].modulate = Color("ffdb89") if i == index else Color.WHITE
 	action_button.text = ["Plant", "Water", "Harvest"][index]
+	if is_instance_valid(player): refresh_hud()
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -239,7 +263,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		if event.physical_keycode in [KEY_SPACE, KEY_E, KEY_ENTER]: interact()
 
 func _physics_process(delta: float) -> void:
-	if choosing_character: return
+	if choosing_character or confirming_sleep: return
 	var direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	if Input.is_physical_key_pressed(KEY_A): direction.x -= 1
 	if Input.is_physical_key_pressed(KEY_D): direction.x += 1
@@ -255,7 +279,7 @@ func _physics_process(delta: float) -> void:
 	var distance := 78.0
 	for i in range(plots.size()):
 		var candidate: float = player.position.distance_to(plots[i].position)
-		if candidate < distance:
+		if not inside_house and candidate < distance:
 			distance = candidate
 			nearest = i
 		if plots[i].stage == 2:
@@ -267,9 +291,117 @@ func _physics_process(delta: float) -> void:
 	if save_time >= 10:
 		save_game(false)
 		save_time = 0
-	date_label.text = "Spring 1  |  Year 1\n%dg   •   Harvested %d" % [coins, harvests]
-	message_label.text = toast if toast_time > 0 else crop_hint()
+	refresh_hud()
 	queue_redraw()
+
+func interaction_action() -> String:
+	if inside_house:
+		var local_position := player.position - ROOM_ORIGIN
+		if local_position.distance_to(interior.BED_APPROACH) < 100.0: return "sleep"
+		if local_position.distance_to(interior.EXIT) < 90.0: return "leave"
+	elif player.position.distance_to(farmhouse.DOOR_POSITION) < 90.0:
+		return "enter"
+	return ""
+
+func calendar_text() -> String:
+	var season_index := int((day - 1) / 28) % 4
+	return "%s %d  |  Year %d" % [SEASONS[season_index], (day - 1) % 28 + 1, int((day - 1) / 112) + 1]
+
+func refresh_hud() -> void:
+	date_label.text = "%s\n%dg   •   Harvested %d" % [calendar_text(), coins, harvests]
+	tool_bar.visible = not inside_house
+	var action := interaction_action()
+	action_button.disabled = false
+	match action:
+		"enter": action_button.text = "Enter"
+		"leave": action_button.text = "Leave"
+		"sleep": action_button.text = "Sleep"
+		_:
+			action_button.text = "Explore" if inside_house else ["Plant", "Water", "Harvest"][selected_tool]
+			action_button.disabled = inside_house
+	var hint := crop_hint()
+	match action:
+		"enter": hint = "Welcome home. Enter the farmhouse."
+		"leave": hint = "Leave the house to return to your farm."
+		"sleep": hint = "Rest in bed to start the next day."
+		_:
+			if inside_house: hint = "Walk beside the bed to sleep, or the front doorway to leave."
+	message_label.text = toast if toast_time > 0 else hint
+
+func set_location(indoors: bool, destination: Vector2) -> void:
+	inside_house = indoors
+	RenderingServer.set_default_clear_color(Color("293e37") if indoors else Color("78b9df"))
+	outdoor_world.visible = not indoors
+	interior.visible = indoors
+	player.collision_mask = 2 if indoors else 1
+	player.position = destination
+	player.velocity = Vector2.ZERO
+	joystick.direction = Vector2.ZERO
+	nearest = -1
+	update_walk(0.0, false, Vector2.DOWN)
+	camera.limit_left = int(ROOM_ORIGIN.x) if indoors else 0
+	camera.limit_top = 0
+	camera.limit_right = int(ROOM_ORIGIN.x + interior.SIZE.x) if indoors else int(WORLD.x)
+	camera.limit_bottom = int(interior.SIZE.y) if indoors else int(WORLD.y)
+	camera.offset = Vector2(0, -60) if indoors else Vector2(0, -100)
+	camera.reset_smoothing()
+	refresh_hud()
+	queue_redraw()
+
+func enter_house() -> void:
+	if inside_house: return
+	set_location(true, ROOM_ORIGIN + interior.ENTRY)
+	say("Home sweet home. The bed is in the right corner.")
+	save_game(false)
+
+func leave_house() -> void:
+	if not inside_house: return
+	set_location(false, farmhouse.DOOR_POSITION + Vector2(0, 35))
+	say("Back on the farm.")
+	save_game(false)
+
+func offer_sleep() -> void:
+	if not inside_house or confirming_sleep: return
+	confirming_sleep = true
+	player.velocity = Vector2.ZERO
+	joystick.direction = Vector2.ZERO
+	sleep_prompt = ColorRect.new()
+	sleep_prompt.color = Color(0.08, 0.13, 0.10, 0.85)
+	hud.add_child(sleep_prompt)
+	sleep_prompt.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var center := CenterContainer.new()
+	sleep_prompt.add_child(center)
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", parchment())
+	center.add_child(panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 16)
+	panel.add_child(column)
+	var title := Label.new()
+	title.text = "Sleep until tomorrow?"
+	title.add_theme_color_override("font_color", Color("493b2d"))
+	title.add_theme_font_size_override("font_size", 24)
+	column.add_child(title)
+	column.add_child(make_button("Sleep until morning", sleep_until_morning))
+	column.add_child(make_button("Stay awake", cancel_sleep))
+
+func cancel_sleep() -> void:
+	confirming_sleep = false
+	if is_instance_valid(sleep_prompt): sleep_prompt.queue_free()
+
+func sleep_until_morning() -> void:
+	if not inside_house or not confirming_sleep: return
+	cancel_sleep()
+	day += 1
+	for plot in plots:
+		if plot.stage == 2:
+			plot.growth = GROW_SECONDS
+			plot.stage = 3
+	set_location(true, ROOM_ORIGIN + interior.BED_APPROACH)
+	say("Good morning! Watered crops are ready. %s." % calendar_text())
+	save_time = 0.0
+	save_game(false)
 
 func crop_hint() -> String:
 	if nearest < 0 or nearest >= plots.size():
@@ -292,7 +424,18 @@ func say(text: String) -> void:
 	toast_time = 4.0
 
 func interact() -> void:
-	if choosing_character: return
+	if choosing_character or confirming_sleep: return
+	match interaction_action():
+		"enter":
+			enter_house()
+			return
+		"leave":
+			leave_house()
+			return
+		"sleep":
+			offer_sleep()
+			return
+	if inside_house: return
 	if nearest < 0:
 		say("Move closer to a crop bed.")
 		return
@@ -329,7 +472,7 @@ func save_game(show_message: bool = true) -> void:
 		crop_data.append({"stage": plot.stage, "growth": plot.growth})
 	var file := FileAccess.open(SAVE_FILE, FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({"version": 2, "character": character_choice, "coins": coins, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
+		file.store_string(JSON.stringify({"version": 3, "day": day, "location": "house" if inside_house else "farm", "character": character_choice, "coins": coins, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
 		if show_message: say("Farm saved.")
 	elif show_message: say("Could not save. Check storage permissions.")
 
@@ -340,17 +483,21 @@ func load_game() -> void:
 	coins = maxi(0, int(parsed.get("coins", 500)))
 	set_character(str(parsed.get("character", "boy")))
 	harvests = maxi(0, int(parsed.get("harvests", 0)))
-	player.position = Vector2(450, 1120)
+	day = maxi(1, int(parsed.get("day", 1)))
+	var destination := Vector2(450, 1120)
+	var indoors := str(parsed.get("location", "farm")) == "house"
+	if indoors: destination = ROOM_ORIGIN + interior.ENTRY
 	if int(parsed.get("version", 1)) >= 2:
 		var saved_position := Vector2(float(parsed.get("x", 450)), float(parsed.get("y", 1120)))
-		if is_walkable(saved_position):
-			player.position = saved_position
+		if (indoors and interior.is_walkable(saved_position - ROOM_ORIGIN)) or (not indoors and is_walkable(saved_position)):
+			destination = saved_position
 	var crops = parsed.get("plots", [])
 	if crops is Array:
 		for i in range(mini(crops.size(), plots.size())):
 			if crops[i] is Dictionary:
 				plots[i].stage = clampi(int(crops[i].get("stage", 0)), 0, 3)
 				plots[i].growth = clampf(float(crops[i].get("growth", 0)), 0, GROW_SECONDS)
+	set_location(indoors, destination)
 	say("Welcome back. Your farm has been restored.")
 
 func update_walk(delta: float, moving: bool, direction: Vector2 = Vector2.ZERO, travel: float = -1.0) -> void:
@@ -440,7 +587,7 @@ func choose_character(choice: String) -> void:
 	say("Welcome home. Your farmer is ready.")
 
 func show_character_picker() -> void:
-	if choosing_character: return
+	if choosing_character or confirming_sleep: return
 	choosing_character = true
 	player.velocity = Vector2.ZERO
 	joystick.direction = Vector2.ZERO
@@ -488,6 +635,7 @@ func _notification(what: int) -> void:
 		save_game(false)
 
 func _draw() -> void:
+	if inside_house: return
 	# Dynamic beds and crops sit over the static environment, never baked into it.
 	for i in range(plots.size()):
 		var plot: Dictionary = plots[i]
@@ -518,7 +666,7 @@ func crop(pos: Vector2, stage: int) -> void:
 	draw_line(pos, pos + Vector2(0, -15 * spread), Color("36542b"), 3)
 	for side in [-1, 1]:
 		var tip := pos + Vector2(side * 12, -15) * spread
-		draw_colored_polygon(PackedVector2Array([pos, tip + Vector2(-3, -5), tip + Vector2(3, -6), tip + Vector2(5, 0), pos + Vector2(0, -7)]), Color("b7c269") if stage == 3 else Color("5d933d"))
+		draw_colored_polygon(PackedVector2Array([pos, tip + Vector2(-side * 4, -3), tip + Vector2(side * 4, 3)]), Color("b7c269") if stage == 3 else Color("5d933d"))
 		draw_line(pos + Vector2(0, -3), tip, Color("98b54c"), 2)
 	if stage == 3:
 		draw_circle(pos + Vector2(0, -5), 8, Color("f3d8a1"))

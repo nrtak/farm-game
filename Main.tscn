@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3]
 [ext_resource type="Script" path="res://Farm.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/farm-environment-v5-flat.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/farm-environment-v6-land.png" id="2"]
 [node name="CoastalFarm" type="Node2D"]
 script = ExtResource("1")
 
