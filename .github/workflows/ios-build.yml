@@ -4,6 +4,10 @@ on:
     branches: [ios-preparation]
   workflow_dispatch:
     inputs:
+      upload_existing:
+        description: Upload the verified signed build 2 to TestFlight
+        type: boolean
+        default: false
       signed:
         description: Produce a signed App Store IPA
         type: boolean
@@ -18,8 +22,10 @@ on:
         required: true
 permissions:
   contents: read
+  actions: read
 jobs:
   build:
+    if: ${{ !inputs.upload_existing }}
     runs-on: macos-26
     timeout-minutes: 60
     environment: ${{ inputs.signed && 'ios' || 'ios-check' }}
@@ -69,4 +75,37 @@ jobs:
           security delete-keychain "$RUNNER_TEMP/coastal-signing.keychain-db" || true
           rm -f "$RUNNER_TEMP/distribution.p12" "$RUNNER_TEMP/distribution.mobileprovision" "$RUNNER_TEMP/profile.plist"
           if [[ -n "${PROFILE_PATH:-}" ]]; then rm -f "$PROFILE_PATH"; fi
+  upload:
+    if: inputs.upload_existing
+    runs-on: macos-26
+    timeout-minutes: 30
+    environment: ios
+    steps:
+      - name: Download verified signed build
+        uses: actions/download-artifact@v4
+        with:
+          name: tea-blossom-hills-ios-2
+          run-id: 37508737464
+          github-token: ${{ github.token }}
+          path: signed-build
+      - name: Upload to App Store Connect
+        shell: bash
+        env:
+          ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          umask 077
+          key_dir="$RUNNER_TEMP/apple-upload-key"
+          mkdir -p "$key_dir"
+          trap 'rm -rf "$key_dir"' EXIT
+          printf '%s' "$ASC_PRIVATE_KEY_BASE64" | base64 --decode > "$key_dir/AuthKey_${ASC_KEY_ID}.p8"
+          export API_PRIVATE_KEYS_DIR="$key_dir"
+          ipa=$(find signed-build -name '*.ipa' -type f)
+          [[ -n "$ipa" && "$(printf '%s\n' "$ipa" | wc -l | tr -d ' ')" = 1 ]]
+          xcrun altool --upload-app --type ios --file "$ipa" --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+      - name: Remove upload key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/apple-upload-key"
 
