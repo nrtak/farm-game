@@ -10,7 +10,7 @@ var produce := {"Turnip": 0, "Potato": 0, "Strawberry": 0}
 var shipping_queue := {"Turnip": 0, "Potato": 0, "Strawberry": 0}
 const SPEED := 200.0
 const RUN_SPEED := 340.0
-const SAVE_FILE := "user://draft_save.json"
+var SAVE_FILE := "user://draft_save.json"
 const TownScript = preload("res://Town.gd")
 const RoadScript = preload("res://SouthRoad.gd")
 const TOWN_ORIGIN := Vector2(6000, 0)
@@ -57,6 +57,11 @@ var scene_step := 0
 var scene_actors: Array = []
 var active_scene := ""
 var seen_scenes: Array = []
+var interior_progress: Dictionary = {}
+var farm_visitor: Node2D
+var tea_challenge_button: Button
+const Stewardship = preload("res://Stewardship.gd")
+const InteriorLife = preload("res://InteriorLife.gd")
 var festival_active := false
 var festival_elapsed := 0.0
 var festival_people: Array = []
@@ -161,6 +166,9 @@ var tool_buttons: Array[Button] = []
 var rocks := [Vector2(430, 810), Vector2(1410, 770), Vector2(1640, 1230)]
 
 func _ready() -> void:
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--test-session="):
+			SAVE_FILE = "user://test_" + argument.trim_prefix("--test-session=").validate_filename() + ".json"
 	get_tree().auto_accept_quit = false
 	RenderingServer.set_default_clear_color(Color("77a5be"))
 	outdoor_world = Node2D.new()
@@ -182,7 +190,7 @@ func _ready() -> void:
 	road.visible = false
 	add_child(road)
 	town.add_supporting_cast()
-	for service in ["General Store", "Blacksmith", "Café", "Inn", "Clinic", "Town Hall", "Police Box", "Fire Station", "Archive", "Shrine Residence", "Mountain Lodge", "Tea Farmhouse", "Tea Processing Shed", "Harbor Homes", "Fishing Shop", "Hiro Cabin", "Mine"]:
+	for service in ["General Store", "Blacksmith", "Café", "Inn", "Clinic", "Town Hall", "Police Box", "Fire Station", "Archive", "Shrine Residence", "Mountain Lodge", "Tea Farmhouse", "Tea Processing Shed", "Harbor Homes", "Fishing Shop", "Hiro Cabin", "Mine", "Carpentry"]:
 		var room := ShopScript.new()
 		room.position = Vector2(24000 + shops.size() * 2000, 0)
 		room.visible = false
@@ -470,6 +478,7 @@ func advance_clock(seconds: float) -> void:
 		if clock_minutes >= 1440.0:
 			clock_minutes = 0.0
 			day += 1
+			InteriorLife.complete_construction(self)
 			settle_farm_day()
 
 func select_tool(index: int) -> void:
@@ -499,6 +508,7 @@ func _physics_process(delta: float) -> void:
 		player.velocity = Vector2.ZERO
 		if pickup_time == 0: item_moment.visible = false
 		return
+	if Stewardship.check_visit(self): return
 	advance_clock(delta)
 	if fishing_active:
 		fishing_elapsed += delta
@@ -530,7 +540,8 @@ func _physics_process(delta: float) -> void:
 		player.z_index = clampi(int((player.position.y - origin.y) / 10), 1, 179)
 	else: player.z_index = 5
 	if location == "town": town.update_label_visibility(player.position - TOWN_ORIGIN)
-	if location == "town" and not festival_active: town.tick(delta, clock_minutes)
+	if not festival_active: town.tick_ambient(delta, clock_minutes, is_rainy_day(), shops)
+	if location == "town" and not festival_active: town.tick(delta, clock_minutes, is_rainy_day())
 	elif regions.has(location): regions[location].tick(delta, clock_minutes)
 	elif location == "shop": shops[shop_name].tick(delta)
 	check_walk_exits()
@@ -561,6 +572,7 @@ func _physics_process(delta: float) -> void:
 
 func interaction_action() -> String:
 	if fishing_active: return "catch_fish"
+	if inside_house and int(interior_progress.get("home",0)) >= 2 and (player.position-ROOM_ORIGIN).distance_to(Vector2(1010,450)) < 85: return "cook"
 	if location == "tea":
 		for spot in TEA_SPOTS:
 			if (player.position - REGION_ORIGINS.tea).distance_to(spot) < 70: return "pick_tea"
@@ -576,6 +588,7 @@ func interaction_action() -> String:
 		if shop_name == "Archive" and lost_item_stage == 1 and player.position.distance_to(SHOP_ORIGIN + Vector2(230, 480)) < 85: return "collect_wallet"
 		if shops[shop_name].nearest_resident(player.position - SHOP_ORIGIN) != null: return "talk_shop"
 		if player.position.distance_to(SHOP_ORIGIN + ShopScript.COUNTER) < 110: return "counter"
+		if InteriorLife.ACTIVITIES.has(shop_name) and (player.position-SHOP_ORIGIN).distance_to(Vector2(410,470)) < 80: return "room_activity"
 		return ""
 	if regions.has(location):
 		var point: Vector2 = player.position - REGION_ORIGINS[location]
@@ -590,7 +603,7 @@ func interaction_action() -> String:
 		if town.nearest_service(point) != "" and point.distance_to(service_door(town.nearest_service(point))) < 80: return "service"
 		if town.nearest_npc(point) != null: return "talk"
 		if town.nearest_service(point) != "": return "service"
-		if point.y > 1650 and absf(point.x - 1200) < 180: return "road"
+		if point.y > 2010 and absf(point.x - 1200) < 180: return "road"
 		if point.y < 160: return "north"
 		if point.x < 180: return "west"
 		if point.x > 2200: return "east"
@@ -601,7 +614,7 @@ func interaction_action() -> String:
 	if inside_house:
 		var local_position := player.position - ROOM_ORIGIN
 		if local_position.distance_to(interior.CALENDAR_APPROACH) < 75: return "calendar"
-		if local_position.distance_to(interior.CHEST_APPROACH) < 80: return "storage"
+		if local_position.distance_to(interior.CHEST_APPROACH) < 80 or (int(interior_progress.get("home",0)) > 0 and local_position.distance_to(Vector2(1010,340)) < 80): return "storage"
 		if local_position.distance_to(interior.BED_APPROACH) < 100.0: return "sleep"
 		if local_position.distance_to(interior.EXIT) < 90.0: return "leave"
 	elif player.position.distance_to(farmhouse.DOOR_POSITION) < 90.0:
@@ -678,6 +691,8 @@ func refresh_hud() -> void:
 		"collect_wallet": hint = "Pick up the lost wallet."
 		"regional_door": hint = "Visit the building."
 		"talk_shop": hint = "Talk to %s." % shops[shop_name].nearest_resident(player.position - SHOP_ORIGIN).first_name
+		"cook": hint = "Kitchen · Cook two vegetables into a meal."
+		"room_activity": hint = "Explore " + InteriorLife.ACTIVITIES[shop_name][0] + "."
 		"counter": hint = "Shop at the counter."
 		"noticeboard": hint = "Plaza Noticeboard · Festival rehearsal and character scenes."
 		"talk_region": hint = "Talk to %s." % regions[location].nearest_npc(player.position - REGION_ORIGINS[location]).first_name
@@ -775,6 +790,7 @@ func sleep_until_morning() -> void:
 	if not inside_house or not confirming_sleep: return
 	cancel_sleep()
 	if clock_minutes >= WAKE_MINUTE: day += 1
+	InteriorLife.complete_construction(self)
 	clock_minutes = WAKE_MINUTE
 	health = MAX_HEALTH
 	settle_farm_day()
@@ -841,6 +857,12 @@ func interact() -> void:
 		"talk_shop":
 			start_conversation(shops[shop_name].nearest_resident(player.position - SHOP_ORIGIN))
 			return
+		"cook":
+			InteriorLife.cook(self)
+			return
+		"room_activity":
+			InteriorLife.open_room(self,shop_name)
+			return
 		"counter":
 			open_service(shop_name)
 			return
@@ -857,7 +879,7 @@ func interact() -> void:
 			travel_to("historic", Vector2(800, 950))
 			return
 		"town":
-			travel_to("town", Vector2(1200, 1680))
+			travel_to("town", Vector2(1200, 2000))
 			return
 		"road":
 			travel_to("farm", FARM_EXIT + Vector2(0, 100))
@@ -942,7 +964,7 @@ func save_game(show_message: bool = true) -> void:
 		crop_data.append({"stage": plot.stage, "growth": plot.growth, "crop": plot.crop, "last_growth_day": plot.last_growth_day})
 	var file := FileAccess.open(SAVE_FILE, FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({"version": 15, "festival_years": festival_years, "pick_level": pick_level, "harvest_level": harvest_level, "stored_items": stored_items, "backpack_level": backpack_level, "mine_lesson_seen": mine_lesson_seen, "ore_basket": ore_basket, "ore_shipping": ore_shipping, "ore_picked_days": ore_picked_days, "tea_lesson_seen": tea_lesson_seen, "tea_leaves": tea_leaves, "packed_tea": packed_tea, "tea_shipping": tea_shipping, "tea_picked_days": tea_picked_days, "fish_basket": fish_basket, "fish_shipping": fish_shipping, "fish_catches": fish_catches, "fishing_quest_stage": fishing_quest_stage, "tea_delivery_stage": tea_delivery_stage, "selected_crop": selected_crop, "extra_seeds": extra_seeds, "produce": produce, "shipping_queue": shipping_queue, "lost_item_stage": lost_item_stage, "day": day, "clock_minutes": clock_minutes, "health": health, "location": location, "shop_name": shop_name, "character": character_choice, "coins": coins, "seeds": seeds, "tool_level": tool_level, "friendship": friendship, "talked_on_day": talked_on_day, "seen_scenes": seen_scenes, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
+		file.store_string(JSON.stringify({"version": 16, "interior_progress": interior_progress, "festival_years": festival_years, "pick_level": pick_level, "harvest_level": harvest_level, "stored_items": stored_items, "backpack_level": backpack_level, "mine_lesson_seen": mine_lesson_seen, "ore_basket": ore_basket, "ore_shipping": ore_shipping, "ore_picked_days": ore_picked_days, "tea_lesson_seen": tea_lesson_seen, "tea_leaves": tea_leaves, "packed_tea": packed_tea, "tea_shipping": tea_shipping, "tea_picked_days": tea_picked_days, "fish_basket": fish_basket, "fish_shipping": fish_shipping, "fish_catches": fish_catches, "fishing_quest_stage": fishing_quest_stage, "tea_delivery_stage": tea_delivery_stage, "selected_crop": selected_crop, "extra_seeds": extra_seeds, "produce": produce, "shipping_queue": shipping_queue, "lost_item_stage": lost_item_stage, "day": day, "clock_minutes": clock_minutes, "health": health, "location": location, "shop_name": shop_name, "character": character_choice, "coins": coins, "seeds": seeds, "tool_level": tool_level, "friendship": friendship, "talked_on_day": talked_on_day, "seen_scenes": seen_scenes, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
 		if show_message: say("Farm saved.")
 	elif show_message: say("Could not save. Check storage permissions.")
 
@@ -952,6 +974,9 @@ func load_game() -> void:
 	if not parsed is Dictionary and FileAccess.file_exists(SAVE_FILE + ".bak"):
 		parsed = read_saved_json(SAVE_FILE + ".bak")
 	if not parsed is Dictionary: return
+	var saved_progress = parsed.get("interior_progress",{})
+	interior_progress = saved_progress if saved_progress is Dictionary else {}
+	InteriorLife.add_plots(self,int(interior_progress.get("restoration",0)))
 	coins = maxi(0, int(parsed.get("coins", 500)))
 	festival_years = []
 	var saved_festivals = parsed.get("festival_years", [])
@@ -961,7 +986,7 @@ func load_game() -> void:
 			if year > 0 and not festival_years.has(year): festival_years.append(year)
 	var saved_storage = parsed.get("stored_items", {})
 	for item in stored_items:
-		stored_items[item] = clampi(int(saved_storage.get(item, 0)), 0, 999) if saved_storage is Dictionary else 0
+		stored_items[item] = clampi(int(saved_storage.get(item, 0)), 0, storage_limit()) if saved_storage is Dictionary else 0
 	backpack_level = clampi(int(parsed.get("backpack_level", 0)), 0, 2)
 	seeds = clampi(int(parsed.get("seeds", 5)), 0, 999)
 	selected_crop = str(parsed.get("selected_crop", "Turnip"))
@@ -979,7 +1004,7 @@ func load_game() -> void:
 	var stored = parsed.get("friendship", {})
 	if stored is Dictionary:
 		for person in stored:
-			if person in ["Seira", "Shohei", "Akira", "Taro"] or Cast.ROLES.has(person):
+			if person in ["Seira", "Shohei", "Akira", "Taro"] or Cast.ROLES.has(person) or town.EXTRA_DIALOGUE.has(person):
 				friendship[person] = clampi(int(stored[person]), 0, 100)
 	var stored_days = parsed.get("talked_on_day", {})
 	if stored_days is Dictionary: talked_on_day = stored_days
@@ -1022,6 +1047,7 @@ func load_game() -> void:
 		var saved_position := Vector2(float(parsed.get("x", 450)), float(parsed.get("y", 1120)))
 		if (indoors and interior.is_walkable(saved_position - ROOM_ORIGIN)) or (not indoors and is_walkable(saved_position)):
 			destination = saved_position
+	interior.apply_upgrade(int(interior_progress.get("home",0)))
 	var crops = parsed.get("plots", [])
 	if crops is Array:
 		for i in range(mini(crops.size(), plots.size())):
@@ -1199,12 +1225,21 @@ func _draw() -> void:
 	for count in ore_shipping.values(): queued += int(count)
 	if queued > 0: draw_circle(SHIPPING_BOX + Vector2(43, -30), 7, Color("e5cb85"))
 	draw_string(ThemeDB.fallback_font, SHIPPING_BOX + Vector2(-60, 60), "Shipping", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("493b2d"))
-	draw_rect(Rect2(FARM_EXIT + Vector2(-65, -45), Vector2(130, 190)), Color("d8c393"))
-	draw_line(FARM_EXIT + Vector2(-65, -45), FARM_EXIT + Vector2(-65, 145), Color("9b9970"), 4)
-	draw_line(FARM_EXIT + Vector2(65, -45), FARM_EXIT + Vector2(65, 145), Color("9b9970"), 4)
-	draw_line(FARM_EXIT + Vector2(-20, 15), FARM_EXIT + Vector2(0, -20), Color("493b2d"), 5)
-	draw_line(FARM_EXIT + Vector2(0, -20), FARM_EXIT + Vector2(20, 15), Color("493b2d"), 5)
-	draw_string(ThemeDB.fallback_font, FARM_EXIT + Vector2(-65, 75), "North · Town", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("493b2d"))
+	if interior_progress.has("construction"):
+		draw_rect(Rect2(650,1020,150,65),Color("ead8af"))
+		draw_string(ThemeDB.fallback_font,Vector2(660,1048),"Kenta's work",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color("614b36"))
+		draw_string(ThemeDB.fallback_font,Vector2(660,1075),"Ready tomorrow",HORIZONTAL_ALIGNMENT_LEFT,-1,16,Color("614b36"))
+	var reclaimed: int = int(interior_progress.get("restoration",0))
+	if reclaimed > 0:
+		draw_rect(Rect2(645,1165,reclaimed*68+65,225),Color("a17650"))
+		for x in range(650,650+reclaimed*68+70,34):
+			draw_rect(Rect2(x,1152,6,24),Color("8e704c"))
+		draw_line(Vector2(650,1158),Vector2(650+reclaimed*68+60,1158),Color("b29a6c"),5)
+	# A continuous dirt lane leads north; the transition remains automatic.
+	var lane := PackedVector2Array([Vector2(825, 0), Vector2(970, 0), Vector2(965, 850), Vector2(970, 990), Vector2(995, 1135), Vector2(945, 1210), Vector2(805, 1210), Vector2(825, 1110), Vector2(825, 900)])
+	draw_colored_polygon(lane, Color("d8c393"))
+	for point in [Vector2(831, 930), Vector2(965, 1090), Vector2(810, 1180)]:
+		draw_circle(point, 14, Color("b7bb82"))
 	# Dynamic beds and crops sit over the static environment, never baked into it.
 	for i in range(plots.size()):
 		var plot: Dictionary = plots[i]
@@ -1262,7 +1297,7 @@ func travel_to(area: String, point: Vector2, persist: bool = true) -> void:
 	stop_fishing()
 	# Migrate earlier saves from the removed connecting road.
 	if area == "road":
-		travel_to("town", Vector2(1200, 1680), persist)
+		travel_to("town", Vector2(1200, 2000), persist)
 		return
 	for room in shops.values(): room.visible = false
 	if festival_active: end_festival()
@@ -1301,6 +1336,8 @@ func start_conversation(npc: Node2D) -> void:
 	npc.paused = true
 	npc.face_player(player.position)
 	var person: String = npc.first_name
+	if not friendship.has(person): friendship[person] = 0
+	if town.EXTRA_DIALOGUE.has(person): dialogue_lines.assign(town.EXTRA_DIALOGUE[person])
 	if int(talked_on_day.get(person, -1)) != day:
 		friendship[person] = mini(100, int(friendship[person]) + 1)
 		talked_on_day[person] = day
@@ -1389,7 +1426,12 @@ func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 	if portrait:
 		var portraits: Texture2D = preload("res://assets/npc-portraits-first-four.png")
 		var regions := {"Seira": Rect2(80, 110, 350, 620), "Shohei": Rect2(470, 50, 345, 650), "Akira": Rect2(890, 90, 300, 610), "Taro": Rect2(1260, 45, 350, 640)}
-		if Cast.DIALOGUE.has(title):
+		if town.EXTRA_DIALOGUE.has(title):
+			portraits = load("res://assets/npc-portraits-new-residents-v1.png")
+			var names := ["Ren", "Chanel", "David", "Renji", "Midori"]
+			var width := portraits.get_width() / 5.0
+			regions[title] = Rect2(names.find(title) * width, 0, width, portraits.get_height() * 0.85)
+		elif Cast.DIALOGUE.has(title):
 			var source := Cast.index_of(title)
 			portraits = load("res://assets/npc-portraits-group-%d.png" % source.x)
 			var cell_width := portraits.get_width() / 6.0
@@ -1435,6 +1477,8 @@ func advance_dialogue() -> void:
 	else: dialogue_text.text = dialogue_lines[dialogue_index]
 
 func close_dialogue() -> void:
+	if is_instance_valid(farm_visitor): farm_visitor.queue_free()
+	farm_visitor = null
 	for record in scene_actors:
 		var actor = record.npc
 		if actor.get_parent() != record.parent: actor.reparent(record.parent, false)
@@ -1451,6 +1495,9 @@ func close_dialogue() -> void:
 	refresh_hud()
 
 func open_service(service: String) -> void:
+	if service == "Carpentry":
+		InteriorLife.open_carpentry(self)
+		return
 	if service == "Mine":
 		say("Walk to a rock and press Mine. Exit through the south doorway.")
 		return
@@ -1591,6 +1638,7 @@ func open_noticeboard() -> void:
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(list)
 	if gathering_available(): list.add_child(make_button("Join today’s Spring Gathering", start_scheduled_gathering))
+	list.add_child(make_button("Community requests and restoration", InteriorLife.open_projects.bind(self)))
 	list.add_child(make_button("Spring Gathering · Preview", begin_festival))
 	for title in CharacterScenes.SCENES:
 		list.add_child(make_button(title + (" · Seen" if seen_scenes.has(title) else ""), start_scene.bind(title)))
@@ -1606,6 +1654,7 @@ func start_scene(title: String) -> void:
 	for step in scene_steps:
 		if not names.has(step[0]): names.append(step[0])
 	var all: Array = town.npcs.duplicate()
+	all.append_array(town.visitors)
 	for area in regions.values(): all.append_array(area.npcs)
 	for actor in all:
 		if not names.has(actor.first_name): continue
@@ -1641,6 +1690,7 @@ func begin_festival() -> void:
 	festival_elapsed = 0.0
 	festival_people.clear()
 	var all: Array = town.npcs.duplicate()
+	all.append_array(town.visitors)
 	for area in regions.values(): all.append_array(area.npcs)
 	for i in range(all.size()):
 		var npc = all[i]
@@ -1653,6 +1703,12 @@ func begin_festival() -> void:
 		npc.show_frame(0, 1)
 	player.position = TOWN_ORIGIN + Vector2(1200, 1030)
 	festival_button.visible = true
+	if is_instance_valid(tea_challenge_button): tea_challenge_button.queue_free()
+	tea_challenge_button = make_button("Tea challenge",InteriorLife.festival_game.bind(self,0))
+	hud.add_child(tea_challenge_button)
+	tea_challenge_button.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	tea_challenge_button.position = Vector2(get_viewport_rect().size.x/2-90,85)
+	tea_challenge_button.size = Vector2(180,48)
 	say("Spring Gathering rehearsal! Walk around, meet everyone, then End Festival.")
 	refresh_hud()
 
@@ -1665,6 +1721,7 @@ func animate_festival() -> void:
 		npc.z_index = int(npc.position.y / 10)
 
 func end_festival() -> void:
+	if is_instance_valid(tea_challenge_button): tea_challenge_button.queue_free()
 	if not festival_active: return
 	for record in festival_people:
 		var npc = record.npc
@@ -1696,7 +1753,7 @@ func enter_shop(service: String, restoring: bool = false) -> void:
 		open_service(service)
 		return
 	if not restoring:
-		var hours := {"General Store": Vector2(480, 1080), "Blacksmith": Vector2(420, 1020), "Café": Vector2(720, 1140), "Inn": Vector2(360, 1320), "Clinic": Vector2(540, 1020), "Town Hall": Vector2(540, 1020), "Police Box": Vector2(360, 1320), "Fire Station": Vector2(360, 1320), "Archive": Vector2(540, 1080), "Shrine Residence": Vector2(360, 1200), "Mountain Lodge": Vector2(360, 1200), "Tea Farmhouse": Vector2(360, 1200), "Tea Processing Shed": Vector2(360, 1080), "Harbor Homes": Vector2(360, 1200), "Fishing Shop": Vector2(360, 1080), "Hiro Cabin": Vector2(360, 1200), "Mine": Vector2(0, 1440)}
+		var hours := {"General Store": Vector2(480, 1080), "Blacksmith": Vector2(420, 1020), "Café": Vector2(720, 1140), "Inn": Vector2(360, 1320), "Clinic": Vector2(540, 1020), "Town Hall": Vector2(540, 1020), "Police Box": Vector2(360, 1320), "Fire Station": Vector2(360, 1320), "Archive": Vector2(540, 1080), "Shrine Residence": Vector2(360, 1200), "Mountain Lodge": Vector2(360, 1200), "Tea Farmhouse": Vector2(360, 1200), "Tea Processing Shed": Vector2(360, 1080), "Harbor Homes": Vector2(360, 1200), "Fishing Shop": Vector2(360, 1080), "Hiro Cabin": Vector2(360, 1200), "Mine": Vector2(0, 1440), "Carpentry":Vector2(480,1080)}
 		if clock_minutes < hours[service].x or clock_minutes >= hours[service].y:
 			say("%s is closed. Please return during opening hours." % service)
 			return
@@ -1748,16 +1805,16 @@ func check_walk_exits() -> void:
 	match location:
 		"farm":
 			if player.position.distance_to(FARM_EXIT) < 55:
-				travel_to("town", Vector2(1200, 1680))
+				travel_to("town", Vector2(1200, 2000))
 		"road":
 			var point := player.position - ROAD_ORIGIN
 			if point.y < 70 and absf(point.x - 500) < 170:
-				travel_to("town", Vector2(1200, 1680))
+				travel_to("town", Vector2(1200, 2000))
 			elif point.y > 930 and absf(point.x - 500) < 170:
 				travel_to("farm", FARM_EXIT + Vector2(0, 100))
 		"town":
 			var point := player.position - TOWN_ORIGIN
-			if point.y > 1730 and absf(point.x - 1200) < 180:
+			if point.y > 2090 and absf(point.x - 1200) < 180:
 				travel_to("farm", FARM_EXIT + Vector2(0, 100))
 			elif point.y < 80 and absf(point.x - 1200) < 220:
 				travel_to("mountain", Vector2(800, 950))
@@ -1902,6 +1959,7 @@ func resident_room(person: String) -> String:
 		"Emi": return "Mountain Lodge" if not evening else ""
 		"Yoshi": return "Archive" if morning else ""
 		"Rei": return "Shrine Residence" if evening else ""
+		"Kenta": return "Carpentry" if clock_minutes >= 480 and clock_minutes < 1080 else ""
 	return ""
 
 func update_resident_presence() -> void:
@@ -2043,15 +2101,38 @@ func backpack_has_room() -> bool:
 func open_backpack() -> void:
 	clear_item_moment()
 	var column := make_modal("Backpack · %d / %d" % [backpack_count(), BACKPACK_SIZES[backpack_level]])
-	var rows: Array[String] = []
+	dialogue_text.text = "Seeds and tools use separate pouches. Ship items to free space."
+	dialogue_text.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(0, 160)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(scroll)
+	var list := VBoxContainer.new()
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(list)
+	var contents: Dictionary = {}
 	for inventory in [produce, fish_basket, ore_basket]:
-		var entries: Array[String] = []
 		for item in inventory:
-			if int(inventory[item]) > 0: entries.append("%s ×%d" % [item, inventory[item]])
-		if not entries.is_empty(): rows.append(" · ".join(entries))
-	if tea_leaves + packed_tea > 0: rows.append("Tea leaves ×%d · Packets ×%d" % [tea_leaves, packed_tea])
-	dialogue_text.text = "\n".join(rows) if not rows.is_empty() else "Your backpack is empty. Collect crops, fish, tea or ore."
-	dialogue_text.text += "\nSeeds and tools use separate pouches. Ship items to free space."
+			if int(inventory[item]) > 0: contents[item] = int(inventory[item])
+	if tea_leaves > 0: contents["Tea leaves"] = tea_leaves
+	if packed_tea > 0: contents["Tea packets"] = packed_tea
+	for item in contents:
+		var row := HBoxContainer.new()
+		list.add_child(row)
+		var slot := Control.new()
+		slot.custom_minimum_size = Vector2(64, 64)
+		row.add_child(slot)
+		var icon := preload("res://ItemMoment.gd").new()
+		icon.show_caption = false
+		icon.position = Vector2(32, 32)
+		icon.scale = Vector2.ONE * 0.8
+		slot.add_child(icon)
+		icon.show_item(item)
+		var label := Label.new()
+		label.text = "%s ×%d" % [item, contents[item]]
+		label.add_theme_color_override("font_color", Color("493b2d"))
+		row.add_child(label)
+	if contents.is_empty(): dialogue_text.text = "Your backpack is empty. Collect crops, fish, tea or ore."
 	dialogue_panel.get_child(0).offset_top = -380
 	column.add_child(make_button("Change farmer", backpack_change_farmer))
 	column.add_child(make_button("Close", close_dialogue))
@@ -2138,7 +2219,7 @@ func open_storage_item(item: String) -> void:
 func transfer_storage(item: String, requested: int, depositing: bool) -> void:
 	if not inside_house or not stored_items.has(item): return
 	var available: int = carried_count(item) if depositing else int(stored_items[item])
-	var room: int = 999 - int(stored_items[item]) if depositing else maxi(0, mini(BACKPACK_SIZES[backpack_level] - backpack_count(), 999 - carried_count(item)))
+	var room: int = storage_limit() - int(stored_items[item]) if depositing else maxi(0, mini(BACKPACK_SIZES[backpack_level] - backpack_count(), 999 - carried_count(item)))
 	var amount := mini(requested, mini(available, room))
 	if amount <= 0:
 		dialogue_text.text = "No items to move, or no space in the destination."
@@ -2151,7 +2232,7 @@ func transfer_storage(item: String, requested: int, depositing: bool) -> void:
 func store_everything() -> void:
 	if not inside_house: return
 	for item in stored_items:
-		var amount := mini(carried_count(item), 999 - int(stored_items[item]))
+		var amount := mini(carried_count(item), storage_limit() - int(stored_items[item]))
 		stored_items[item] += amount
 		change_carried(item, -amount)
 	save_game(false)
@@ -2200,3 +2281,6 @@ func open_calendar() -> void:
 	dialogue_text.text = "%s\nTomorrow: %s\n\nSpring Gathering · Spring 14, Year %d\nTown Plaza · 10 AM–6 PM\nWalk into the plaza to join. Finish the gathering for a welcome gift." % [calendar_text(), "Rain (crops watered)" if is_rainy_day(day + 1) else "Clear", next_year]
 	if gathering_available(): dialogue_text.text += "\nThe gathering is today!"
 	column.add_child(make_button("Close", close_dialogue))
+
+func storage_limit() -> int:
+	return 999 * (1 + int(interior_progress.get("home",0)))

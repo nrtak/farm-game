@@ -22,7 +22,7 @@ func run() -> void:
 	farm.clock_minutes = 600
 	farm.check_scheduled_gathering()
 	assert(farm.festival_active and farm.scheduled_gathering and farm.town.festival_decorated)
-	assert(farm.festival_people.size() == 22)
+	assert(farm.festival_people.size() == 27)
 	while farm.dialogue_open: farm.advance_dialogue()
 	var money: int = farm.coins
 	farm.end_festival()

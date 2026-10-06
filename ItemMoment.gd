@@ -1,5 +1,6 @@
 extends Node2D
 var item := ""
+var show_caption := true
 func show_item(value: String) -> void:
 	item = value
 	visible = true
@@ -36,6 +37,7 @@ func _draw() -> void:
 	else:
 		draw_line(Vector2(0, 22), Vector2(0, -22), green, 5)
 		for point in [Vector2(-10, 6), Vector2(10, -6), Vector2(-8, -16)]: draw_circle(point, 11, green)
+	if not show_caption: return
 	var width := ThemeDB.fallback_font.get_string_size(item, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x
 	draw_rect(Rect2(-width / 2 - 10, 38, width + 20, 31), Color("f3e4be"))
 	draw_string(ThemeDB.fallback_font, Vector2(-width / 2, 61), item, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, ink)

@@ -8,6 +8,10 @@ on:
         description: Upload the verified signed build 2 to TestFlight
         type: boolean
         default: false
+      upload_testflight:
+        description: Upload the new signed build to TestFlight
+        type: boolean
+        default: false
       signed:
         description: Produce a signed App Store IPA
         type: boolean
@@ -68,6 +72,27 @@ jobs:
             export/ipa/*.ipa
           if-no-files-found: error
           retention-days: 7
+      - name: Upload new build to TestFlight
+        if: inputs.signed && inputs.upload_testflight
+        shell: bash
+        env:
+          ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          umask 077
+          key_dir="$RUNNER_TEMP/apple-upload-key"
+          mkdir -p "$key_dir"
+          trap 'rm -rf "$key_dir"' EXIT
+          printf '%s' "$ASC_PRIVATE_KEY_BASE64" | base64 --decode > "$key_dir/AuthKey_${ASC_KEY_ID}.p8"
+          export API_PRIVATE_KEYS_DIR="$key_dir"
+          ipa=$(find export/ipa -name '*.ipa' -type f)
+          [[ -n "$ipa" && "$(printf '%s\n' "$ipa" | wc -l | tr -d ' ')" = 1 ]]
+          xcrun altool --upload-app --type ios --file "$ipa" --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+      - name: Remove upload key
+        if: always() && inputs.signed && inputs.upload_testflight
+        run: rm -rf "$RUNNER_TEMP/apple-upload-key"
       - name: Remove temporary signing materials
         if: always() && inputs.signed
         shell: bash

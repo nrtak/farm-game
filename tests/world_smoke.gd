@@ -135,7 +135,7 @@ func run() -> void:
 	farm.toggle_pause()
 	farm.travel_to("town", Vector2(1200, 950), false)
 	farm.begin_festival()
-	assert(farm.festival_people.size() == 22, "Entire cast attends rehearsal")
+	assert(farm.festival_people.size() == 27, "Entire cast attends rehearsal")
 	var before: float = farm.clock_minutes
 	farm.advance_clock(5)
 	assert(farm.clock_minutes == before, "Festival pauses the daily clock")
@@ -167,7 +167,7 @@ func run() -> void:
 		assert(farm.location == "town", "Walk back from " + area)
 		farm._physics_process(0.016)
 		assert(farm.location == "town", "Town arrival remains in town")
-	farm.travel_to("town", Vector2(1200, 1740), false)
+	farm.travel_to("town", Vector2(1200, farm.town.SIZE.y - 60), false)
 	farm._physics_process(0.016)
 	assert(farm.location == "farm", "Town south directly reaches farm")
 	farm.player.position = farm.FARM_EXIT

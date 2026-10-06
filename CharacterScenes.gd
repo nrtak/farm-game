@@ -2,6 +2,9 @@ extends RefCounted
 
 # Original everyday scenes. These are optional draft vignettes, not romance milestones.
 const SCENES := {
+	"A Table for Everyone": [["Chanel","I saved a table. Even David can stop delivering things for five minutes."],["David","Five minutes, then. Ren, did you finish that mountain sketch?"],["Ren","Nearly. It needed people in the foreground."],["Midori","And a little green around the edges."],["Renji","Sounds like our town. Farmer, pull up a chair."]],
+	"The Shared Garden": [["Midori","A neglected garden is still a garden. It just needs someone to begin."],["Kenta","We can repair the borders once the farmer clears the beds."],["Ren","I could draw a plan that leaves room for flowers."],["Akira","Food, flowers, and a place to gather. That's a restoration worth doing."]],
+	"A Dog at the Door": [["Renji","The Shiba has decided this is the best sunny doorway in town."],["Chanel","We should leave room for everyone to pass."],["David","I'll move the delivery basket. The dog got here first."],["Taro","Clear paths and happy neighbors. That includes the four-legged ones."]],
 	"A New Shelf": [
 		["Seira", "If we moved this shelf, we could display the local fruit properly. Maybe add a few photographs too."],
 		["Keiko", "Photographs don't sell seeds, Seira."],

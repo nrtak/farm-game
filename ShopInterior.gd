@@ -26,9 +26,10 @@ func setup(service: String) -> void:
 		solids.append_array([Rect2(800, 210, 155, 240), Rect2(150, 220, 160, 80), Rect2(155, 540, 180, 65)])
 	else:
 		solids.append_array([Rect2(170, 440, 150, 100), Rect2(780, 440, 150, 100), Rect2(170, 650, 150, 100), Rect2(780, 650, 150, 100)])
+	apply_expanded_layout()
 	for rect in [Rect2(90, 150, 920, 20), Rect2(90, 790, 920, 20), Rect2(90, 170, 20, 620), Rect2(990, 170, 20, 620)]: obstacle(rect)
 	for rect in solids: obstacle(rect)
-	var people: Array = {"General Store": ["Keiko", "Seira"], "Blacksmith": ["Gen", "Shohei"], "Café": ["Naomi"], "Inn": ["Yumi", "Hana"], "Clinic": ["Kenji", "Aya"], "Town Hall": ["Akira"], "Police Box": ["Taro"], "Fire Station": ["Jiro", "Yuta"], "Archive": ["Yoshi"], "Shrine Residence": ["Rei"], "Mountain Lodge": ["Emi"], "Tea Farmhouse": ["Sachiko", "Mika"], "Tea Processing Shed": ["Sachiko"], "Harbor Homes": ["Ken", "Masao"], "Fishing Shop": ["Masao"], "Hiro Cabin": ["Hiro"], "Mine": []}[kind]
+	var people: Array = {"General Store": ["Keiko", "Seira"], "Blacksmith": ["Gen", "Shohei"], "Café": ["Naomi"], "Inn": ["Yumi", "Hana"], "Clinic": ["Kenji", "Aya"], "Town Hall": ["Akira"], "Police Box": ["Taro"], "Fire Station": ["Jiro", "Yuta"], "Archive": ["Yoshi"], "Shrine Residence": ["Rei"], "Mountain Lodge": ["Emi"], "Tea Farmhouse": ["Sachiko", "Mika"], "Tea Processing Shed": ["Sachiko"], "Harbor Homes": ["Ken", "Masao"], "Fishing Shop": ["Masao"], "Hiro Cabin": ["Hiro"], "Mine": [], "Carpentry":["Kenta"]}[kind]
 	for i in range(people.size()):
 		var person: String = people[i]
 		var keeper = preload("res://Npc.gd").new()
@@ -88,7 +89,18 @@ func _draw() -> void:
 	for rect in solids:
 		draw_rect(rect, Color("72523d"))
 		draw_rect(Rect2(rect.position, Vector2(rect.size.x, rect.size.y - 15)), Color("a47a52"))
-	if kind == "General Store":
+	if kind == "Carpentry":
+		for rect in [Rect2(145,215,165,180),Rect2(810,215,150,200),Rect2(150,550,170,80)]:
+			draw_rect(rect,Color("a98960"))
+			for x in range(int(rect.position.x)+12,int(rect.end.x),25): draw_line(Vector2(x,rect.position.y+10),Vector2(x,rect.end.y-10),Color("795d40"),3)
+		draw_rect(Rect2(175,240,105,100),Color("efdfbb"))
+		draw_rect(Rect2(190,260,75,55),Color("98a888"),false,3)
+		draw_string(ThemeDB.fallback_font,Vector2(140,435),"Expansion drawings",HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color("493b2d"))
+		draw_string(ThemeDB.fallback_font,Vector2(805,455),"Lumber rack",HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color("493b2d"))
+		draw_string(ThemeDB.fallback_font,Vector2(145,675),"Work bench",HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color("493b2d"))
+	elif kind in ["General Store", "Inn", "Blacksmith", "Café", "Clinic"]:
+		draw_expanded_room()
+	elif kind == "General Store":
 		for x in [150, 850]:
 			for y in [235, 310, 385]:
 				draw_rect(Rect2(x, y, 100, 35), Color("d8c896"))
@@ -147,13 +159,17 @@ func _draw() -> void:
 		draw_rect(Rect2(210, 465, 40, 32), Color("b58654"))
 		draw_rect(Rect2(215, 470, 30, 22), Color("e4cf9c"))
 		draw_string(ThemeDB.fallback_font, Vector2(155, 520), "Lost wallet", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("493b2d"))
-	
+
+	if preload("res://InteriorLife.gd").ACTIVITIES.has(kind):
+		draw_rect(Rect2(398,450,24,28),Color("f0dfb9"))
+		draw_line(Vector2(410,450),Vector2(410,478),Color("795d42"),2)
+		draw_string(ThemeDB.fallback_font,Vector2(350,505),"Activity",HORIZONTAL_ALIGNMENT_CENTER,120,18,Color("493b2d"))
 	draw_string(ThemeDB.fallback_font, Vector2(440, 350), "Counter", HORIZONTAL_ALIGNMENT_CENTER, 220, 23, Color("493b2d"))
 	draw_string(ThemeDB.fallback_font, Vector2(440, 775), "Town ↓", HORIZONTAL_ALIGNMENT_CENTER, 220, 23, Color("493b2d"))
 
 func nearest_resident(point: Vector2) -> Node2D:
-	for resident in residents:
-		if resident.visible and resident.position.distance_to(point) < 110: return resident
+	for resident in get_children():
+		if resident.get_script() == preload("res://Npc.gd") and resident.visible and resident.position.distance_to(point) < 110: return resident
 	return null
 func tick(delta: float) -> void:
 	for resident in residents:
@@ -163,3 +179,92 @@ func rock_box() -> StyleBoxFlat:
 	box.bg_color = Color("747970")
 	box.set_corner_radius_all(22)
 	return box
+
+# Keep the central aisle and resident route open in every service room.
+func apply_expanded_layout() -> void:
+	match kind:
+		"Carpentry": solids = [Rect2(360,230,380,80),Rect2(145,215,165,180),Rect2(810,215,150,200),Rect2(150,550,170,80)]
+		"General Store": solids = [Rect2(360,230,380,80), Rect2(135,200,155,240), Rect2(810,200,165,245), Rect2(150,550,170,80), Rect2(820,570,140,80)]
+		"Inn": solids = [Rect2(360,230,380,80), Rect2(140,210,165,190), Rect2(810,210,165,190), Rect2(150,535,160,95), Rect2(825,535,140,95)]
+		"Blacksmith": solids = [Rect2(360,230,380,80), Rect2(135,210,165,210), Rect2(815,220,160,160), Rect2(145,550,170,85), Rect2(825,555,140,85)]
+		"Café": solids = [Rect2(360,230,380,80), Rect2(140,215,170,120), Rect2(815,215,160,120), Rect2(165,450,150,100), Rect2(815,450,150,100), Rect2(165,645,150,100), Rect2(815,645,150,100)]
+		"Clinic": solids = [Rect2(360,230,380,80), Rect2(140,220,170,100), Rect2(810,215,165,240), Rect2(145,555,170,70), Rect2(825,565,145,80)]
+
+func furnishing(rect: Rect2, color: Color) -> void:
+	draw_rect(rect, Color("72523d"))
+	draw_rect(Rect2(rect.position + Vector2(5,5), rect.size - Vector2(10,18)), color)
+
+func room_label(text: String, point: Vector2) -> void:
+	draw_string(ThemeDB.fallback_font, point, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 19, Color("493b2d"))
+
+func draw_expanded_room() -> void:
+	var cream := Color("e6d5ad")
+	var sage := Color("8d9b77")
+	match kind:
+		"General Store":
+			for x in [145,820]:
+				for y in [220,290,360]:
+					furnishing(Rect2(x,y,135,45), cream)
+					for dx in [20,65,105]:
+						draw_rect(Rect2(x+dx,y+8,21,22), sage if x == 145 else Color("c3a477"))
+			furnishing(Rect2(155,555,160,70),sage)
+			for x in [830,895]: furnishing(Rect2(x,580,55,55),cream)
+			room_label("Seeds & produce",Vector2(130,490))
+			room_label("Household supplies",Vector2(790,490))
+			room_label("Seed display",Vector2(140,665))
+			room_label("Stockroom crates",Vector2(790,690))
+		"Inn":
+			for x in [150,820]:
+				draw_rect(Rect2(x,220,145,170),cream)
+				draw_rect(Rect2(x+15,230,115,35),Color("f3e9d4"))
+				draw_rect(Rect2(x+10,280,125,100),sage)
+				draw_line(Vector2(x-10,185),Vector2(x-10,430),Color("72523d"),8)
+			furnishing(Rect2(155,540,150,85),cream)
+			draw_circle(Vector2(230,580),18,sage)
+			furnishing(Rect2(830,540,130,85),sage)
+			room_label("Guest room 1",Vector2(135,460))
+			room_label("Guest room 2",Vector2(800,460))
+			room_label("Shared dining",Vector2(135,670))
+			room_label("Guest lounge",Vector2(800,670))
+		"Blacksmith":
+			furnishing(Rect2(145,220,145,185),Color("545c58"))
+			draw_rect(Rect2(165,265,105,70),Color("493b2d"))
+			draw_colored_polygon(PackedVector2Array([Vector2(180,325),Vector2(195,285),Vector2(215,310),Vector2(238,278),Vector2(260,325)]),Color("d69a52"))
+			furnishing(Rect2(825,230,140,135),sage)
+			for x in [850,890,930]:
+				draw_line(Vector2(x,250),Vector2(x,340),Color("72523d"),7)
+				draw_line(Vector2(x-15,250),Vector2(x+15,250),cream,9)
+			furnishing(Rect2(155,555,150,70),Color("747970"))
+			draw_colored_polygon(PackedVector2Array([Vector2(190,560),Vector2(275,560),Vector2(255,580),Vector2(240,580),Vector2(240,607),Vector2(210,607),Vector2(210,580)]),Color("545c58"))
+			for x in [835,900]: furnishing(Rect2(x,565,55,60),Color("747970"))
+			room_label("Forge",Vector2(145,460))
+			room_label("Tool racks",Vector2(815,420))
+			room_label("Anvil workbench",Vector2(130,670))
+			room_label("Metal stock",Vector2(815,685))
+		"Café":
+			furnishing(Rect2(150,225,150,100),sage)
+			draw_rect(Rect2(170,240,65,55),Color("747970"))
+			draw_circle(Vector2(200,265),16,Color("493b2d"))
+			furnishing(Rect2(825,225,140,100),cream)
+			for x in [850,890,930]: draw_circle(Vector2(x,265),13,sage)
+			for x in [175,825]:
+				for y in [460,655]:
+					furnishing(Rect2(x,y,130,85),cream)
+					draw_circle(Vector2(x+65,y+35),15,sage)
+					for dx in [15,95]: draw_rect(Rect2(x+dx,y+58,25,18),sage)
+			room_label("Kitchen",Vector2(145,380))
+			room_label("Tea & pastries",Vector2(800,380))
+		"Clinic":
+			furnishing(Rect2(150,230,150,80),cream)
+			draw_line(Vector2(225,245),Vector2(225,290),sage,10)
+			draw_line(Vector2(205,268),Vector2(245,268),sage,10)
+			draw_rect(Rect2(820,225,145,220),cream)
+			draw_rect(Rect2(835,235,115,45),Color("f3e9d4"))
+			draw_rect(Rect2(830,295,125,140),sage)
+			draw_line(Vector2(790,200),Vector2(790,470),Color("b5bcaa"),10)
+			furnishing(Rect2(155,560,150,55),sage)
+			for x in [835,900]: furnishing(Rect2(x,575,55,60),cream)
+			room_label("Medical cabinet",Vector2(130,355))
+			room_label("Examination area",Vector2(790,490))
+			room_label("Waiting seats",Vector2(135,670))
+			room_label("Clean supplies",Vector2(790,690))

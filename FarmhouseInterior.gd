@@ -1,7 +1,7 @@
 extends Node2D
 
-const SIZE := Vector2(1000, 800)
-const FLOOR := Rect2(90, 190, 820, 530)
+var SIZE := Vector2(1000, 800)
+var FLOOR := Rect2(90, 190, 820, 530)
 const ENTRY := Vector2(500, 665)
 const EXIT := Vector2(500, 700)
 const BED_APPROACH := Vector2(670, 475)
@@ -13,7 +13,7 @@ const CHEST_APPROACH := Vector2(190, 665)
 const SOLIDS := [BED, TABLE, CHEST, Rect2(110, 200, 140, 85), Rect2(500, 200, 140, 65)]
 
 func _ready() -> void:
-	for rect in [Rect2(70, 170, 860, 20), Rect2(70, 720, 860, 20), Rect2(70, 190, 20, 530), Rect2(910, 190, 20, 530)]:
+	for rect in [Rect2(70,170,FLOOR.size.x+40,20),Rect2(70,720,FLOOR.size.x+40,20),Rect2(70,190,20,530),Rect2(FLOOR.end.x,190,20,530)]:
 		obstacle(rect)
 	for rect in SOLIDS: obstacle(rect)
 
@@ -37,13 +37,13 @@ func is_walkable(point: Vector2, radius: float = 12.0) -> bool:
 
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, SIZE), Color("293e37"))
-	draw_rect(Rect2(70, 90, 860, 650), Color("684a33"))
-	draw_rect(Rect2(90, 110, 820, 80), Color("d9be8b"))
+	draw_rect(Rect2(70, 90, FLOOR.size.x+40, 650), Color("684a33"))
+	draw_rect(Rect2(90, 110, FLOOR.size.x, 80), Color("d9be8b"))
 	draw_rect(FLOOR, Color("bc9563"))
-	for x in range(90, 910, 82):
+	for x in range(90, int(FLOOR.end.x), 82):
 		draw_line(Vector2(x, 190), Vector2(x, 720), Color("9a754e"), 2)
 	for y in range(190, 720, 35):
-		draw_line(Vector2(90, y), Vector2(910, y), Color(0.4, 0.26, 0.15, 0.14), 1)
+		draw_line(Vector2(90, y), Vector2(FLOOR.end.x, y), Color(0.4, 0.26, 0.15, 0.14), 1)
 	for rect in [Rect2(150, 120, 130, 55), Rect2(520, 120, 130, 55)]:
 		draw_rect(rect, Color("b3d4c6"))
 		draw_rect(rect, Color("785a3b"), false, 5)
@@ -85,6 +85,13 @@ func _draw() -> void:
 	for offset in [Vector2(-15, -12), Vector2(8, -20), Vector2(20, -5)]:
 		draw_line(pot, pot + offset, Color("486941"), 3)
 		draw_circle(pot + offset, 12, Color("6f9151"))
+	if home_level > 0:
+		draw_rect(Rect2(940,245,145,80),Color("826446"))
+		draw_string(ThemeDB.fallback_font,Vector2(945,355),"Expanded storage",HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color("493b2d"))
+	if home_level > 1:
+		draw_rect(Rect2(960,370,140,45),Color("6f7b70"))
+		draw_circle(Vector2(1010,390),17,Color("d8ceb1"))
+		draw_string(ThemeDB.fallback_font,Vector2(960,485),"Kitchen",HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color("493b2d"))
 	# Front entry threshold and doormat.
 	draw_rect(Rect2(435, 680, 130, 40), Color("70523a"))
 	draw_rect(Rect2(449, 691, 102, 21), Color("d2b880"))
@@ -94,3 +101,15 @@ func panel(color: Color) -> StyleBoxFlat:
 	style.bg_color = color
 	style.set_corner_radius_all(6)
 	return style
+
+var home_level := 0
+func apply_upgrade(level: int) -> void:
+	home_level = clampi(level,0,2)
+	FLOOR = Rect2(90,190,820+home_level*220,530)
+	SIZE = Vector2(1000+home_level*220,800)
+	for child in get_children():
+		if child is StaticBody2D:
+			remove_child(child)
+			child.queue_free()
+	_ready()
+	queue_redraw()
