@@ -22,7 +22,7 @@ jobs:
   build:
     runs-on: macos-26
     timeout-minutes: 60
-    environment: ios
+    environment: ${{ inputs.signed && 'ios' || 'ios-check' }}
     env:
       APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
       IOS_BUNDLE_ID: ${{ vars.IOS_BUNDLE_ID }}
@@ -56,7 +56,7 @@ jobs:
       - name: Save build
         uses: actions/upload-artifact@v4
         with:
-          name: coastal-farm-ios-${{ inputs.build || github.run_number }}
+          name: tea-blossom-hills-ios-${{ inputs.build || github.run_number }}
           path: |
             export/ios-unsigned-app.tar.gz
             export/ipa/*.ipa
@@ -68,4 +68,5 @@ jobs:
         run: |
           security delete-keychain "$RUNNER_TEMP/coastal-signing.keychain-db" || true
           rm -f "$RUNNER_TEMP/distribution.p12" "$RUNNER_TEMP/distribution.mobileprovision" "$RUNNER_TEMP/profile.plist"
+          if [[ -n "${PROFILE_PATH:-}" ]]; then rm -f "$PROFILE_PATH"; fi
 

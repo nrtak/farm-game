@@ -16,3 +16,4 @@ destination.mkdir(parents=True, exist_ok=True)
 shutil.copyfile(Path(os.environ['RUNNER_TEMP']) / 'distribution.mobileprovision', destination / (profile['UUID'] + '.mobileprovision'))
 with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as environment:
     environment.write('PROFILE_NAME=' + profile['Name'] + '\n')
+    environment.write('PROFILE_PATH=' + str(destination / (profile['UUID'] + '.mobileprovision')) + '\n')
