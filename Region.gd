@@ -86,8 +86,8 @@ func tick(delta: float, _minute: float) -> void:
 func nearest_npc(point: Vector2) -> Node2D:
 	var result: Node2D
 	var distance := 120.0
-	for npc in npcs:
-		if not npc.visible: continue
+	for npc in get_children():
+		if npc.get_script() != NpcScript or not npc.visible: continue
 		var candidate := point.distance_to(npc.position)
 		if candidate < distance:
 			distance = candidate
@@ -103,6 +103,15 @@ func is_walkable(point: Vector2) -> bool:
 func _draw() -> void:
 	if background != null:
 		draw_texture_rect(background, Rect2(Vector2.ZERO, SIZE), false)
+		if kind == "historic":
+			# These side lanes end within the region; reserve the south road for travel.
+			for side in [0, 1]:
+				var cap := PackedVector2Array()
+				var uv := PackedVector2Array()
+				for point in [Vector2(0,470),Vector2(70,485),Vector2(115,520),Vector2(137,570),Vector2(128,625),Vector2(92,674),Vector2(0,700)]:
+					cap.append(Vector2(SIZE.x-point.x,point.y) if side == 1 else point)
+					uv.append(Vector2(390+point.x*0.55,680+(point.y-470)*0.5)/background.get_size())
+				draw_polygon(cap,PackedColorArray([Color.WHITE]),uv,background)
 		if kind == "mountain":
 			draw_style_box(mine_arch(), Rect2(740, 135, 120, 120))
 			draw_rect(Rect2(762, 175, 76, 80), Color("454940"))

@@ -253,6 +253,7 @@ func _ready() -> void:
 	camera.limit_right = 2400
 	camera.limit_bottom = 1600
 	player.add_child(camera)
+	get_viewport().size_changed.connect(refit_camera)
 	make_ui()
 	load_game()
 	get_viewport().size_changed.connect(layout_ui)
@@ -540,7 +541,7 @@ func _physics_process(delta: float) -> void:
 		player.z_index = clampi(int((player.position.y - origin.y) / 10), 1, 179)
 	else: player.z_index = 5
 	if location == "town": town.update_label_visibility(player.position - TOWN_ORIGIN)
-	if not festival_active: town.tick_ambient(delta, clock_minutes, is_rainy_day(), shops)
+	if not festival_active: town.tick_ambient(delta, clock_minutes, is_rainy_day(), shops, regions)
 	if location == "town" and not festival_active: town.tick(delta, clock_minutes, is_rainy_day())
 	elif regions.has(location): regions[location].tick(delta, clock_minutes)
 	elif location == "shop": shops[shop_name].tick(delta)
@@ -1238,8 +1239,17 @@ func _draw() -> void:
 	# A continuous dirt lane leads north; the transition remains automatic.
 	var lane := PackedVector2Array([Vector2(825, 0), Vector2(970, 0), Vector2(965, 850), Vector2(970, 990), Vector2(995, 1135), Vector2(945, 1210), Vector2(805, 1210), Vector2(825, 1110), Vector2(825, 900)])
 	draw_colored_polygon(lane, Color("d8c393"))
-	for point in [Vector2(831, 930), Vector2(965, 1090), Vector2(810, 1180)]:
-		draw_circle(point, 14, Color("b7bb82"))
+	# Reuse a quiet dirt patch in short tiles so the walkway matches the painted world.
+	var dirt := preload("res://assets/region-historic-v1.png")
+	for y in range(0, 1080, 120):
+		draw_texture_rect_region(dirt, Rect2(833,y,128,120),Rect2(700,480,70,90))
+	# Quiet texture on the lane, with softened grass edges rather than isolated circles.
+	for y in range(0, 1190, 50):
+		var x := 894 + sin(float(y) * 0.025) * 23
+		draw_line(Vector2(x, y), Vector2(x+16, y+2), Color("cdb987"), 2)
+	for y in range(0, 1100, 22):
+		for x in [826, 967]:
+			draw_line(Vector2(x,y), Vector2(x + (-6 if x < 900 else 6),y-5), Color("a5ad73"), 3)
 	# Dynamic beds and crops sit over the static environment, never baked into it.
 	for i in range(plots.size()):
 		var plot: Dictionary = plots[i]
@@ -1320,7 +1330,8 @@ func travel_to(area: String, point: Vector2, persist: bool = true) -> void:
 		camera.limit_top = 0
 		camera.limit_right = int(origin.x + dimensions.x)
 		camera.limit_bottom = int(dimensions.y)
-		camera.offset = Vector2(0, -70)
+		camera.offset = Vector2.ZERO
+		fit_region_camera(dimensions)
 		camera.reset_smoothing()
 	player.velocity = Vector2.ZERO
 	joystick.reset_stick()
@@ -1444,6 +1455,9 @@ func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 		picture.custom_minimum_size = Vector2(150, 215)
 		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		var portrait_material := ShaderMaterial.new()
+		portrait_material.shader = preload("res://PortraitPaper.gdshader")
+		picture.material = portrait_material
 		row.add_child(picture)
 	var column := VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -2284,3 +2298,12 @@ func open_calendar() -> void:
 
 func storage_limit() -> int:
 	return 999 * (1 + int(interior_progress.get("home",0)))
+
+func fit_region_camera(dimensions: Vector2) -> void:
+	var viewport_size := get_viewport_rect().size
+	var fit := maxf(0.70, maxf(viewport_size.x / dimensions.x, viewport_size.y / dimensions.y))
+	camera.zoom = Vector2.ONE * fit
+func refit_camera() -> void:
+	if regions.has(location) and not inside_house:
+		fit_region_camera(regions[location].SIZE)
+		camera.offset = Vector2.ZERO

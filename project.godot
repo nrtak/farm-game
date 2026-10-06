@@ -2,6 +2,7 @@ config_version=5
 
 [application]
 config/name="Tea Blossom Hills"
+config/icon="res://assets/tea-blossom-hills-icon.png"
 run/main_scene="res://Main.tscn"
 
 [display]

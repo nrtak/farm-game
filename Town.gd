@@ -258,7 +258,7 @@ func add_ambient_life() -> void:
 		pet.route = walk_route(pet.position, [Vector2(1200, 910 + i*60), Vector2(1400, 910), Vector2(1200, 1250)])
 		pets.append(pet)
 
-func tick_ambient(delta: float, minute: float, rainy: bool, rooms: Dictionary = {}) -> void:
+func tick_ambient(delta: float, minute: float, rainy: bool, rooms: Dictionary = {}, regions: Dictionary = {}) -> void:
 	var period := (0 if minute < 720 else (1 if minute < 1080 else 2)) + (3 if rainy else 0)
 	if period != ambient_period:
 		ambient_period = period
@@ -273,6 +273,12 @@ func tick_ambient(delta: float, minute: float, rainy: bool, rooms: Dictionary = 
 					npc.reparent(room)
 					npc.position = Vector2(410 + (i % 3)*110, 510 + (i%2)*95)
 				npc.set_route([npc.position, npc.position + Vector2(0, 45)])
+			elif not regions.is_empty() and i >= 2:
+				var area = regions[["harbor", "mountain", "tea"][(i-2+period)%3]]
+				if npc.get_parent() != area:
+					npc.reparent(area)
+					npc.position = Vector2(650 + (i-2)*130, 610)
+				npc.set_route([npc.position, Vector2(800, 760), Vector2(800, 610)])
 			else:
 				if npc.get_parent() != self:
 					npc.reparent(self)
@@ -280,8 +286,17 @@ func tick_ambient(delta: float, minute: float, rainy: bool, rooms: Dictionary = 
 				npc.set_route(walk_route(npc.position, [destination, destination + Vector2(60, 0)]))
 		for i in range(pets.size()):
 			var pet = pets[i]
+			if not regions.is_empty() and i >= 2:
+				var area = regions[["historic", "harbor", "tea"][i-2]]
+				if pet.get_parent() != area:
+					pet.reparent(area)
+					pet.position = Vector2(620 + (i-2)*170, 600)
+				pet.route = [pet.position, Vector2(800, 720), Vector2(800, 610)]
+				if rainy: pet.route = [Vector2(640 + (i-2)*160, 430)]
+				pet.index = 0
+				continue
 			var shelter := Vector2(1450 + i * 45, 1310)
-			pet.route = walk_route(pet.position, [shelter, shelter + Vector2(30,0)] if rainy else [Vector2(1200, 910 + i*60), Vector2(1400,910), Vector2(1200,1250)])
+			pet.route = walk_route(pet.position, [shelter, shelter + Vector2(30,0)] if rainy else [Vector2(700 + i*900, 960), Vector2(820 + i*850, 1100)])
 			pet.index = 0
 	for npc in visitors:
 		npc.tick(delta)
