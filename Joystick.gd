@@ -9,6 +9,9 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 func _input(event: InputEvent) -> void:
+	if not is_visible_in_tree():
+		if finger != -1 or direction != Vector2.ZERO: reset_stick()
+		return
 	if event is InputEventScreenTouch:
 		var local: Vector2 = event.position - global_position
 		if event.pressed and finger == -1 and local.distance_to(size / 2) < RADIUS + 14:
@@ -33,10 +36,13 @@ func update_knob(point: Vector2) -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
-		finger = -1
-		direction = Vector2.ZERO
-		knob = Vector2.ZERO
-		queue_redraw()
+		reset_stick()
+
+func reset_stick() -> void:
+	finger = -1
+	direction = Vector2.ZERO
+	knob = Vector2.ZERO
+	queue_redraw()
 
 func _draw() -> void:
 	draw_circle(size / 2, RADIUS, Color(0.20, 0.25, 0.18, 0.45))

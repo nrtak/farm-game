@@ -3,3 +3,8 @@
 export/
 .DS_Store
 Thumbs.db
+override.cfg
+*.p12
+*.mobileprovision
+*.keychain-db
+__pycache__/

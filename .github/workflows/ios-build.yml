@@ -1,0 +1,68 @@
+name: iOS build
+on:
+  workflow_dispatch:
+    inputs:
+      signed:
+        description: Produce a signed App Store IPA
+        type: boolean
+        default: false
+      version:
+        description: App version
+        default: '0.1.0'
+        required: true
+      build:
+        description: Unique increasing build number
+        default: '1'
+        required: true
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 60
+    environment: ios
+    env:
+      APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+      IOS_BUNDLE_ID: ${{ vars.IOS_BUNDLE_ID }}
+      APP_VERSION: ${{ inputs.version }}
+      BUILD_NUMBER: ${{ inputs.build }}
+      SIGNED_BUILD: ${{ inputs.signed }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Xcode SDK
+        shell: bash
+        run: |
+          xcodebuild -version
+          sdk=$(xcrun --sdk iphoneos --show-sdk-version)
+          [[ "${sdk%%.*}" -ge 26 ]]
+      - name: Install Godot and iOS template
+        run: bash ci/install_godot.sh
+      - name: Import and check game
+        run: |
+          "$GODOT_BIN" --headless --path . --import
+          python3 ci/run_checks.py
+      - name: Install Apple signing
+        if: inputs.signed
+        env:
+          IOS_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          IOS_PROFILE_BASE64: ${{ secrets.IOS_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: bash ci/install_signing.sh
+      - name: Build iOS
+        run: bash ci/build_ios.sh
+      - name: Save build
+        uses: actions/upload-artifact@v4
+        with:
+          name: coastal-farm-ios-${{ inputs.build }}
+          path: |
+            export/ios-unsigned-app.tar.gz
+            export/ipa/*.ipa
+          if-no-files-found: error
+          retention-days: 7
+      - name: Remove temporary signing materials
+        if: always() && inputs.signed
+        shell: bash
+        run: |
+          security delete-keychain "$RUNNER_TEMP/coastal-signing.keychain-db" || true
+          rm -f "$RUNNER_TEMP/distribution.p12" "$RUNNER_TEMP/distribution.mobileprovision" "$RUNNER_TEMP/profile.plist"
