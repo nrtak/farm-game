@@ -11,14 +11,17 @@ var npcs: Array[Node2D] = []
 var solids: Array[Rect2] = []
 var title := ""
 var background: Texture2D
+var scenery_polygons: Array = []
+var scenery_circles: Array = []
+const MINE_DOOR := Vector2(850,155)
 
 func setup(area: String, people: Array) -> void:
 	kind = area
 	title = {"tea": "Tea Country", "harbor": "Western Harbor", "mountain": "Mountain & Lake", "historic": "Historic District"}[kind]
-	background = load("res://assets/region-historic-v2.png" if kind == "historic" else "res://assets/region-%s-v1.png" % kind)
+	background = load("res://assets/region-%s-v3-layout.png" % kind)
 	var building_bounds: Array = {
-		"tea": [Rect2(190, 100, 365, 235), Rect2(895, 120, 360, 220)],
-		"harbor": [Rect2(220, 110, 315, 220), Rect2(928, 110, 325, 220)],
+		"tea": [Rect2(185,100,365,235),Rect2(932,250,360,230)],
+		"harbor": [Rect2(220,210,315,220),Rect2(928,110,325,220)],
 		"mountain": [Rect2(230, 90, 350, 265), Rect2(940, 155, 265, 190)],
 		"historic": [Rect2(195, 130, 355, 220), Rect2(915, 110, 330, 245)]
 	}[kind]
@@ -28,35 +31,46 @@ func setup(area: String, people: Array) -> void:
 		solids.append(rect)
 		obstacle(rect)
 	if kind == "mountain":
-		for rect in [Rect2(140,660,420,230),Rect2(1130,630,360,230),Rect2(555,750,165,120)]:
+		for rect in [Rect2(140,550,420,230),Rect2(1130,630,360,230),Rect2(555,750,165,120)]:
 			solids.append(rect)
 			obstacle(rect)
-	if kind == "harbor":
-		for rect in [Rect2(0, 850, 230, 350), Rect2(340, 880, 360, 320), Rect2(230, 1000, 110, 200), Rect2(900, 870, 350, 330), Rect2(1360, 820, 240, 380), Rect2(1250, 1000, 110, 200)]:
-			solids.append(rect)
-			obstacle(rect)
-	if kind == "mountain":
-		for rect in [Rect2(0, 890, 230, 310), Rect2(230, 1040, 300, 160)]:
-			solids.append(rect)
-			obstacle(rect)
+	scenery_polygons = preload("res://RegionLayout.gd").boundary_polygons(kind)
+	scenery_circles = preload("res://RegionLayout.gd").tree_clusters(kind)
+	for polygon in scenery_polygons:
+		var body := StaticBody2D.new()
+		body.collision_layer=16; body.collision_mask=0
+		var shape := CollisionPolygon2D.new()
+		shape.polygon=polygon; body.add_child(shape); add_child(body)
+	for circle in scenery_circles:
+		var body := StaticBody2D.new()
+		body.collision_layer=16; body.collision_mask=0; body.position=circle[0]
+		var collider := CollisionShape2D.new()
+		var shape := CircleShape2D.new()
+		shape.radius=circle[1]; collider.shape=shape
+		body.add_child(collider); add_child(body)
 	for rect in [Rect2(-24, -24, 1648, 24), Rect2(-24, 1200, 1648, 24), Rect2(-24, 0, 24, 1200), Rect2(1600, 0, 24, 1200)]: obstacle(rect)
 	for i in range(people.size()):
 		var person: String = people[i]
 		var npc := NpcScript.new()
 		add_child(npc)
-		npc.position = Vector2(500 + i * 500, 550)
+		var posts := {"Mika":Vector2(470,510),"Sachiko":Vector2(1235,680),"Ken":Vector2(420,620),"Masao":Vector2(1200,530),"Emi":Vector2(470,520),"Hiro":Vector2(1210,530),"Haruka":Vector2(470,520),"Rei":Vector2(1190,550)}
+		npc.position = safe_point(posts.get(person,Vector2(800,600)))
 		var index := Cast.index_of(person)
 		var walk_path := "res://assets/npc-%s-walk.png" % person.to_lower()
 		if preload("res://CharacterArt.gd").walk(person) != null: npc.setup(person, preload("res://CharacterArt.gd").walk(person))
 		else: npc.setup_turnaround(person, SpriteLibrary.turnaround(index.x), index.y, index.x)
 		npc.z_index = 4
-		npc.set_route([npc.position, Vector2(800, 630 + i * 130), Vector2(500 + i * 500, 780), npc.position])
+		npc.set_route([])
 		npcs.append(npc)
 	add_label(title, Vector2(570, 60), Vector2(460, 50))
-	add_label("South · Return to Town", Vector2(560, 1070), Vector2(480, 45))
+	add_label("North · Return to Town" if kind=="harbor" else "South · Return to Town", Vector2(560,100 if kind=="harbor" else 1070), Vector2(480,45))
 	var labels: Array = {"tea": ["Tea Farmhouse", "Processing Shed"], "harbor": ["Harbor Homes", "Fishing Shop"], "mountain": ["Emi's Lodge", "Hiro's Cabin"], "historic": ["History Room", "Shrine"]}[kind]
-	add_label(labels[0], Vector2(250, 420), Vector2(360, 40))
-	add_label(labels[1], Vector2(1000, 420), Vector2(350, 40))
+	var doors: Array = {"tea":[Vector2(410,430),Vector2(1235,590)],"harbor":[Vector2(410,560),Vector2(1190,450)],"mountain":[Vector2(455,430),Vector2(1190,430)],"historic":[Vector2(410,430),Vector2(1190,450)]}[kind]
+	var signs: Array = {"tea":["Home","Tea"],"harbor":["Home","Fish"],"mountain":["Lodge","Cabin"],"historic":["Archive","Shrine"]}[kind]
+	for i in range(2): add_child(preload("res://WorldSigns.gd").label(signs[i],doors[i]+Vector2(-56,15)))
+	if kind=="mountain":
+		add_child(preload("res://WorldSigns.gd").label("Onsen",Vector2(294,835)))
+		add_child(preload("res://WorldSigns.gd").label("Carpenter",Vector2(1254,895)))
 	queue_redraw()
 
 func add_label(text: String, where: Vector2, dimensions: Vector2) -> void:
@@ -100,18 +114,28 @@ func nearest_npc(point: Vector2) -> Node2D:
 
 func is_walkable(point: Vector2) -> bool:
 	if not Rect2(Vector2(24, 24), SIZE - Vector2(48, 48)).has_point(point): return false
+	for polygon in scenery_polygons:
+		if Geometry2D.is_point_in_polygon(point,polygon): return false
+	for circle in scenery_circles:
+		if point.distance_to(circle[0]) < float(circle[1])+16: return false
 	for rect in solids:
 		if rect.grow(16).has_point(point): return false
 	return true
+
+func safe_point(preferred: Vector2) -> Vector2:
+	if is_walkable(preferred): return preferred
+	for radius in range(32,481,32):
+		for i in range(24):
+			var candidate := preferred+Vector2(radius,0).rotated(TAU*i/24.0)
+			if is_walkable(candidate): return candidate
+	return Vector2(800,600)
 
 func _draw() -> void:
 	if background != null:
 		draw_texture_rect(background, Rect2(Vector2.ZERO, SIZE), false)
 		if kind == "mountain":
 			draw_mountain_resort()
-			draw_style_box(mine_arch(), Rect2(740, 135, 120, 120))
-			draw_rect(Rect2(762, 175, 76, 80), Color("454940"))
-			draw_string(ThemeDB.fallback_font, Vector2(745, 290), "Mine", HORIZONTAL_ALIGNMENT_CENTER, 110, 24, Color("493b2d"))
+			draw_string(ThemeDB.fallback_font, MINE_DOOR+Vector2(-40,45), "Mine", HORIZONTAL_ALIGNMENT_CENTER, 110, 24, Color("493b2d"))
 		if kind == "tea":
 			for spot in [Vector2(430, 800), Vector2(430, 950), Vector2(1150, 800)]:
 				draw_circle(spot, 25, Color("d8c393"))
@@ -119,7 +143,7 @@ func _draw() -> void:
 				draw_circle(spot + Vector2(-7, -3), 8, Color("60834f"))
 				draw_circle(spot + Vector2(7, -9), 8, Color("60834f"))
 		if kind == "harbor":
-			for spot in [Vector2(285, 940), Vector2(1305, 940)]:
+			for spot in [Vector2(1305,850),Vector2(1305,1070)]:
 				draw_circle(spot, 26, Color(0.90, 0.83, 0.63, 0.7))
 				draw_line(spot + Vector2(-8, 8), spot + Vector2(8, -8), Color("493b2d"), 4)
 				draw_string(ThemeDB.fallback_font, spot + Vector2(-42, -36), "Fish", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("493b2d"))
@@ -168,7 +192,7 @@ func mine_arch() -> StyleBoxFlat:
 	return box
 
 func draw_mountain_resort() -> void:
-	draw_texture_rect(preload("res://assets/onsen-exterior-v1.png"),Rect2(140,660,420,260),false)
+	draw_texture_rect(preload("res://assets/onsen-exterior-v1.png"),Rect2(140,550,420,260),false)
 	draw_texture_rect(preload("res://assets/carpentry-exterior-v1.png"),Rect2(1130,630,360,250),false)
 	var pool := StyleBoxFlat.new()
 	pool.bg_color = Color("82b7b4")
@@ -179,6 +203,4 @@ func draw_mountain_resort() -> void:
 	for x in [580,625,675]:
 		draw_arc(Vector2(x,812),15,0.1,2.7,12,Color("c1d6c9"),2)
 		draw_arc(Vector2(x,748),18,-1.6,0.4,12,Color(0.94,0.94,0.84,0.7),3)
-	draw_string(ThemeDB.fallback_font,Vector2(245,945),"Mountain Onsen",HORIZONTAL_ALIGNMENT_LEFT,-1,23,Color("493b2d"))
-	draw_string(ThemeDB.fallback_font,Vector2(1170,910),"Forest Workshop",HORIZONTAL_ALIGNMENT_LEFT,-1,23,Color("493b2d"))
 

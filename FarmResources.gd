@@ -8,9 +8,16 @@ var action_time := 0.0
 var action_kind := ""
 var target := Vector2.ZERO
 var last_view := ""
+var action_audio: AudioStreamPlayer
+var sounds := {}
 func setup(game) -> void:
 	farm = game
 	z_index = 190
+	action_audio = AudioStreamPlayer.new()
+	action_audio.volume_db = -16
+	add_child(action_audio)
+	for kind in ["water","seed","axe","mine","harvest"]:
+		sounds[kind] = load("res://assets/audio/"+kind+".wav")
 func state() -> Dictionary:
 	if not farm.interior_progress.has("resources"):
 		farm.interior_progress.resources = {"water":WATER_CAPACITY,"lumber":0,"chopped":{},"irrigation":0}
@@ -53,6 +60,9 @@ func play(kind: String, point: Vector2) -> void:
 	action_kind = kind
 	target = point
 	action_time = 0.65
+	if sounds.has(kind) and DisplayServer.get_name() != "headless":
+		action_audio.stream = sounds[kind]
+		action_audio.play()
 	queue_redraw()
 func irrigate() -> void:
 	var level: int = state().irrigation
@@ -110,7 +120,10 @@ func _draw() -> void:
 		draw_style_box(tool_box(Color("829ca3")),Rect2(p-Vector2(18,20),Vector2(36,30)))
 		draw_arc(p+Vector2(-20,-8),12,PI/2,PI*1.5,12,Color("526f79"),5)
 		draw_line(p+Vector2(15,0),p+Vector2(40*side,-12),Color("829ca3"),9)
-		for i in range(6): draw_circle(p+Vector2((38+i*3)*side,8+fmod(phase*90+i*13,40)),3,Color("9ecbd2"))
+		for i in range(6):
+			var fall := fmod(phase*2.0+i/6.0,1.0)
+			draw_circle((p+Vector2(40*side,-12)).lerp(target+Vector2((i-3)*7,0),fall),3,Color("9ecbd2"))
+		draw_arc(target,12+phase*20,0,PI,12,Color("9ecbd2",1-phase),3)
 	elif action_kind in ["axe","mine"]:
 		var end := p+Vector2(cos(phase*PI)*35*side,-sin(phase*PI)*55)
 		draw_line(p,end,Color("98734c"),9)
@@ -119,7 +132,10 @@ func _draw() -> void:
 		for i in range(4): draw_circle(target+Vector2((i-2)*12,-phase*35),3,Color("d6bc8b"))
 	elif action_kind == "seed":
 		draw_style_box(tool_box(Color("b49864")),Rect2(p-Vector2(16,5),Vector2(32,36)))
-		for i in range(5): draw_circle(p+Vector2((i-2)*8,20+phase*55),3,Color("e6cb84"))
+		for i in range(5):
+			var scatter := p.lerp(target+Vector2((i-2)*9,0),phase)
+			scatter.y -= sin(phase*PI)*22
+			draw_circle(scatter,3,Color("e6cb84"))
 	else:
 		draw_arc(target,25,PI,TAU,12,Color("eee2b3"),4)
 		draw_line(p,target.lerp(p,1-phase),Color("edbd8f"),10)

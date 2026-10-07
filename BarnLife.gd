@@ -142,6 +142,11 @@ static func draw_room(room) -> void:
 		room.draw_rect(Rect2(p-Vector2(110,50),Vector2(220,95)),Color("ceb478"))
 		for dx in [-110,110]: room.draw_line(p+Vector2(dx,-50),p+Vector2(dx,45),Color("85643e"),8)
 		room.draw_line(p-Vector2(110,50),p+Vector2(110,-50),Color("85643e"),8)
+		# Straw bedding and troughs sit inside the solid stalls.
+		for dx in [-75,-30,20,65]:
+			room.draw_line(p+Vector2(dx,17),p+Vector2(dx+14,22),Color("b49354"),3)
+		room.draw_rect(Rect2(p+Vector2(65,-40),Vector2(35,18)),Color("8d7450"))
+		room.draw_rect(Rect2(p+Vector2(69,-36),Vector2(27,10)),Color("849c96"))
 		if i >= capacity(farm): room.draw_string(ThemeDB.fallback_font,p-Vector2(40,0),"Expand",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color("76583d")); continue
 		if i>=data.animals.size(): continue
 		var animal: Dictionary = data.animals[i]
@@ -160,5 +165,7 @@ static func draw_room(room) -> void:
 		room.draw_string(ThemeDB.fallback_font,p+Vector2(-45,35),animal.species,HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color("584631"))
 		if animal.ready>0: room.draw_circle(p+Vector2(70,-20),7,Color("f3df9d"))
 	room.draw_rect(Rect2(420,185,260,75),Color("92714d"))
+	preload("res://InteriorDecor.gd").crate(room,Rect2(438,191,50,26))
+	room.draw_rect(Rect2(612,192,45,24),Color("e6d5ad"))
 	room.draw_string(ThemeDB.fallback_font,Vector2(438,230),"Animals & feed",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("f4e3bb"))
 	room.draw_string(ThemeDB.fallback_font,Vector2(460,780),"Exit ↓",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("584631"))

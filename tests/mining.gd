@@ -18,8 +18,8 @@ func run() -> void:
 			farm.start_conversation(npc)
 			assert(farm.mine_lesson_seen and farm.dialogue_lines.size() == 3)
 			farm.close_dialogue()
-	assert(farm.regions.mountain.is_walkable(Vector2(800, 250)))
-	farm.travel_to("mountain", Vector2(800, 250), false)
+	assert(farm.regions.mountain.is_walkable(farm.RegionScript.MINE_DOOR))
+	farm.travel_to("mountain", farm.RegionScript.MINE_DOOR, false)
 	farm.check_walk_exits()
 	assert(farm.shop_name == "Mine" and farm.location == "shop")
 	for spot in farm.MINE_SPOTS:

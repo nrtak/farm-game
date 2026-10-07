@@ -32,12 +32,13 @@ const EXTRA_DIALOGUE := {
 const REST_BENCHES := [Rect2(1540, 760, 105, 32), Rect2(865, 1080, 105, 32)]
 var solids: Array[Rect2] = []
 var navigation := AStarGrid2D.new()
+const TREE_CLUSTERS := [[Vector2(105,180),65],[Vector2(950,300),45],[Vector2(1470,280),55],[Vector2(2320,400),65],[Vector2(2250,1440),70],[Vector2(255,1530),65],[Vector2(1550,2020),55],[Vector2(975,2080),65]]
 
 func _ready() -> void:
 	var background := Sprite2D.new()
-	background.texture = preload("res://assets/town-background-v2-square.png")
+	background.texture = preload("res://assets/town-background-v3-layout.png")
 	background.centered = false
-	background.scale = Vector2.ONE * ART_SCALE
+	background.scale = SIZE / Vector2(background.texture.get_size())
 	background.z_index = -10
 	add_child(background)
 	for building in BUILDINGS:
@@ -45,7 +46,7 @@ func _ready() -> void:
 		rect = Rect2(rect.position * ART_SCALE, rect.size * ART_SCALE)
 		solids.append(rect)
 		add_obstacle(rect)
-		add_label(building.name, building.door * ART_SCALE + Vector2(-130, 25), Vector2(260, 35))
+		add_child(preload("res://WorldSigns.gd").label(building.name,building.door*ART_SCALE+Vector2(-56,25)))
 	for rect in [Rect2(-24, -24, 2448, 24), Rect2(-24, 2160, 2448, 24), Rect2(-24, 0, 24, 2160), Rect2(2400, 0, 24, 2160)]: add_obstacle(rect)
 	add_label("South · Farm", Vector2(1020, 2040), Vector2(360, 40))
 	add_label("North · Mountain & Lake", Vector2(980, 50), Vector2(440, 40))
@@ -59,6 +60,13 @@ func _ready() -> void:
 	for bench in REST_BENCHES:
 		solids.append(bench)
 		add_obstacle(bench)
+	for cluster in TREE_CLUSTERS:
+		var body := StaticBody2D.new()
+		body.position=cluster[0]; body.collision_layer=4; body.collision_mask=0
+		var collider := CollisionShape2D.new()
+		var shape := CircleShape2D.new()
+		shape.radius=cluster[1]; collider.shape=shape
+		body.add_child(collider); add_child(body)
 	navigation.region = Rect2i(0, 0, 60, 54)
 	navigation.cell_size = Vector2(40, 40)
 	navigation.offset = Vector2(20, 20)
@@ -204,6 +212,8 @@ func tick(delta: float, minute: float, rainy: bool = false) -> void:
 
 func is_walkable(point: Vector2) -> bool:
 	if not Rect2(Vector2(24, 24), SIZE - Vector2(48, 48)).has_point(point): return false
+	for cluster in TREE_CLUSTERS:
+		if point.distance_to(cluster[0]) < float(cluster[1])+16: return false
 	for rect in solids:
 		if rect.grow(16).has_point(point): return false
 	return true
@@ -227,9 +237,6 @@ func nearest_service(point: Vector2) -> String:
 func _draw() -> void:
 	for bench in REST_BENCHES:
 		draw_texture_rect_region(preload("res://assets/town-background-v2-square.png"), Rect2(bench.position - Vector2(0, 20), Vector2(105, 65)), Rect2(878, 409, 57, 36))
-	draw_texture_rect_region(preload("res://assets/town-background-v2-square.png"), Rect2(0, 1798, 2400, 362), Rect2(0, 1000, 1448, 86))
-	draw_rect(Rect2(1090, 1798, 220, 362), Color("dbc48f"))
-	draw_texture_rect(preload("res://assets/carpentry-exterior-v1.png"),Rect2(190*ART_SCALE,1050*ART_SCALE,250*ART_SCALE,160*ART_SCALE),false)
 	if festival_decorated:
 		for y in [720, 1100]:
 			draw_line(Vector2(1000, y), Vector2(1400, y), Color("765b3b"), 3)
@@ -281,7 +288,7 @@ func tick_ambient(delta: float, minute: float, rainy: bool, rooms: Dictionary = 
 					"Chanel": destination = rooms["Onsen Resort"]; point = Vector2(530,390)
 					"Ren":
 						destination = rooms["Onsen Resort"] if minute >= 720 or rainy else regions.mountain
-						point = Vector2(690,510) if destination == rooms["Onsen Resort"] else Vector2(460,940)
+						point = Vector2(690,510) if destination == rooms["Onsen Resort"] else Vector2(750,920)
 					"Renji": destination = rooms["Mountain Carpentry" if minute < 720 else "Carpentry"]; point = Vector2(730,520)
 					"David":
 						destination = regions.harbor if minute < 720 and not rainy else rooms["General Store"]
@@ -290,7 +297,7 @@ func tick_ambient(delta: float, minute: float, rainy: bool, rooms: Dictionary = 
 				if minute >= 1260: destination = rooms["Inn"]; point = Vector2(450+(i%3)*110,510+(i/3)*90)
 			else: point = Vector2(1200,520+i*260)
 			if npc.get_parent() != destination: npc.reparent(destination,false)
-			npc.position = point
+			npc.position = destination.safe_point(point) if destination.has_method("safe_point") else point
 			npc.set_route([])
 			npc.show_frame(0,1)
 		for i in range(pets.size()):
@@ -299,9 +306,9 @@ func tick_ambient(delta: float, minute: float, rainy: bool, rooms: Dictionary = 
 				var area = regions[["historic", "harbor", "tea"][i-2]]
 				if pet.get_parent() != area:
 					pet.reparent(area)
-					pet.position = Vector2(620 + (i-2)*170, 600)
+					pet.position = area.safe_point(Vector2(620+(i-2)*170,600))
 				pet.route = [pet.position, pet.position + Vector2(0,35)]
-				if rainy: pet.route = [Vector2(640 + (i-2)*160, 430)]
+				if rainy: pet.route = [area.safe_point(Vector2(640+(i-2)*160,430))]
 				pet.index = 0
 				continue
 			var shelter := Vector2(1450 + i * 45, 1310)

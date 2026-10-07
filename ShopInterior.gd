@@ -29,15 +29,15 @@ func setup(service: String) -> void:
 	apply_expanded_layout()
 	for rect in [Rect2(90, 150, 920, 20), Rect2(90, 790, 920, 20), Rect2(90, 170, 20, 620), Rect2(990, 170, 20, 620)]: obstacle(rect)
 	for rect in solids: obstacle(rect)
-	var people: Array = {"General Store": ["Keiko", "Seira"], "Blacksmith": ["Gen", "Shohei"], "Café": ["Naomi"], "Inn": ["Yumi", "Hana"], "Clinic": ["Kenji", "Aya"], "Town Hall": ["Akira"], "Police Box": ["Taro"], "Fire Station": ["Jiro", "Yuta"], "Archive": ["Haruka"], "Shrine Residence": ["Rei"], "Mountain Lodge": ["Emi"], "Tea Farmhouse": ["Sachiko", "Mika"], "Tea Processing Shed": ["Sachiko"], "Harbor Homes": ["Ken", "Masao"], "Fishing Shop": ["Masao"], "Hiro Cabin": ["Hiro"], "Mine": [], "Carpentry":["Kenta"], "Mountain Carpentry":["Kenta"], "Onsen Resort":[],"Barn":[],"Greenhouse":[],"Upper Floor":[]}[kind]
+	var people: Array = {"General Store": ["Keiko", "Seira"], "Blacksmith": ["Gen", "Shohei"], "Café": ["Naomi", "Keiko", "Akira"], "Inn": ["Yumi", "Hana"], "Clinic": ["Kenji", "Aya"], "Town Hall": ["Akira"], "Police Box": ["Taro"], "Fire Station": ["Jiro", "Yuta"], "Archive": ["Haruka"], "Shrine Residence": ["Rei"], "Mountain Lodge": ["Emi"], "Tea Farmhouse": ["Sachiko", "Mika"], "Tea Processing Shed": ["Sachiko"], "Harbor Homes": ["Ken", "Masao"], "Fishing Shop": ["Masao"], "Hiro Cabin": ["Hiro"], "Mine": [], "Carpentry":["Kenta"], "Mountain Carpentry":["Kenta"], "Onsen Resort":[],"Barn":[],"Greenhouse":[],"Upper Floor":[]}[kind]
 	for i in range(people.size()):
 		var person: String = people[i]
 		var keeper = preload("res://Npc.gd").new()
 		add_child(keeper)
 		keeper.setup(person, preload("res://CharacterArt.gd").walk(person))
-		keeper.position = Vector2(550, 230) if i == 0 else Vector2(730, 540)
+		keeper.position = Vector2(550, 230) if i == 0 else Vector2(730, 540 + (i-1)*110)
 		keeper.paused = i == 0
-		if i > 0: keeper.set_route([Vector2(730, 540), Vector2(730, 660), Vector2(600, 660), Vector2(730, 540)])
+		if i > 0: keeper.set_route([])
 		keeper.show_frame(0, 1)
 		keeper.z_index = 4
 		residents.append(keeper)
@@ -101,9 +101,9 @@ func _draw() -> void:
 			for x in range(int(rect.position.x)+12,int(rect.end.x),25): draw_line(Vector2(x,rect.position.y+10),Vector2(x,rect.end.y-10),Color("795d40"),3)
 		draw_rect(Rect2(175,240,105,100),Color("efdfbb"))
 		draw_rect(Rect2(190,260,75,55),Color("98a888"),false,3)
-		draw_string(ThemeDB.fallback_font,Vector2(140,435),"Expansion drawings",HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color("493b2d"))
-		draw_string(ThemeDB.fallback_font,Vector2(805,455),"Lumber rack",HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color("493b2d"))
-		draw_string(ThemeDB.fallback_font,Vector2(145,675),"Work bench",HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color("493b2d"))
+		pass # Furniture is identified by its shape.
+		pass # Furniture is identified by its shape.
+		pass # Furniture is identified by its shape.
 	elif kind in ["General Store", "Inn", "Blacksmith", "Café", "Clinic"]:
 		draw_expanded_room()
 	elif kind == "General Store":
@@ -134,7 +134,7 @@ func _draw() -> void:
 				draw_circle(Vector2(x + 7, 385), 7, Color("697e79"))
 		var labels := {"Town Hall": ["Town plan", "Archives", "Waiting seats"], "Police Box": ["Patrol desk", "Lost property", "Waiting seats"], "Fire Station": ["Drill board", "Equipment", "Rest bench"], "Archive": ["Old maps", "Family records", "Reading bench"], "Shrine Residence": ["Festival plan", "Tea cabinet", "Sitting area"], "Mountain Lodge": ["Trail map", "Supplies", "Rest bench"], "Tea Processing Shed": ["Sorting table", "Drying trays", "Packing bench"], "Fishing Shop": ["Gear desk", "Fishing tackle", "Repair bench"]}
 		for item in [[labels[kind][0], Vector2(140, 415)], [labels[kind][1], Vector2(790, 455)], [labels[kind][2], Vector2(140, 675)]]:
-			draw_string(ThemeDB.fallback_font, item[1], item[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("493b2d"))
+			pass # Furniture is identified by its shape.
 	elif kind in ["Inn", "Clinic", "Tea Farmhouse", "Harbor Homes", "Hiro Cabin"]:
 		var beds := [Rect2(140, 210, 150, 190), Rect2(810, 210, 150, 190)] if kind in ["Inn", "Tea Farmhouse", "Harbor Homes", "Hiro Cabin"] else [Rect2(800, 210, 155, 240)]
 		if kind == "Hiro Cabin": beds = [Rect2(140, 210, 150, 190)]
@@ -147,15 +147,15 @@ func _draw() -> void:
 				for y in [245, 305, 365]: draw_rect(Rect2(825, y, 115, 30), Color("8d9b87"))
 			draw_rect(Rect2(135, 530, 240, 145), Color("bac096"), false, 5)
 			draw_circle(Vector2(245, 590), 20, Color("ded1af"))
-			draw_string(ThemeDB.fallback_font, Vector2(140, 435), ({"Inn": "Guest room", "Tea Farmhouse": "Family room", "Harbor Homes": "Ken room", "Hiro Cabin": "Sleeping nook"}[kind]), HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("493b2d"))
-			draw_string(ThemeDB.fallback_font, Vector2(805, 435), ({"Inn": "Guest room", "Tea Farmhouse": "Family room", "Harbor Homes": "Masao room", "Hiro Cabin": "Field notes"}[kind]), HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("493b2d"))
+			pass # Furniture is identified by its shape.
+			pass # Furniture is identified by its shape.
 		else:
 			draw_rect(Rect2(175, 235, 100, 45), Color("dedac6"))
 			draw_line(Vector2(225, 245), Vector2(225, 270), Color("9c7768"), 6)
 			draw_line(Vector2(213, 257), Vector2(237, 257), Color("9c7768"), 6)
 			draw_rect(Rect2(165, 550, 160, 35), Color("8d9b87"))
-			draw_string(ThemeDB.fallback_font, Vector2(140, 635), "Waiting area", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("493b2d"))
-			draw_string(ThemeDB.fallback_font, Vector2(805, 480), "Treatment", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("493b2d"))
+			pass # Furniture is identified by its shape.
+			pass # Furniture is identified by its shape.
 	else:
 		for point in [Vector2(245, 490), Vector2(855, 490), Vector2(245, 700), Vector2(855, 700)]:
 			draw_circle(point, 24, Color("e5d6b4"))
@@ -169,9 +169,10 @@ func _draw() -> void:
 	if preload("res://InteriorLife.gd").ACTIVITIES.has(kind):
 		draw_rect(Rect2(398,450,24,28),Color("f0dfb9"))
 		draw_line(Vector2(410,450),Vector2(410,478),Color("795d42"),2)
-		draw_string(ThemeDB.fallback_font,Vector2(350,505),"Activity",HORIZONTAL_ALIGNMENT_CENTER,120,18,Color("493b2d"))
+		pass # Furniture is identified by its shape.
 	preload("res://RoomDetails.gd").draw_details(self)
-	draw_string(ThemeDB.fallback_font, Vector2(440, 350), "Counter", HORIZONTAL_ALIGNMENT_CENTER, 220, 23, Color("493b2d"))
+	preload("res://InteriorDecor.gd").draw_service(self)
+	pass # Furniture is identified by its shape.
 	draw_string(ThemeDB.fallback_font, Vector2(440, 775), "Exit ↓", HORIZONTAL_ALIGNMENT_CENTER, 220, 23, Color("493b2d"))
 
 func nearest_resident(point: Vector2) -> Node2D:
@@ -210,7 +211,7 @@ func furnishing(rect: Rect2, color: Color) -> void:
 	draw_rect(Rect2(rect.position + Vector2(5,5), rect.size - Vector2(10,18)), color)
 
 func room_label(text: String, point: Vector2) -> void:
-	draw_string(ThemeDB.fallback_font, point, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 19, Color("493b2d"))
+	pass # Furniture is identified by its shape.
 
 func draw_expanded_room() -> void:
 	var cream := Color("e6d5ad")

@@ -22,7 +22,7 @@ func run():
 		f.enter_shop(service,true)
 		await create_timer(0.55).timeout
 		await capture(f,"polish-room-"+service.replace(" ","-"))
-	for area in ["town","historic","mountain","farm"]:
+	for area in ["town","historic","mountain","harbor","tea","farm"]:
 		f.travel_to(area,Vector2(800,890) if area == "mountain" else (Vector2(1200,1940) if area == "town" else (Vector2(1000,850) if area == "farm" else Vector2(800,600))),false)
 		await create_timer(0.55).timeout
 		await capture(f,"polish-"+area)
@@ -46,5 +46,19 @@ func run():
 	f.hud.hide()
 	await create_timer(0.55).timeout
 	await capture(f,"farm-layout-review")
+	for seasonal_day in [1,29,57,85]:
+		f.day=seasonal_day
+		f.refresh_hud()
+		await create_timer(0.2).timeout
+		await capture(f,"farm-season-"+str(seasonal_day))
+	f.hud.show()
+	f.day=1
+	for size in [Vector2i(1170,540),Vector2i(1024,768)]:
+		root.size=size
+		f.travel_to("town",Vector2(1200,950),false)
+		f.layout_ui()
+		await create_timer(0.3).timeout
+		assert(Rect2(Vector2.ZERO,Vector2(size)).encloses(f.action_button.get_global_rect()))
+		await capture(f,"mobile-layout-"+str(size.x))
 	print("PASS: rendered all service rooms, paths, four lighting phases, mountain festival and farm overview")
 	quit()

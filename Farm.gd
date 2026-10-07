@@ -43,14 +43,14 @@ var tea_shipping := 0
 var tea_picked_days := [0, 0, 0]
 const TEA_SPOTS := [Vector2(430, 800), Vector2(430, 950), Vector2(1150, 800)]
 const FISH := {"Sardine": 12, "Mackerel": 25, "Sea Bream": 40}
-const FISHING_SPOTS := [Vector2(285, 940), Vector2(1305, 940)]
+const FISHING_SPOTS := [Vector2(1305,850),Vector2(1305,1070)]
 var fish_basket := {"Sardine": 0, "Mackerel": 0, "Sea Bream": 0}
 var fish_shipping := {"Sardine": 0, "Mackerel": 0, "Sea Bream": 0}
 var fishing_active := false
 var fishing_elapsed := 0.0
 var fish_catches := 0
 var fishing_quest_stage := 0
-const REGIONAL_ROOMS := {"Onsen Resort":["mountain",Vector2(350,920)],"Mountain Carpentry":["mountain",Vector2(1310,880)],"Mine": ["mountain", Vector2(800, 250)],"Archive": ["historic", Vector2(410, 430)], "Shrine Residence": ["historic", Vector2(1190, 450)], "Mountain Lodge": ["mountain", Vector2(455, 430)], "Tea Farmhouse": ["tea", Vector2(410, 430)], "Tea Processing Shed": ["tea", Vector2(1190, 430)], "Harbor Homes": ["harbor", Vector2(410, 430)], "Fishing Shop": ["harbor", Vector2(1190, 430)], "Hiro Cabin": ["mountain", Vector2(1190, 430)]}
+const REGIONAL_ROOMS := {"Onsen Resort":["mountain",Vector2(350,820)],"Mountain Carpentry":["mountain",Vector2(1310,880)],"Mine": ["mountain", Vector2(850,155)],"Archive": ["historic", Vector2(410, 430)], "Shrine Residence": ["historic", Vector2(1190, 450)], "Mountain Lodge": ["mountain", Vector2(455, 430)], "Tea Farmhouse": ["tea", Vector2(410, 430)], "Tea Processing Shed": ["tea", Vector2(1235,590)], "Harbor Homes": ["harbor", Vector2(410,560)], "Fishing Shop": ["harbor", Vector2(1190, 430)], "Hiro Cabin": ["mountain", Vector2(1190, 430)]}
 var quest_label: Label
 var hud_elapsed := 0.0
 var draw_elapsed := 0.0
@@ -102,6 +102,7 @@ const InteriorScene = preload("res://FarmhouseInterior.tscn")
 const ROOM_ORIGIN := Vector2(3000, 0)
 const SEASONS := ["Spring", "Summer", "Autumn", "Winter"]
 var outdoor_world: Node2D
+var season_scenery = preload("res://SeasonScenery.gd").new()
 var farmhouse: Node2D
 var interior: Node2D
 var inside_house := false
@@ -266,6 +267,7 @@ func _ready() -> void:
 	resources = preload("res://FarmResources.gd").new()
 	add_child(resources)
 	resources.setup(self)
+	season_scenery.setup(self)
 	make_ui()
 	load_game()
 	get_viewport().size_changed.connect(layout_ui)
@@ -662,6 +664,7 @@ func calendar_text() -> String:
 	return "%s %d  |  Year %d" % [SEASONS[season_index], (day - 1) % 28 + 1, int((day - 1) / 112) + 1]
 
 func refresh_hud() -> void:
+	season_scenery.update(day)
 	if WeatherLife.forecast(day) == "Hurricane" and not inside_house:
 		set_location(true,ROOM_ORIGIN+interior.ENTRY)
 		return
@@ -980,7 +983,7 @@ func interact() -> void:
 			return
 		"north", "west", "east":
 			var destination: String = {"north": "mountain", "west": "harbor", "east": "tea"}[interaction_action()]
-			travel_to(destination, Vector2(800, 950))
+			travel_to(destination, Vector2(800,180) if destination=="harbor" else Vector2(800,950))
 			return
 		"enter":
 			enter_house()
@@ -1370,6 +1373,7 @@ func travel_to(area: String, point: Vector2, persist: bool = true) -> void:
 		set_location(false, point)
 	else:
 		location = area
+		preload("res://DailyErrands.gd").visit(self,area)
 		inside_house = false
 		outdoor_world.visible = false
 		interior.visible = false
@@ -1378,7 +1382,8 @@ func travel_to(area: String, point: Vector2, persist: bool = true) -> void:
 		var origin: Vector2 = REGION_ORIGINS[area] if regions.has(area) else (TOWN_ORIGIN if area == "town" else ROAD_ORIGIN)
 		var dimensions: Vector2 = regions[area].SIZE if regions.has(area) else (town.SIZE if area == "town" else road.SIZE)
 		if regions.has(area): regions[area].visible = true
-		player.position = origin + point
+		var arrival: Vector2 = regions[area].safe_point(point) if regions.has(area) else point
+		player.position = origin + arrival
 		player.collision_mask = 16 if regions.has(area) else (4 if area == "town" else 8)
 		camera.limit_left = int(origin.x)
 		camera.limit_top = 0
@@ -1784,6 +1789,7 @@ func begin_festival(spec: Dictionary = {}) -> void:
 		npc.paused = true
 		npc.label.visible = false
 		npc.position = festival_center + Vector2(170 if not current_festival.is_empty() else 270, 0).rotated(TAU * i / all.size())
+		if host.has_method("safe_point"): npc.position=host.safe_point(npc.position)
 		npc.show_frame(0, 1)
 	player.position = festival_origin + festival_center + Vector2(0,110)
 	festival_button.visible = true
@@ -1801,6 +1807,8 @@ func animate_festival() -> void:
 		var npc = festival_people[i].npc
 		var angle := TAU * i / festival_people.size()
 		npc.position = festival_center + Vector2(170 if not current_festival.is_empty() else 270, 0).rotated(angle) + Vector2(sin(festival_elapsed * 2.0 + i) * 8, cos(festival_elapsed * 3.0 + i) * 3)
+		var host=npc.get_parent()
+		if host.has_method("safe_point"): npc.position=host.safe_point(npc.position)
 		npc.show_frame(0, int(festival_elapsed * 5.0 + i) % 4)
 		npc.z_index = int(npc.position.y / 10)
 
@@ -1854,6 +1862,7 @@ func enter_shop(service: String, restoring: bool = false) -> void:
 	if is_instance_valid(polish): polish.path.clear()
 	location = "shop"
 	shop_name = service
+	if not restoring: preload("res://DailyErrands.gd").visit(self,service)
 	SHOP_ORIGIN = shops[service].position
 	shops[service].visible = true
 	if service == "Mine":
@@ -1889,12 +1898,12 @@ func check_walk_exits() -> void:
 			elif shop_name == "Barn":
 				travel_to("farm", BARN_DOOR + Vector2(0,110))
 			elif REGIONAL_ROOMS.has(shop_name):
-				travel_to(REGIONAL_ROOMS[shop_name][0], REGIONAL_ROOMS[shop_name][1] + Vector2(0, 110))
+				travel_to(REGIONAL_ROOMS[shop_name][0], REGIONAL_ROOMS[shop_name][1] + (Vector2(260,50) if shop_name == "Onsen Resort" else Vector2(0,110)))
 			else:
 				travel_to("town", service_door(shop_name) + Vector2(0, 70))
 		return
 	if inside_house or festival_active: return
-	if location == "mountain" and (player.position - REGION_ORIGINS.mountain).distance_to(Vector2(800, 250)) < 45:
+	if location == "mountain" and (player.position - REGION_ORIGINS.mountain).distance_to(RegionScript.MINE_DOOR) < 45:
 		enter_shop("Mine")
 		return
 	match location:
@@ -1920,7 +1929,7 @@ func check_walk_exits() -> void:
 			elif point.y < 80 and absf(point.x - 1200) < 220:
 				travel_to("mountain", Vector2(800, 950))
 			elif point.x < 100 and absf(point.y - 900) < 160:
-				travel_to("harbor", Vector2(800, 950))
+				travel_to("harbor", Vector2(800,180))
 			elif point.x > 2300 and absf(point.y - 900) < 160:
 				travel_to("tea", Vector2(800, 950))
 			elif point.x < 100 and absf(point.y - 390) < 100:
@@ -1928,7 +1937,7 @@ func check_walk_exits() -> void:
 		_:
 			if regions.has(location):
 				var point: Vector2 = player.position - REGION_ORIGINS[location]
-				if point.y > 1120 and absf(point.x - 800) < 100:
+				if ((location=="harbor" and point.y<80) or (location!="harbor" and point.y>1120)) and absf(point.x-800)<100:
 					var arrivals := {"mountain": Vector2(1200, 180), "harbor": Vector2(220, 900), "tea": Vector2(2180, 900), "historic": Vector2(240, 390)}
 					travel_to("town", arrivals[location])
 
@@ -1936,7 +1945,7 @@ func open_map() -> void:
 	if choosing_character or confirming_sleep or dialogue_open: return
 	var column := make_modal("Walking Routes")
 	dialogue_panel.get_child(0).offset_top = -340
-	dialogue_text.text = "Farm → Town walkway → Main Town.\n\nFrom town: north road to Mountain & Lake; east road to Tea Country; west road to the Harbor; northwest path to the Shrine.\n\nWalk onto each marked exit to continue. Return along the southern path in the outer regions."
+	dialogue_text.text = "Farm → Town walkway → Main Town.\n\nFrom town: north road to Mountain & Lake; east road to Tea Country; west road to the Harbor; northwest path to the Shrine.\n\nWalk onto each marked exit to continue. Harbor: return by the north path. Other regions: return by the south path."
 	column.add_child(make_button("Close", close_dialogue))
 
 func open_guide() -> void:
@@ -2046,11 +2055,11 @@ func resident_room(person: String) -> String:
 	var evening := clock_minutes >= 1080
 	match person:
 		"Seira": return "General Store" if morning or evening else ""
-		"Keiko": return "General Store" if clock_minutes < 1080 else ""
+		"Keiko": return "Café" if clock_minutes >= 1080 and clock_minutes < 1200 else "General Store"
 		"Shohei": return "Blacksmith" if morning or evening else ""
 		"Gen": return "Blacksmith" if clock_minutes < 1020 else ""
-		"Akira": return "Town Hall" if morning else ""
-		"Taro": return "Police Box" if clock_minutes >= 660 and clock_minutes < 840 else ""
+		"Akira": return "Town Hall" if morning or clock_minutes >= 1200 else ("Café" if evening else "")
+		"Taro": return "Police Box" if clock_minutes >= 1200 or (clock_minutes >= 660 and clock_minutes < 840) else ""
 		"Kenji", "Aya": return "Clinic" if clock_minutes >= 540 and clock_minutes < 1020 else ""
 		"Yumi": return "Inn"
 		"Hana": return "Inn" if morning or evening else ""
@@ -2406,7 +2415,7 @@ func storage_limit() -> int:
 
 func fit_region_camera(dimensions: Vector2) -> void:
 	var viewport_size := get_viewport_rect().size
-	var fit := maxf(0.70, maxf(viewport_size.x / dimensions.x, viewport_size.y / dimensions.y))
+	var fit := maxf(0.58, maxf(viewport_size.x / dimensions.x, viewport_size.y / dimensions.y))
 	camera.zoom = Vector2.ONE * fit
 func refit_camera() -> void:
 	if location == "farm" and not inside_house:

@@ -163,7 +163,7 @@ func run() -> void:
 		assert(farm.location == area, "Walk into " + area)
 		farm._physics_process(0.016)
 		assert(farm.location == area, "Arrival does not bounce back")
-		farm.player.position = farm.REGION_ORIGINS[area] + Vector2(800, 1130)
+		farm.player.position = farm.REGION_ORIGINS[area] + (Vector2(800,60) if area == "harbor" else Vector2(800,1130))
 		farm._physics_process(0.016)
 		assert(farm.location == "town", "Walk back from " + area)
 		farm._physics_process(0.016)

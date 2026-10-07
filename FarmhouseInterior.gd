@@ -107,6 +107,7 @@ func _draw() -> void:
 		draw_rect(Rect2(x,190,10,340),Color("785a3b"))
 		draw_rect(Rect2(x,630,10,90),Color("785a3b"))
 	# Front entry threshold and doormat.
+	preload("res://InteriorDecor.gd").draw_home(self)
 	draw_rect(Rect2(435, 680, 130, 40), Color("70523a"))
 	draw_rect(Rect2(449, 691, 102, 21), Color("d2b880"))
 

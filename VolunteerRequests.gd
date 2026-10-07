@@ -64,4 +64,5 @@ static func journal(farm) -> void:
 	var meal: String = farm.interior_progress.get("meal_request","")
 	if meal in ["accepted","completed"]: text += "Seira's community meal · two vegetables · "+meal+"\n"
 	farm.dialogue_text.text = "No accepted requests yet. Residents may stop by the farmhouse with an offer." if text.is_empty() else text
+	preload("res://DailyErrands.gd").append_journal(farm,column)
 	column.add_child(farm.make_button("Close",farm.close_dialogue))

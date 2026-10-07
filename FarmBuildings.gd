@@ -90,11 +90,15 @@ static func draw_room(room) -> void:
 		for bed in greenhouse(farm):
 			var p:=Vector2(bed.position[0],bed.position[1])
 			room.draw_rect(Rect2(p-Vector2(43,36),Vector2(86,72)),Color("93704a"))
+			room.draw_rect(Rect2(p-Vector2(43,36),Vector2(86,72)),Color("795d40"),false,4)
+			for y in [-19,0,19]: room.draw_line(p+Vector2(-33,y),p+Vector2(33,y),Color("a78559"),2)
 			if bed.stage>0:
 				room.draw_line(p+Vector2(0,15),p-Vector2(0,20),Color("667f4e"),6)
 				for dx in [-12,12]: room.draw_circle(p+Vector2(dx,-7),11,Color("819b60"))
 				if bed.stage==3: room.draw_circle(p+Vector2(0,9),12,Color(farm.CROPS[bed.crop].color))
 		room.draw_rect(Rect2(150,210,95,45),Color("7b9f9f"))
+		room.draw_rect(Rect2(152,214,91,37),Color("b9d1c4"),false,3)
+		room.draw_arc(Vector2(197,212),14,PI,TAU,12,Color("697f76"),5)
 		room.draw_string(ThemeDB.fallback_font,Vector2(160,240),"Water",HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color("e9e4cc"))
 	else:
 		for x in [170,710]:
@@ -103,5 +107,8 @@ static func draw_room(room) -> void:
 			room.draw_rect(Rect2(x+20,235,110,35),Color("e9dfc4"))
 		room.draw_rect(Rect2(420,280,260,130),Color("997651"))
 		room.draw_circle(Vector2(550,335),35,Color("d8c39a"))
+		preload("res://InteriorDecor.gd").cup(room,Vector2(610,330))
+		preload("res://InteriorDecor.gd").clock(room,Vector2(550,125))
+		for x in [170,710]: preload("res://InteriorDecor.gd").folded_towels(room,Vector2(x+45,385))
 		room.draw_string(ThemeDB.fallback_font,Vector2(420,500),"Upstairs family rooms",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("584631"))
 	room.draw_string(ThemeDB.fallback_font,Vector2(475,780),"Exit ↓",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("584631"))
