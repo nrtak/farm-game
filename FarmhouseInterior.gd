@@ -16,6 +16,10 @@ func _ready() -> void:
 	for rect in [Rect2(70,170,FLOOR.size.x+40,20),Rect2(70,720,FLOOR.size.x+40,20),Rect2(70,190,20,530),Rect2(FLOOR.end.x,190,20,530)]:
 		obstacle(rect)
 	for rect in SOLIDS: obstacle(rect)
+	for level in range(home_level):
+		var x:=910+level*220
+		obstacle(Rect2(x,190,10,340))
+		obstacle(Rect2(x,630,10,90))
 
 func obstacle(rect: Rect2) -> void:
 	var body := StaticBody2D.new()
@@ -31,6 +35,9 @@ func obstacle(rect: Rect2) -> void:
 
 func is_walkable(point: Vector2, radius: float = 12.0) -> bool:
 	if not FLOOR.grow(-radius).has_point(point): return false
+	for level in range(home_level):
+		var x:=910+level*220
+		if Rect2(x,190,10,340).grow(radius).has_point(point) or Rect2(x,630,10,90).grow(radius).has_point(point): return false
 	for rect in SOLIDS:
 		if rect.grow(radius).has_point(point): return false
 	return true
@@ -85,13 +92,20 @@ func _draw() -> void:
 	for offset in [Vector2(-15, -12), Vector2(8, -20), Vector2(20, -5)]:
 		draw_line(pot, pot + offset, Color("486941"), 3)
 		draw_circle(pot + offset, 12, Color("6f9151"))
+	if get_parent().interior_progress.get("second_story",false):
+		for i in range(6): draw_rect(Rect2(555,540+i*12,110,10),Color("97744f"))
+		draw_string(ThemeDB.fallback_font,Vector2(555,635),"Upstairs",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color("493b2d"))
 	if home_level > 0:
 		draw_rect(Rect2(940,245,145,80),Color("826446"))
 		draw_string(ThemeDB.fallback_font,Vector2(945,355),"Expanded storage",HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color("493b2d"))
 	if home_level > 1:
-		draw_rect(Rect2(960,370,140,45),Color("6f7b70"))
-		draw_circle(Vector2(1010,390),17,Color("d8ceb1"))
-		draw_string(ThemeDB.fallback_font,Vector2(960,485),"Kitchen",HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color("493b2d"))
+		draw_rect(Rect2(1160,370,140,45),Color("6f7b70"))
+		draw_circle(Vector2(1210,390),17,Color("d8ceb1"))
+		draw_string(ThemeDB.fallback_font,Vector2(1160,485),"Kitchen",HORIZONTAL_ALIGNMENT_LEFT,-1,20,Color("493b2d"))
+	for level in range(home_level):
+		var x:=910+level*220
+		draw_rect(Rect2(x,190,10,340),Color("785a3b"))
+		draw_rect(Rect2(x,630,10,90),Color("785a3b"))
 	# Front entry threshold and doormat.
 	draw_rect(Rect2(435, 680, 130, 40), Color("70523a"))
 	draw_rect(Rect2(449, 691, 102, 21), Color("d2b880"))

@@ -122,6 +122,7 @@ func run() -> void:
 	farm.load_game()
 	assert(farm.friendship.Emi == 17, "Recovery copy restores an interrupted save")
 	farm.travel_to("farm", Vector2(900, 1200), false)
+	farm.resources.action_time = 0
 	farm.joystick.direction = Vector2(0.5, 0)
 	farm._physics_process(0.016)
 	var walking: float = farm.player.velocity.length()
@@ -227,7 +228,7 @@ func run() -> void:
 	assert(farm.health == 20 and farm.coins == 49, "Unaffordable treatment not charged")
 	farm.close_dialogue()
 	for room_name in farm.REGIONAL_ROOMS:
-		farm.clock_minutes = 800
+		farm.clock_minutes = 600 if room_name == "Mountain Carpentry" else 800
 		var entrance = farm.REGIONAL_ROOMS[room_name]
 		assert(farm.regions[entrance[0]].is_walkable(entrance[1]), "Exterior door has clear approach")
 		farm.travel_to(entrance[0], entrance[1], false)

@@ -54,9 +54,9 @@ const SCENES := {
 		["Hiro", "You're right. Farmer, there's a seat here if you want it."]
 	],
 	"Old Paths": [
-		["Yoshi", "There used to be a path from your family land toward the old orchard."],
-		["Rei", "Yoshi remembers every path. I remember where people get lost."],
-		["Yoshi", "Between us, you should find your way."],
+		["Haruka", "There used to be a path from your family land toward the old orchard."],
+		["Rei", "Haruka remembers every path. I remember where people get lost."],
+		["Haruka", "Between us, you should find your way."],
 		["Rei", "Bring good shoes. History can be muddy."]
 	],
 	"A Quiet Cup": [

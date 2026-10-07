@@ -23,18 +23,19 @@ var pets: Array[Node2D] = []
 var ambient_period := -1
 var greeting_time := 0.0
 const EXTRA_DIALOGUE := {
-	"Ren": ["I'm Ren. I like sketching the mountain from the plaza.", "Blue hair is easier to spot when my friends come looking for me!"],
-	"Chanel": ["I'm Chanel. A little shopping, then tea at Naomi's café—that's my afternoon.", "It's lovely seeing the old farm come back to life."],
-	"David": ["David here. I help carry deliveries around town.", "If you see a sleepy dog on the road, give it a little room."],
-	"Renji": ["I'm Renji. I stop by the forge to see what Shohei is making.", "There is always someone to meet around the plaza."],
-	"Midori": ["I'm Midori. I love the gardens around town.", "Green hair, green plants... I suppose I have a favorite color."]
+	"Ren": ["I'm Ren. I prepare the mountain onsen baths and keep the resort running.", "The water is warmest when the morning air is cool. Come by for a soak."],
+	"Chanel": ["I am Chanel. I welcome guests at the mountain onsen.", "Stop by for a quiet soak after working on the farm."],
+	"David": ["David here. I carry deliveries between the general store and harbor.", "If you see a sleepy dog on the road, give it a little room."],
+	"Renji": ["I'm Renji. I help Kenta prepare timber and build at the workshops.", "We work near the mountains in the morning and in town after lunch."],
+	"Midori": ["I'm Midori. I tend the tea fields and the onsen gardens.", "I like giving each season a little corner of the garden."]
 }
+const REST_BENCHES := [Rect2(1540, 760, 105, 32), Rect2(865, 1080, 105, 32)]
 var solids: Array[Rect2] = []
 var navigation := AStarGrid2D.new()
 
 func _ready() -> void:
 	var background := Sprite2D.new()
-	background.texture = preload("res://assets/town-background-v1.png")
+	background.texture = preload("res://assets/town-background-v2-square.png")
 	background.centered = false
 	background.scale = Vector2.ONE * ART_SCALE
 	background.z_index = -10
@@ -55,6 +56,9 @@ func _ready() -> void:
 	var board := Rect2(1310, 615, 80, 65)
 	solids.append(board)
 	add_obstacle(board)
+	for bench in REST_BENCHES:
+		solids.append(bench)
+		add_obstacle(bench)
 	navigation.region = Rect2i(0, 0, 60, 54)
 	navigation.cell_size = Vector2(40, 40)
 	navigation.offset = Vector2(20, 20)
@@ -62,14 +66,14 @@ func _ready() -> void:
 	navigation.update()
 	for y in range(54):
 		for x in range(60):
-			navigation.set_point_solid(Vector2i(x, y), not is_walkable(Vector2(x * 40 + 20, y * 40 + 20)))
+			navigation.set_point_solid(Vector2i(x, y), not is_npc_walkable(Vector2(x * 40 + 20, y * 40 + 20)))
 	var positions := [Vector2(750, 880), Vector2(780, 1310), Vector2(1200, 510), Vector2(1150, 1540)]
 	var names := ["Seira", "Shohei", "Akira", "Taro"]
 	for i in range(4):
 		var npc := NpcScript.new()
 		add_child(npc)
 		npc.position = positions[i]
-		npc.setup(names[i], load("res://assets/npc-%s-walk.png" % names[i].to_lower()))
+		npc.setup(names[i], preload("res://CharacterArt.gd").walk(names[i]))
 		npc.z_index = 4
 		npcs.append(npc)
 	update_schedules(360.0)
@@ -119,7 +123,8 @@ func update_schedules(minute: float) -> void:
 				routes = [Vector2(1200, 1645), Vector2(1200, 910), Vector2(1200, 460), Vector2(1200, 910)]
 		if period == 2:
 				routes = [Vector2(1200, 910), Vector2(1830, 1295), Vector2(1200, 1295)] if i != 3 else [Vector2(1200, 1645), Vector2(1200, 910)]
-		npc.set_route(walk_route(npc.position, routes))
+		settle_on_road(npc)
+		npc.set_route(walk_route(npc.position, routes.slice(0,1)))
 
 func add_supporting_cast() -> void:
 	for person in Cast.HOMES:
@@ -128,7 +133,7 @@ func add_supporting_cast() -> void:
 		npc.position = Cast.HOMES[person]
 		var source := Cast.index_of(person)
 		var walk_path := "res://assets/npc-%s-walk.png" % person.to_lower()
-		if ResourceLoader.exists(walk_path): npc.setup(person, load(walk_path))
+		if preload("res://CharacterArt.gd").walk(person) != null: npc.setup(person, preload("res://CharacterArt.gd").walk(person))
 		else: npc.setup_turnaround(person, SpriteLibrary.turnaround(source.x), source.y, source.x)
 		npc.z_index = 4
 		npcs.append(npc)
@@ -145,13 +150,14 @@ func update_supporting_routes(minute: float) -> void:
 		var route: Array = [home, lane, home + Vector2(45, 0)]
 		if period == 1:
 			route = [home, lane, Vector2(1200, 910), Vector2(1450 + (i % 3) * 80, 910), Vector2(1200, 910), lane, home]
-		npc.set_route(walk_route(npc.position, route))
+		settle_on_road(npc)
+		npc.set_route(walk_route(npc.position, route.slice(0,1)))
 
 func walk_route(start: Vector2, destinations: Array) -> Array:
 	var points: Array = []
 	var previous := start
 	var loop := destinations.duplicate()
-	if not destinations.is_empty(): loop.append(start)
+	# Scheduled trips end at the destination; residents settle rather than loop.
 	for destination in loop:
 		var from := Vector2i(clampi(int(previous.x / 40), 0, 59), clampi(int(previous.y / 40), 0, 53))
 		var to := Vector2i(clampi(int(destination.x / 40), 0, 59), clampi(int(destination.y / 40), 0, 53))
@@ -163,6 +169,11 @@ func walk_route(start: Vector2, destinations: Array) -> Array:
 			if points.is_empty() or points[-1].distance_to(point) > 1: points.append(point)
 		previous = destination
 	return points
+
+func settle_on_road(npc) -> void:
+	if is_npc_walkable(npc.position): return
+	var cell := nearest_clear_cell(Vector2i(npc.position / 40))
+	npc.position = navigation.get_point_position(cell)
 
 func nearest_clear_cell(cell: Vector2i) -> Vector2i:
 	for radius in range(1, 8):
@@ -214,12 +225,11 @@ func nearest_service(point: Vector2) -> String:
 	return ""
 
 func _draw() -> void:
-	draw_texture_rect_region(preload("res://assets/town-background-v1.png"), Rect2(0, 1798, 2400, 362), Rect2(0, 1000, 1448, 86))
+	for bench in REST_BENCHES:
+		draw_texture_rect_region(preload("res://assets/town-background-v2-square.png"), Rect2(bench.position - Vector2(0, 20), Vector2(105, 65)), Rect2(878, 409, 57, 36))
+	draw_texture_rect_region(preload("res://assets/town-background-v2-square.png"), Rect2(0, 1798, 2400, 362), Rect2(0, 1000, 1448, 86))
 	draw_rect(Rect2(1090, 1798, 220, 362), Color("dbc48f"))
-	var workshop := Rect2(190*ART_SCALE,1050*ART_SCALE,250*ART_SCALE,135*ART_SCALE)
-	draw_rect(workshop,Color("b99a70"))
-	draw_colored_polygon(PackedVector2Array([workshop.position+Vector2(-15,0),workshop.position+Vector2(workshop.size.x/2,-70),workshop.position+Vector2(workshop.size.x+15,0)]),Color("6e7c70"))
-	draw_rect(Rect2(workshop.get_center()+Vector2(-25,20),Vector2(50,90)),Color("75563b"))
+	draw_texture_rect(preload("res://assets/carpentry-exterior-v1.png"),Rect2(190*ART_SCALE,1050*ART_SCALE,250*ART_SCALE,160*ART_SCALE),false)
 	if festival_decorated:
 		for y in [720, 1100]:
 			draw_line(Vector2(1000, y), Vector2(1400, y), Color("765b3b"), 3)
@@ -242,7 +252,7 @@ func add_ambient_life() -> void:
 	for i in range(5):
 		var npc := NpcScript.new()
 		add_child(npc)
-		npc.setup(names[i], load("res://assets/npc-%s-walk-v1.png" % names[i].to_lower()))
+		npc.setup(names[i], preload("res://CharacterArt.gd").walk(names[i]))
 		npc.first_name = names[i]
 		npc.label.text = names[i]
 		npc.position = Vector2(1140 + i * 90, 950)
@@ -259,31 +269,30 @@ func add_ambient_life() -> void:
 		pets.append(pet)
 
 func tick_ambient(delta: float, minute: float, rainy: bool, rooms: Dictionary = {}, regions: Dictionary = {}) -> void:
-	var period := (0 if minute < 720 else (1 if minute < 1080 else 2)) + (3 if rainy else 0)
+	var period := (0 if minute < 720 else (1 if minute < 1080 else (2 if minute<1260 else 3))) + (4 if rainy else 0)
 	if period != ambient_period:
 		ambient_period = period
-		var hangouts := [Vector2(1200, 520), Vector2(1880, 820), Vector2(1200, 1300), Vector2(820, 1310), Vector2(980, 910)]
 		for i in range(visitors.size()):
 			var npc = visitors[i]
-			var destination: Vector2 = hangouts[(i + period) % hangouts.size()]
-			if rainy or minute >= 1080: destination = Vector2(1820 + (i%2)*80, 1310 + (i/2)*45)
-			if (rainy or minute >= 1080) and not rooms.is_empty():
-				var room = rooms["Café" if i % 2 == 0 and minute < 1080 else "Inn"]
-				if npc.get_parent() != room:
-					npc.reparent(room)
-					npc.position = Vector2(410 + (i % 3)*110, 510 + (i%2)*95)
-				npc.set_route([npc.position, npc.position + Vector2(0, 45)])
-			elif not regions.is_empty() and i >= 2:
-				var area = regions[["harbor", "mountain", "tea"][(i-2+period)%3]]
-				if npc.get_parent() != area:
-					npc.reparent(area)
-					npc.position = Vector2(650 + (i-2)*130, 610)
-				npc.set_route([npc.position, Vector2(800, 760), Vector2(800, 610)])
-			else:
-				if npc.get_parent() != self:
-					npc.reparent(self)
-					npc.position = Vector2(1200 + i*60, 910)
-				npc.set_route(walk_route(npc.position, [destination, destination + Vector2(60, 0)]))
+			var destination = self
+			var point := Vector2(1200,910)
+			if not rooms.is_empty() and not regions.is_empty():
+				match npc.first_name:
+					"Chanel": destination = rooms["Onsen Resort"]; point = Vector2(530,390)
+					"Ren":
+						destination = rooms["Onsen Resort"] if minute >= 720 or rainy else regions.mountain
+						point = Vector2(690,510) if destination == rooms["Onsen Resort"] else Vector2(460,940)
+					"Renji": destination = rooms["Mountain Carpentry" if minute < 720 else "Carpentry"]; point = Vector2(730,520)
+					"David":
+						destination = regions.harbor if minute < 720 and not rainy else rooms["General Store"]
+						point = Vector2(1020,600) if destination == regions.harbor else Vector2(730,600)
+					"Midori": destination = rooms["Tea Farmhouse"] if rainy else regions.tea; point = Vector2(730,570) if rainy else Vector2(1060,700)
+				if minute >= 1260: destination = rooms["Inn"]; point = Vector2(450+(i%3)*110,510+(i/3)*90)
+			else: point = Vector2(1200,520+i*260)
+			if npc.get_parent() != destination: npc.reparent(destination,false)
+			npc.position = point
+			npc.set_route([])
+			npc.show_frame(0,1)
 		for i in range(pets.size()):
 			var pet = pets[i]
 			if not regions.is_empty() and i >= 2:
@@ -291,12 +300,13 @@ func tick_ambient(delta: float, minute: float, rainy: bool, rooms: Dictionary = 
 				if pet.get_parent() != area:
 					pet.reparent(area)
 					pet.position = Vector2(620 + (i-2)*170, 600)
-				pet.route = [pet.position, Vector2(800, 720), Vector2(800, 610)]
+				pet.route = [pet.position, pet.position + Vector2(0,35)]
 				if rainy: pet.route = [Vector2(640 + (i-2)*160, 430)]
 				pet.index = 0
 				continue
 			var shelter := Vector2(1450 + i * 45, 1310)
-			pet.route = walk_route(pet.position, [shelter, shelter + Vector2(30,0)] if rainy else [Vector2(700 + i*900, 960), Vector2(820 + i*850, 1100)])
+			pet.position = Vector2(900+i*900,850)
+			pet.route = [shelter, shelter+Vector2(30,0)] if rainy else [pet.position,pet.position+Vector2(35,0)]
 			pet.index = 0
 	for npc in visitors:
 		npc.tick(delta)
@@ -317,3 +327,12 @@ func tick_ambient(delta: float, minute: float, rainy: bool, rooms: Dictionary = 
 					break
 	elif greeting_time < 9:
 		for npc in visitors: npc.label.text = npc.first_name
+
+func is_npc_walkable(point: Vector2) -> bool:
+	if not is_walkable(point): return false
+	if Rect2(1070,24,270,2112).has_point(point): return true
+	if Rect2(24,790,2352,210).has_point(point): return true
+	for building in BUILDINGS:
+		var door: Vector2 = building.door*ART_SCALE
+		if Rect2(minf(door.x,1200)-45,door.y-45,absf(door.x-1200)+90,95).has_point(point): return true
+	return false

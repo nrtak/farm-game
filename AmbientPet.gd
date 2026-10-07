@@ -7,6 +7,7 @@ var wait := 1.0
 var travel := 0.0
 var facing := 1.0
 var resting := false
+var affection_time := 0.0
 var shiba_sprite: Sprite2D
 var artwork := ""
 func _ready() -> void:
@@ -24,6 +25,7 @@ func update_shiba() -> void:
 	shiba_sprite.flip_h = facing < 0
 	shiba_sprite.frame = (6 if resting else (5 if index % 2 == 0 else 4)) if wait > 0 else int(travel / 13.0) % 4
 func tick(delta: float) -> void:
+	affection_time = maxf(0,affection_time-delta)
 	if wait > 0:
 		wait -= delta
 		update_shiba()
@@ -33,17 +35,21 @@ func tick(delta: float) -> void:
 	var direction: Vector2 = route[index] - position
 	if direction.length() < 5:
 		index = (index + 1) % route.size()
-		wait = 2.0 + index * 1.3
+		wait = 18.0 + index * 4.0
 		resting = index % 3 == 0
 	else:
 		var step := minf(65.0 * delta, direction.length())
-		position += direction.normalized() * step
+		var next := position+direction.normalized()*step
+		if get_parent().has_method("is_walkable") and not get_parent().is_walkable(next): wait=20; return
+		position = next
 		travel += step
 		if absf(direction.x) > 1: facing = signf(direction.x)
 		resting = false
 	update_shiba()
 	queue_redraw()
 func _draw() -> void:
+	if affection_time > 0:
+		draw_string(ThemeDB.fallback_font,Vector2(-8,-92),"♥",HORIZONTAL_ALIGNMENT_LEFT,-1,23,Color("d28b79"))
 	if is_instance_valid(shiba_sprite): return
 	draw_set_transform(Vector2.ZERO, 0, Vector2(facing, 1))
 	paint_oval(Vector2(0, -3), Vector2(30, 8), Color(0, 0, 0, 0.15))

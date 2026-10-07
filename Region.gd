@@ -15,7 +15,7 @@ var background: Texture2D
 func setup(area: String, people: Array) -> void:
 	kind = area
 	title = {"tea": "Tea Country", "harbor": "Western Harbor", "mountain": "Mountain & Lake", "historic": "Historic District"}[kind]
-	background = load("res://assets/region-%s-v1.png" % kind)
+	background = load("res://assets/region-historic-v2.png" if kind == "historic" else "res://assets/region-%s-v1.png" % kind)
 	var building_bounds: Array = {
 		"tea": [Rect2(190, 100, 365, 235), Rect2(895, 120, 360, 220)],
 		"harbor": [Rect2(220, 110, 315, 220), Rect2(928, 110, 325, 220)],
@@ -27,6 +27,10 @@ func setup(area: String, people: Array) -> void:
 		var rect := Rect2(bounds.position * scale_to_world, bounds.size * scale_to_world)
 		solids.append(rect)
 		obstacle(rect)
+	if kind == "mountain":
+		for rect in [Rect2(140,660,420,230),Rect2(1130,630,360,230),Rect2(555,750,165,120)]:
+			solids.append(rect)
+			obstacle(rect)
 	if kind == "harbor":
 		for rect in [Rect2(0, 850, 230, 350), Rect2(340, 880, 360, 320), Rect2(230, 1000, 110, 200), Rect2(900, 870, 350, 330), Rect2(1360, 820, 240, 380), Rect2(1250, 1000, 110, 200)]:
 			solids.append(rect)
@@ -43,7 +47,7 @@ func setup(area: String, people: Array) -> void:
 		npc.position = Vector2(500 + i * 500, 550)
 		var index := Cast.index_of(person)
 		var walk_path := "res://assets/npc-%s-walk.png" % person.to_lower()
-		if ResourceLoader.exists(walk_path): npc.setup(person, load(walk_path))
+		if preload("res://CharacterArt.gd").walk(person) != null: npc.setup(person, preload("res://CharacterArt.gd").walk(person))
 		else: npc.setup_turnaround(person, SpriteLibrary.turnaround(index.x), index.y, index.x)
 		npc.z_index = 4
 		npc.set_route([npc.position, Vector2(800, 630 + i * 130), Vector2(500 + i * 500, 780), npc.position])
@@ -103,16 +107,8 @@ func is_walkable(point: Vector2) -> bool:
 func _draw() -> void:
 	if background != null:
 		draw_texture_rect(background, Rect2(Vector2.ZERO, SIZE), false)
-		if kind == "historic":
-			# These side lanes end within the region; reserve the south road for travel.
-			for side in [0, 1]:
-				var cap := PackedVector2Array()
-				var uv := PackedVector2Array()
-				for point in [Vector2(0,470),Vector2(70,485),Vector2(115,520),Vector2(137,570),Vector2(128,625),Vector2(92,674),Vector2(0,700)]:
-					cap.append(Vector2(SIZE.x-point.x,point.y) if side == 1 else point)
-					uv.append(Vector2(390+point.x*0.55,680+(point.y-470)*0.5)/background.get_size())
-				draw_polygon(cap,PackedColorArray([Color.WHITE]),uv,background)
 		if kind == "mountain":
+			draw_mountain_resort()
 			draw_style_box(mine_arch(), Rect2(740, 135, 120, 120))
 			draw_rect(Rect2(762, 175, 76, 80), Color("454940"))
 			draw_string(ThemeDB.fallback_font, Vector2(745, 290), "Mine", HORIZONTAL_ALIGNMENT_CENTER, 110, 24, Color("493b2d"))
@@ -170,3 +166,19 @@ func mine_arch() -> StyleBoxFlat:
 	box.corner_radius_top_left = 45
 	box.corner_radius_top_right = 45
 	return box
+
+func draw_mountain_resort() -> void:
+	draw_texture_rect(preload("res://assets/onsen-exterior-v1.png"),Rect2(140,660,420,260),false)
+	draw_texture_rect(preload("res://assets/carpentry-exterior-v1.png"),Rect2(1130,630,360,250),false)
+	var pool := StyleBoxFlat.new()
+	pool.bg_color = Color("82b7b4")
+	pool.border_color = Color("858879")
+	pool.set_border_width_all(12)
+	pool.set_corner_radius_all(38)
+	draw_style_box(pool,Rect2(555,750,165,120))
+	for x in [580,625,675]:
+		draw_arc(Vector2(x,812),15,0.1,2.7,12,Color("c1d6c9"),2)
+		draw_arc(Vector2(x,748),18,-1.6,0.4,12,Color(0.94,0.94,0.84,0.7),3)
+	draw_string(ThemeDB.fallback_font,Vector2(245,945),"Mountain Onsen",HORIZONTAL_ALIGNMENT_LEFT,-1,23,Color("493b2d"))
+	draw_string(ThemeDB.fallback_font,Vector2(1170,910),"Forest Workshop",HORIZONTAL_ALIGNMENT_LEFT,-1,23,Color("493b2d"))
+

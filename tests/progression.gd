@@ -7,6 +7,7 @@ func run():
 	f.set_physics_process(false)
 	f.choose_character("boy")
 	f.interior_progress = {}
+	f.resources.state().lumber = 100
 	f.harvests = 30
 	f.coins = 3000
 	f.day = 20
@@ -37,7 +38,7 @@ func run():
 		assert(f.interior.home_level == level)
 	assert(f.storage_limit() == 2997)
 	f.enter_house()
-	f.player.position = f.ROOM_ORIGIN + Vector2(1010,450)
+	f.player.position = f.ROOM_ORIGIN + Vector2(1230,450)
 	assert(f.interaction_action() == "cook")
 	f.produce = {"Turnip":1,"Potato":1,"Strawberry":0}
 	f.health = 50

@@ -1,8 +1,8 @@
 extends RefCounted
-const NEIGHBORS := ["Seira","Shohei","Akira","Taro","Aya","Hana","Mika","Yuta","Ken","Hiro","Keiko","Kenji","Gen","Yumi","Jiro","Naomi","Sachiko","Kenta","Yoshi","Rei","Masao","Emi","Ren","Chanel","David","Renji","Midori"]
+const NEIGHBORS := ["Seira","Shohei","Akira","Taro","Aya","Hana","Mika","Yuta","Ken","Hiro","Keiko","Kenji","Gen","Yumi","Jiro","Naomi","Sachiko","Kenta","Haruka","Rei","Masao","Emi","Ren","Chanel","David","Renji","Midori"]
 static func check_visit(farm) -> bool:
 	if farm.location != "farm" or farm.inside_house or farm.festival_active or farm.active_scene != "": return false
-	if farm.player.position.distance_to(Vector2(450,1080)) > 90: return false
+	if farm.player.position.distance_to(farm.farmhouse.DOOR_POSITION+Vector2(0,60)) > 90: return false
 	if farm.joystick.direction.length() > 0.1 or farm.player.velocity.length() > 1: return false
 	var state: Dictionary = farm.interior_progress.get("story",{})
 	var key := ""
@@ -23,9 +23,14 @@ static func check_visit(farm) -> bool:
 		else:
 			state["vote_day"] = farm.day+28
 			words = "The vote was %d in favor and %d asking for more progress. You keep working the farm. We have granted another season and will review it again in 28 days.\n\n" % [votes,27-votes] + progress(farm)
-	elif (farm.day-1)%112 == 12 and not state.has("invite_%d" % farm.day):
+	elif not SeasonalFestivals.today(farm.day+1).is_empty() and not state.has("invite_%d" % farm.day):
 		key = "invite_%d" % farm.day
-		words = "I stopped by to invite you to tomorrow's Spring Gathering. Join us in the town plaza between 10 AM and 6 PM. You're part of this community, and we'd love to see you there."
+		var event := SeasonalFestivals.today(farm.day+1)
+		words = "I stopped by to invite you to tomorrow's " + event.name + ". Join us in " + {"town":"the town plaza","tea":"tea country","harbor":"the harbor","historic":"the shrine district","mountain":"the mountain onsen"}[event.area] + ". Check the farmhouse calendar for the time. We would love to see you there."
+	elif VolunteerRequests.delivery_ready(farm) and not state.has("delivery_offer_%d" % farm.day):
+		key = "delivery_offer_%d" % farm.day
+		person = "Seira"
+		words = "I stopped by for the vegetables for our community meal. Would you like to hand over two now?"
 	elif farm.harvests >= 3 and not state.get("seira_visit",false):
 		key = "seira_visit"
 		person = "Seira"
@@ -41,12 +46,15 @@ static func check_visit(farm) -> bool:
 	farm.farm_visitor = visitor
 	farm.add_child(visitor)
 	visitor.setup(person,load("res://assets/npc-%s-walk.png" % person.to_lower()))
-	visitor.position = Vector2(650,1080)
+	visitor.position = farm.farmhouse.DOOR_POSITION+Vector2(180,100)
 	visitor.z_index = 5
 	visitor.face_player(farm.player.position)
 	var column = farm.make_modal(person,true)
 	farm.dialogue_panel.get_child(0).offset_top = -minf(380,farm.get_viewport_rect().size.y-32)
 	farm.dialogue_text.text = words
+	if key.begins_with("invite_"): VolunteerRequests.offer(farm,column,SeasonalFestivals.today(farm.day+1),farm.day+1)
+	if key == "seira_visit": VolunteerRequests.offer_delivery(farm,column)
+	if key.begins_with("delivery_offer_"): column.add_child(farm.make_button("Deliver two vegetables",VolunteerRequests.deliver.bind(farm)))
 	column.add_child(farm.make_button("Thanks for stopping by",finish_visit.bind(farm,visitor)))
 	farm.save_game(false)
 	return true

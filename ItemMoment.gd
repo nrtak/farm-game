@@ -31,6 +31,19 @@ func _draw() -> void:
 		draw_line(Vector2(0, -8), Vector2(0, -24), green, 6)
 		draw_circle(Vector2(-8, -15), 8, green)
 		draw_circle(Vector2(8, -19), 8, green)
+	elif item == "Lumber":
+		draw_line(Vector2(-22,10),Vector2(22,-10),Color("97734e"),18)
+		draw_circle(Vector2(22,-10),9,Color("dbc18b"))
+	elif item in ["Milk","Goat milk"]:
+		draw_rect(Rect2(-15,-16,30,39),Color("f5edda"))
+		draw_rect(Rect2(-10,-25,20,10),Color("8dabb2"))
+		draw_rect(Rect2(-15,1,30,12),Color("8dabb2"))
+	elif item == "Egg":
+		draw_set_transform(Vector2.ZERO,0,Vector2(0.8,1.1))
+		draw_circle(Vector2.ZERO,22,Color("f6edd6"))
+		draw_set_transform(Vector2.ZERO)
+	elif item == "Wool":
+		for p in [Vector2(-13,0),Vector2(0,-10),Vector2(13,0),Vector2(0,12)]: draw_circle(p,13,Color("f4efdc"))
 	elif item == "Wallet":
 		draw_rect(Rect2(-23, -16, 46, 32), Color("b58654"))
 		draw_rect(Rect2(-18, -11, 36, 22), Color("e4cf9c"))

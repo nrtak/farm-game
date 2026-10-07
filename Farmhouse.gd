@@ -1,13 +1,13 @@
 extends Node2D
 
-const DOOR_POSITION := Vector2(400, 1005)
-const OUTLINE := [Vector2(5, 550), Vector2(50, 475), Vector2(130, 390), Vector2(325, 390), Vector2(415, 485), Vector2(380, 600), Vector2(120, 630), Vector2(5, 615)]
+const DOOR_POSITION := Vector2(775, 550)
+const OUTLINE := [Vector2(215,107),Vector2(495,107),Vector2(495,266),Vector2(215,266)]
 
 func _ready() -> void:
 	var body := StaticBody2D.new()
 	var collision := CollisionPolygon2D.new()
 	var points := PackedVector2Array()
-	for point in OUTLINE: points.append(point * 1.5625)
+	for point in OUTLINE: points.append(point * 1.953125)
 	collision.polygon = points
 	body.add_child(collision)
 	add_child(body)
@@ -17,10 +17,13 @@ func _ready() -> void:
 	sprite.region_enabled = true
 	sprite.region_rect = bounds
 	sprite.centered = false
-	sprite.position = Vector2(5, 390) * 1.5625
-	sprite.scale = Vector2(410, 240) * 1.5625 / Vector2(bounds.size)
+	sprite.position = Vector2(215, 107) * 1.953125
+	sprite.scale = Vector2(280, 159) * 1.953125 / Vector2(bounds.size)
 
 func _draw() -> void:
+	if get_parent().get_parent().interior_progress.get("second_story",false):
+		draw_rect(Rect2(700,505,80,24),Color("e5d6ae"))
+		draw_string(ThemeDB.fallback_font,Vector2(711,524),"2F",HORIZONTAL_ALIGNMENT_LEFT,-1,19,Color("604a34"))
 	# A small doormat marks the reachable entrance outside the solid facade.
 	draw_style_box(doormat(), Rect2(DOOR_POSITION - Vector2(35, 15), Vector2(70, 30)))
 

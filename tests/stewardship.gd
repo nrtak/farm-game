@@ -7,7 +7,7 @@ func run():
 	f.set_physics_process(false)
 	f.choose_character("boy")
 	f.interior_progress = {}
-	f.travel_to("farm",Vector2(450,1120),false)
+	f.travel_to("farm",f.farmhouse.DOOR_POSITION+Vector2(0,60),false)
 	assert(f.Stewardship.check_visit(f))
 	assert(f.interior_progress.story.intro)
 	f.close_dialogue()

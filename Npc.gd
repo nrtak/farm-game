@@ -1,6 +1,7 @@
 extends Node2D
 
 static var geometry_cache: Dictionary = {}
+static var new_geometry_cache: Dictionary = {}
 
 var first_name := ""
 var route: Array = []
@@ -94,6 +95,18 @@ func setup(person: String, texture: Texture2D) -> void:
 	show_frame(0, 1)
 
 func prepare_walk_geometry(person: String, texture: Texture2D) -> void:
+	if texture.resource_path.contains("/characters/"):
+		if new_geometry_cache.is_empty():
+			var parsed = JSON.parse_string(FileAccess.get_file_as_string("res://assets/characters/walk-geometry.json"))
+			if parsed is Dictionary: new_geometry_cache = parsed
+		var data = new_geometry_cache
+		if data is Dictionary and data.has(person):
+			var entry: Dictionary = data[person]
+			var ratio := Vector2(float(texture.get_width())/entry.width,float(texture.get_height())/entry.height)
+			for values in entry.regions: regions.append(Rect2(Vector2(values[0],values[1])*ratio,Vector2(values[2],values[3])*ratio))
+			for values in entry.offsets: offsets.append(Vector2(values[0],values[1])*ratio)
+			height_scale = entry.scale/ratio.y
+			return
 	if geometry_cache.is_empty() and FileAccess.file_exists("res://assets/npc-geometry.json"):
 		var cached = JSON.parse_string(FileAccess.get_file_as_string("res://assets/npc-geometry.json"))
 		if cached is Dictionary: geometry_cache = cached
@@ -141,11 +154,19 @@ func tick(delta: float) -> void:
 	if paused or route.is_empty(): return
 	var direction := target - position
 	if direction.length() < 4.0:
-		route_index = (route_index + 1) % route.size()
+		if route_index >= route.size()-1:
+			route.clear()
+			show_frame(facing,1)
+			return
+		route_index += 1
 		target = route[route_index]
 		direction = target - position
 	var distance := minf(speed * delta, direction.length())
-	position += direction.normalized() * distance
+	var next := position + direction.normalized() * distance
+	var area = get_parent()
+	if area.has_method("is_npc_walkable") and not area.is_npc_walkable(next): route.clear(); show_frame(facing,1); return
+	elif area.has_method("is_walkable") and not area.is_walkable(next): route.clear(); show_frame(facing,1); return
+	position = next
 	travel += distance
 	if absf(direction.x) > absf(direction.y): facing = 1 if direction.x < 0 else 3
 	else: facing = 0 if direction.y >= 0 else 2
@@ -163,7 +184,7 @@ func show_frame(row: int, phase: int) -> void:
 		return
 	# Some generated last left-profile frames face right. Reuse the matching
 	# right-profile passing frame mirrored, rather than showing a direction jump.
-	var mirror := row == 1 and phase == 3
+	var mirror := row == 1 and (sheet.resource_path.contains("/characters/") or phase == 3)
 	var index := (3 if mirror else row) * 4 + phase
 	if index == frame and sprite.flip_h == mirror: return
 	frame = index

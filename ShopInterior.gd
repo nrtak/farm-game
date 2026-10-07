@@ -29,12 +29,12 @@ func setup(service: String) -> void:
 	apply_expanded_layout()
 	for rect in [Rect2(90, 150, 920, 20), Rect2(90, 790, 920, 20), Rect2(90, 170, 20, 620), Rect2(990, 170, 20, 620)]: obstacle(rect)
 	for rect in solids: obstacle(rect)
-	var people: Array = {"General Store": ["Keiko", "Seira"], "Blacksmith": ["Gen", "Shohei"], "Café": ["Naomi"], "Inn": ["Yumi", "Hana"], "Clinic": ["Kenji", "Aya"], "Town Hall": ["Akira"], "Police Box": ["Taro"], "Fire Station": ["Jiro", "Yuta"], "Archive": ["Yoshi"], "Shrine Residence": ["Rei"], "Mountain Lodge": ["Emi"], "Tea Farmhouse": ["Sachiko", "Mika"], "Tea Processing Shed": ["Sachiko"], "Harbor Homes": ["Ken", "Masao"], "Fishing Shop": ["Masao"], "Hiro Cabin": ["Hiro"], "Mine": [], "Carpentry":["Kenta"]}[kind]
+	var people: Array = {"General Store": ["Keiko", "Seira"], "Blacksmith": ["Gen", "Shohei"], "Café": ["Naomi"], "Inn": ["Yumi", "Hana"], "Clinic": ["Kenji", "Aya"], "Town Hall": ["Akira"], "Police Box": ["Taro"], "Fire Station": ["Jiro", "Yuta"], "Archive": ["Haruka"], "Shrine Residence": ["Rei"], "Mountain Lodge": ["Emi"], "Tea Farmhouse": ["Sachiko", "Mika"], "Tea Processing Shed": ["Sachiko"], "Harbor Homes": ["Ken", "Masao"], "Fishing Shop": ["Masao"], "Hiro Cabin": ["Hiro"], "Mine": [], "Carpentry":["Kenta"], "Mountain Carpentry":["Kenta"], "Onsen Resort":[],"Barn":[],"Greenhouse":[],"Upper Floor":[]}[kind]
 	for i in range(people.size()):
 		var person: String = people[i]
 		var keeper = preload("res://Npc.gd").new()
 		add_child(keeper)
-		keeper.setup(person, load("res://assets/npc-%s-walk.png" % person.to_lower()))
+		keeper.setup(person, preload("res://CharacterArt.gd").walk(person))
 		keeper.position = Vector2(550, 230) if i == 0 else Vector2(730, 540)
 		keeper.paused = i == 0
 		if i > 0: keeper.set_route([Vector2(730, 540), Vector2(730, 660), Vector2(600, 660), Vector2(730, 540)])
@@ -61,6 +61,12 @@ func is_walkable(point: Vector2) -> bool:
 	return true
 
 func _draw() -> void:
+	if kind in ["Greenhouse","Upper Floor"]:
+		preload("res://FarmBuildings.gd").draw_room(self)
+		return
+	if kind == "Barn":
+		preload("res://BarnLife.gd").draw_room(self)
+		return
 	if kind == "Mine":
 		draw_rect(Rect2(Vector2.ZERO, SIZE), Color("454940"))
 		draw_rect(Rect2(90, 70, 920, 740), Color("68665b"))
@@ -89,7 +95,7 @@ func _draw() -> void:
 	for rect in solids:
 		draw_rect(rect, Color("72523d"))
 		draw_rect(Rect2(rect.position, Vector2(rect.size.x, rect.size.y - 15)), Color("a47a52"))
-	if kind == "Carpentry":
+	if kind in ["Carpentry", "Mountain Carpentry"]:
 		for rect in [Rect2(145,215,165,180),Rect2(810,215,150,200),Rect2(150,550,170,80)]:
 			draw_rect(rect,Color("a98960"))
 			for x in range(int(rect.position.x)+12,int(rect.end.x),25): draw_line(Vector2(x,rect.position.y+10),Vector2(x,rect.end.y-10),Color("795d40"),3)
@@ -164,8 +170,9 @@ func _draw() -> void:
 		draw_rect(Rect2(398,450,24,28),Color("f0dfb9"))
 		draw_line(Vector2(410,450),Vector2(410,478),Color("795d42"),2)
 		draw_string(ThemeDB.fallback_font,Vector2(350,505),"Activity",HORIZONTAL_ALIGNMENT_CENTER,120,18,Color("493b2d"))
+	preload("res://RoomDetails.gd").draw_details(self)
 	draw_string(ThemeDB.fallback_font, Vector2(440, 350), "Counter", HORIZONTAL_ALIGNMENT_CENTER, 220, 23, Color("493b2d"))
-	draw_string(ThemeDB.fallback_font, Vector2(440, 775), "Town ↓", HORIZONTAL_ALIGNMENT_CENTER, 220, 23, Color("493b2d"))
+	draw_string(ThemeDB.fallback_font, Vector2(440, 775), "Exit ↓", HORIZONTAL_ALIGNMENT_CENTER, 220, 23, Color("493b2d"))
 
 func nearest_resident(point: Vector2) -> Node2D:
 	for resident in get_children():
@@ -183,7 +190,15 @@ func rock_box() -> StyleBoxFlat:
 # Keep the central aisle and resident route open in every service room.
 func apply_expanded_layout() -> void:
 	match kind:
-		"Carpentry": solids = [Rect2(360,230,380,80),Rect2(145,215,165,180),Rect2(810,215,150,200),Rect2(150,550,170,80)]
+		"Greenhouse": solids=[]
+		"Upper Floor": solids=[Rect2(170,220,150,200),Rect2(710,220,150,200),Rect2(420,280,260,130)]
+		"Barn":
+			solids = [Rect2(420,185,260,75)]
+			for i in range(8):
+				var p: Vector2 = preload("res://BarnLife.gd").animal_point(i)
+				solids.append(Rect2(p-Vector2(110,50),Vector2(220,95)))
+		"Onsen Resort": solids = [Rect2(360,230,380,80),Rect2(145,220,160,180),Rect2(790,425,175,210),Rect2(150,570,165,65)]
+		"Carpentry", "Mountain Carpentry": solids = [Rect2(360,230,380,80),Rect2(145,215,165,180),Rect2(810,215,150,200),Rect2(150,550,170,80)]
 		"General Store": solids = [Rect2(360,230,380,80), Rect2(135,200,155,240), Rect2(810,200,165,245), Rect2(150,550,170,80), Rect2(820,570,140,80)]
 		"Inn": solids = [Rect2(360,230,380,80), Rect2(140,210,165,190), Rect2(810,210,165,190), Rect2(150,535,160,95), Rect2(825,535,140,95)]
 		"Blacksmith": solids = [Rect2(360,230,380,80), Rect2(135,210,165,210), Rect2(815,220,160,160), Rect2(145,550,170,85), Rect2(825,555,140,85)]

@@ -4,12 +4,12 @@ extends RefCounted
 const GROUPS := [
 	["Aya", "Hana", "Mika", "Yuta", "Ken", "Hiro"],
 	["Keiko", "Kenji", "Gen", "Yumi", "Jiro", "Naomi"],
-	["Sachiko", "Kenta", "Yoshi", "Rei", "Masao", "Emi"]
+	["Sachiko", "Kenta", "Haruka", "Rei", "Masao", "Emi"]
 ]
 const ROLES := {
 	"Aya": "Clinic assistant", "Hana": "Inn worker", "Mika": "Tea farmer", "Yuta": "Firefighter", "Ken": "Fisherman", "Hiro": "Mountain guide",
 	"Keiko": "General Store owner", "Kenji": "Doctor", "Gen": "Blacksmith", "Yumi": "Inn owner", "Jiro": "Fire Chief", "Naomi": "Café owner",
-	"Sachiko": "Senior tea farmer", "Kenta": "Carpenter", "Yoshi": "Historian", "Rei": "Shrine caretaker", "Masao": "Senior fisherman", "Emi": "Mountain Lodge owner"
+	"Sachiko": "Senior tea farmer", "Kenta": "Carpenter", "Haruka": "Historian", "Rei": "Shrine caretaker", "Masao": "Senior fisherman", "Emi": "Mountain Lodge owner"
 }
 const HOMES := {
 	"Aya": Vector2(1860, 455), "Kenji": Vector2(1730, 455),
@@ -18,7 +18,7 @@ const HOMES := {
 	"Keiko": Vector2(590, 820), "Gen": Vector2(490, 1295),
 	"Naomi": Vector2(1890, 820), "Kenta": Vector2(1200, 280)
 }
-const REGION := {"Mika": "tea", "Sachiko": "tea", "Ken": "harbor", "Masao": "harbor", "Hiro": "mountain", "Emi": "mountain", "Yoshi": "historic", "Rei": "historic"}
+const REGION := {"Mika": "tea", "Sachiko": "tea", "Ken": "harbor", "Masao": "harbor", "Hiro": "mountain", "Emi": "mountain", "Haruka": "historic", "Rei": "historic"}
 const DIALOGUE := {
 	"Aya": ["I'm Aya. I help Kenji at the clinic. I moved here after deciding city life wasn't for me.", "Settling in takes time. A cup of tea and a walk by the lake usually help me."],
 	"Hana": ["Welcome. I'm Hana. My mother Yumi and I look after the inn.", "I've been sketching ideas for the rooms. I want to make them brighter without losing the inn's character."],
@@ -34,8 +34,8 @@ const DIALOGUE := {
 	"Naomi": ["Naomi! Come by the café at lunchtime. No one does their best work on an empty stomach.", "Everyone stops here sooner or later. Stay for a meal and you might hear something interesting."],
 	"Sachiko": ["Sachiko. I've grown tea here longer than most of these young ones have been alive.", "Mika has plenty of ideas. Good. She'll need both ideas and patience to make them work."],
 	"Kenta": ["Kenta, carpenter. I build houses, barns, fences... anything that needs good wood and a little imagination.", "Your family property has potential. Once it's cleared, we can talk about what to restore."],
-	"Yoshi": ["I'm Yoshi. Your family's farm has more stories than the weeds would have you believe.", "As you clear the old paths, bring me anything curious. Sometimes a forgotten place has been waiting to be remembered."],
-	"Rei": ["Rei. I look after the shrine. Yes, I do smile. Shrine work doesn't require a permanent serious face.", "Yoshi and I exchange stories about this place. Some are even true."],
+	"Haruka": ["I'm Haruka. Your family's farm has more stories than the weeds would have you believe.", "As you clear the old paths, bring me anything curious. Sometimes a forgotten place has been waiting to be remembered."],
+	"Rei": ["Rei. I look after the shrine. Yes, I do smile. Shrine work doesn't require a permanent serious face.", "Haruka and I exchange stories about this place. Some are even true."],
 	"Masao": ["Masao. I fish the western coast. The sea rewards patience, not noise.", "Ken knows these waters well. I hope he'll see that knowing a place also means taking care of it."],
 	"Emi": ["Emi. I run the mountain lodge. Drop in before you tackle a long trail.", "Hiro passes through often. He notices things most people walk straight past."]
 }

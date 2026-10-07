@@ -1,9 +1,11 @@
 extends Node2D
 
-const WORLD := Vector2(2400, 1600)
+const WORLD := Vector2(3000, 2000)
 const GROW_SECONDS := 12.0 # Legacy save compatibility only.
 const CROPS := {"Turnip": {"days": 2, "pack": 25, "sale": 20, "color": "e6dac0"}, "Potato": {"days": 3, "pack": 40, "sale": 35, "color": "c39e72"}, "Strawberry": {"days": 4, "pack": 60, "sale": 55, "color": "bf7868"}}
-const SHIPPING_BOX := Vector2(750, 1200)
+const SHIPPING_BOX := Vector2(830, 900)
+const BARN_DOOR := Vector2(2420, 435)
+var resources: Node2D
 var selected_crop := "Turnip"
 var extra_seeds := {"Potato": 0, "Strawberry": 0}
 var produce := {"Turnip": 0, "Potato": 0, "Strawberry": 0}
@@ -15,7 +17,7 @@ const TownScript = preload("res://Town.gd")
 const RoadScript = preload("res://SouthRoad.gd")
 const TOWN_ORIGIN := Vector2(6000, 0)
 const ROAD_ORIGIN := Vector2(9000, 0)
-const FARM_EXIT := Vector2(900, 1050)
+const FARM_EXIT := Vector2(1485, 140)
 const RegionScript = preload("res://Region.gd")
 const Cast = preload("res://Cast.gd")
 const CharacterScenes = preload("res://CharacterScenes.gd")
@@ -24,6 +26,7 @@ var regions: Dictionary = {}
 const ShopScript = preload("res://ShopInterior.gd")
 var SHOP_ORIGIN := Vector2(24000, 0)
 var shops: Dictionary = {}
+var polish: Node2D
 var shop_name := ""
 var lost_item_stage := 0
 var tea_delivery_stage := 0
@@ -47,7 +50,7 @@ var fishing_active := false
 var fishing_elapsed := 0.0
 var fish_catches := 0
 var fishing_quest_stage := 0
-const REGIONAL_ROOMS := {"Mine": ["mountain", Vector2(800, 250)],"Archive": ["historic", Vector2(410, 430)], "Shrine Residence": ["historic", Vector2(1190, 450)], "Mountain Lodge": ["mountain", Vector2(455, 430)], "Tea Farmhouse": ["tea", Vector2(410, 430)], "Tea Processing Shed": ["tea", Vector2(1190, 430)], "Harbor Homes": ["harbor", Vector2(410, 430)], "Fishing Shop": ["harbor", Vector2(1190, 430)], "Hiro Cabin": ["mountain", Vector2(1190, 430)]}
+const REGIONAL_ROOMS := {"Onsen Resort":["mountain",Vector2(350,920)],"Mountain Carpentry":["mountain",Vector2(1310,880)],"Mine": ["mountain", Vector2(800, 250)],"Archive": ["historic", Vector2(410, 430)], "Shrine Residence": ["historic", Vector2(1190, 450)], "Mountain Lodge": ["mountain", Vector2(455, 430)], "Tea Farmhouse": ["tea", Vector2(410, 430)], "Tea Processing Shed": ["tea", Vector2(1190, 430)], "Harbor Homes": ["harbor", Vector2(410, 430)], "Fishing Shop": ["harbor", Vector2(1190, 430)], "Hiro Cabin": ["mountain", Vector2(1190, 430)]}
 var quest_label: Label
 var hud_elapsed := 0.0
 var draw_elapsed := 0.0
@@ -62,8 +65,14 @@ var farm_visitor: Node2D
 var tea_challenge_button: Button
 const Stewardship = preload("res://Stewardship.gd")
 const InteriorLife = preload("res://InteriorLife.gd")
+const BarnLife = preload("res://BarnLife.gd")
+const FarmBuildings = preload("res://FarmBuildings.gd")
+const WeatherLife = preload("res://WeatherLife.gd")
 var festival_active := false
 var festival_elapsed := 0.0
+var current_festival: Dictionary = {}
+var festival_center := Vector2(1200,910)
+var festival_origin := TOWN_ORIGIN
 var festival_people: Array = []
 var festival_years: Array = []
 var scheduled_gathering := false
@@ -86,7 +95,7 @@ var rain_overlay: Control
 var friendship: Dictionary = {"Seira": 0, "Shohei": 0, "Akira": 0, "Taro": 0}
 var talked_on_day: Dictionary = {}
 var running := false
-const MAP_SCALE := 1.5625
+const MAP_SCALE := 1.953125
 const PLAYER_RADIUS := 12.0
 const FarmhouseScene = preload("res://Farmhouse.tscn")
 const InteriorScene = preload("res://FarmhouseInterior.tscn")
@@ -111,38 +120,35 @@ var sleep_prompt: Control
 var confirming_sleep := false
 # Coordinates follow the visible silhouettes on the 1536 x 1024 map.
 const SOLID_OUTLINES := [
-	[Vector2(5, 550), Vector2(50, 475), Vector2(130, 390), Vector2(325, 390), Vector2(415, 485), Vector2(380, 600), Vector2(120, 630), Vector2(5, 615)],
-	[Vector2(925, 295), Vector2(990, 250), Vector2(1090, 265), Vector2(1130, 305), Vector2(1115, 378), Vector2(935, 375)],
-	[Vector2(875, 0), Vector2(1536, 0), Vector2(1536, 520), Vector2(1370, 450), Vector2(1260, 415), Vector2(1150, 375), Vector2(1140, 245), Vector2(900, 215)],
-	[Vector2(1115, 875), Vector2(1220, 815), Vector2(1400, 785), Vector2(1536, 805), Vector2(1536, 1024), Vector2(1320, 1024), Vector2(1220, 950)]
+    [Vector2(215,107),Vector2(495,107),Vector2(495,266),Vector2(215,266)],
+    [Vector2(0,0),Vector2(720,0),Vector2(720,88),Vector2(100,88),Vector2(100,0)],
+    [Vector2(810,0),Vector2(1536,0),Vector2(1536,95),Vector2(810,95)],
+    [Vector2(0,0),Vector2(110,0),Vector2(110,350),Vector2(95,420),Vector2(100,610),Vector2(85,720),Vector2(110,940),Vector2(0,1024)],
+    [Vector2(1435,90),Vector2(1536,90),Vector2(1536,1024),Vector2(1410,1024),Vector2(1430,930),Vector2(1400,720),Vector2(1425,550)],
+    [Vector2(0,960),Vector2(1536,960),Vector2(1536,1024),Vector2(0,1024)],
+    [Vector2(1140,115),Vector2(1220,60),Vector2(1310,105),Vector2(1310,204),Vector2(1140,204)],
+    [Vector2(225,385),Vector2(290,385),Vector2(295,475),Vector2(225,475)],
+    [Vector2(1130,795),Vector2(1180,740),Vector2(1330,725),Vector2(1440,770),Vector2(1440,905),Vector2(1290,940),Vector2(1150,915)]
 ]
 const JoystickScript = preload("res://Joystick.gd")
 var item_moment: Node2D
 var pickup_time := 0.0
-var stored_items := {"Turnip": 0, "Potato": 0, "Strawberry": 0, "Sardine": 0, "Mackerel": 0, "Sea Bream": 0, "Copper": 0, "Iron": 0, "Tea leaves": 0, "Tea packets": 0}
-const STORAGE_GROUPS := {"Crops": ["Turnip", "Potato", "Strawberry"], "Fish": ["Sardine", "Mackerel", "Sea Bream"], "Ore": ["Copper", "Iron"], "Tea": ["Tea leaves", "Tea packets"]}
+var stored_items := {"Turnip": 0, "Potato": 0, "Strawberry": 0, "Sardine": 0, "Mackerel": 0, "Sea Bream": 0, "Copper": 0, "Iron": 0, "Tea leaves": 0, "Tea packets": 0, "Milk":0, "Goat milk":0, "Wool":0, "Egg":0}
+const STORAGE_GROUPS := {"Crops": ["Turnip", "Potato", "Strawberry"], "Fish": ["Sardine", "Mackerel", "Sea Bream"], "Ore": ["Copper", "Iron"], "Tea": ["Tea leaves", "Tea packets"], "Animals":["Milk","Goat milk","Wool","Egg"]}
 var backpack_level := 0
 const BACKPACK_SIZES := [12, 24, 48]
 const BACKPACK_PRICES := [300, 900]
 var player: CharacterBody2D
 var camera: Camera2D
 var farmer: Sprite2D
-const WALK_TEXTURE = preload("res://assets/fieldwork-boy-v2.png")
-const GIRL_TEXTURE = preload("res://assets/fieldwork-girl-v2.png")
-const BOY_SIDE_TEXTURE = preload("res://assets/fieldwork-boy-side-v3.png")
-const GIRL_SIDE_TEXTURE = preload("res://assets/fieldwork-girl-side-v3.png")
 const STRIDE_DISTANCE := 24.0
-var active_texture: Texture2D = WALK_TEXTURE
-var side_texture: Texture2D
-var side_regions: Array[Rect2] = []
+var active_texture: Texture2D
 var side_offsets: Array[Vector2] = []
 var walk_distance := 0.0
-var side_scale := 1.0
 var front_scale := 1.0
 var character_choice := "boy"
 var choosing_character := false
 var character_picker: Control
-const IDLE_TEXTURE = preload("res://assets/farmer-v2.png")
 var walk_regions: Array[Rect2] = []
 var walk_clock := 0.0
 var walk_frame := -2
@@ -190,7 +196,7 @@ func _ready() -> void:
 	road.visible = false
 	add_child(road)
 	town.add_supporting_cast()
-	for service in ["General Store", "Blacksmith", "Café", "Inn", "Clinic", "Town Hall", "Police Box", "Fire Station", "Archive", "Shrine Residence", "Mountain Lodge", "Tea Farmhouse", "Tea Processing Shed", "Harbor Homes", "Fishing Shop", "Hiro Cabin", "Mine", "Carpentry"]:
+	for service in ["General Store", "Blacksmith", "Café", "Inn", "Clinic", "Town Hall", "Police Box", "Fire Station", "Archive", "Shrine Residence", "Mountain Lodge", "Tea Farmhouse", "Tea Processing Shed", "Harbor Homes", "Fishing Shop", "Hiro Cabin", "Mine", "Carpentry", "Mountain Carpentry", "Onsen Resort", "Barn", "Greenhouse", "Upper Floor"]:
 		var room := ShopScript.new()
 		room.position = Vector2(24000 + shops.size() * 2000, 0)
 		room.visible = false
@@ -211,8 +217,8 @@ func _ready() -> void:
 		for person in group: friendship[person] = 0
 	for row in range(3):
 		for col in range(5):
-			plots.append({"position": Vector2(300 + col * 68, 1200 + row * 68), "stage": 0, "growth": 0.0, "crop": "Turnip", "last_growth_day": day})
-	for rect in [Rect2(-24, -24, 2448, 24), Rect2(-24, 1600, 2448, 24), Rect2(-24, 0, 24, 1600), Rect2(2400, 0, 24, 1600)]:
+			plots.append({"position": Vector2(1120 + col * 100, 900 + row * 100), "stage": 0, "growth": 0.0, "crop": "Turnip", "last_growth_day": day})
+	for rect in [Rect2(-24, -24, 3048, 24), Rect2(-24, 2000, 3048, 24), Rect2(-24, 0, 24, 2000), Rect2(3000, 0, 24, 2000)]:
 		obstacle(rect)
 	# The separate farmhouse scene owns its facade collision.
 	for outline in SOLID_OUTLINES.slice(1):
@@ -222,7 +228,7 @@ func _ready() -> void:
 		body.add_child(collision)
 		outdoor_world.add_child(body)
 	player = CharacterBody2D.new()
-	player.position = Vector2(450, 1120)
+	player.position = Vector2(775, 590)
 	player.z_index = 5
 	add_child(player)
 	var collider := CollisionShape2D.new()
@@ -245,15 +251,21 @@ func _ready() -> void:
 	set_character("boy")
 	camera = Camera2D.new()
 	camera.offset = Vector2(0, -100)
-	camera.zoom = Vector2(0.70, 0.70)
+	camera.zoom = Vector2(0.58, 0.58)
 	camera.position_smoothing_enabled = true
 	camera.position_smoothing_speed = 7
 	camera.limit_left = 0
 	camera.limit_top = 0
-	camera.limit_right = 2400
-	camera.limit_bottom = 1600
+	camera.limit_right = 3000
+	camera.limit_bottom = 2000
 	player.add_child(camera)
 	get_viewport().size_changed.connect(refit_camera)
+	polish = preload("res://WorldPolish.gd").new()
+	add_child(polish)
+	polish.setup(self)
+	resources = preload("res://FarmResources.gd").new()
+	add_child(resources)
+	resources.setup(self)
 	make_ui()
 	load_game()
 	get_viewport().size_changed.connect(layout_ui)
@@ -279,6 +291,7 @@ func world_outline(outline: Array) -> PackedVector2Array:
 	return points
 
 func is_walkable(position: Vector2) -> bool:
+	if interior_progress.get("greenhouse",false) and Rect2(400,1310,500,250).grow(PLAYER_RADIUS).has_point(position): return false
 	if not Rect2(Vector2.ONE * PLAYER_RADIUS, WORLD - Vector2.ONE * PLAYER_RADIUS * 2.0).has_point(position):
 		return false
 	for outline in SOLID_OUTLINES:
@@ -372,7 +385,10 @@ func make_ui() -> void:
 	for i in range(3):
 		var index := i
 		var button := make_button(["Seed", "Water", "Harvest"][i], func(): select_tool(index); if index == 0: open_seed_picker())
-		button.custom_minimum_size = Vector2(104, 58)
+		button.custom_minimum_size = Vector2(138, 58)
+		button.icon = load("res://assets/tool-%s.svg" % ["seed","water","harvest"][i])
+		button.expand_icon = false
+		button.add_theme_constant_override("icon_max_width",28)
 		tool_bar.add_child(button)
 		tool_buttons.append(button)
 	var save_button := make_button("Save", save_game)
@@ -426,7 +442,7 @@ func layout_ui() -> void:
 	joystick.position = Vector2(margin.x, view.y - bottom - 168)
 	action_button.position = Vector2(view.x - right - 138, view.y - bottom - 128)
 	action_button.size = Vector2(138, 72)
-	tool_bar.position = Vector2((view.x - 328) / 2, view.y - bottom - 102)
+	tool_bar.position = Vector2((view.x - 430) / 2, view.y - bottom - 102)
 	message_label.position = Vector2(margin.x, view.y - bottom - 26)
 	message_label.size = Vector2(view.x - margin.x - right, 26)
 	hud.get_node("SaveButton").position = Vector2(view.x - right - 95, margin.y)
@@ -510,6 +526,9 @@ func _physics_process(delta: float) -> void:
 		if pickup_time == 0: item_moment.visible = false
 		return
 	if Stewardship.check_visit(self): return
+	if resources.action_time > 0:
+		player.velocity = Vector2.ZERO
+		return
 	advance_clock(delta)
 	if fishing_active:
 		fishing_elapsed += delta
@@ -527,10 +546,16 @@ func _physics_process(delta: float) -> void:
 	if Input.is_physical_key_pressed(KEY_W): direction.y -= 1
 	if Input.is_physical_key_pressed(KEY_S): direction.y += 1
 	direction += joystick.direction
+	direction = polish.direction(direction)
 	running = Input.is_physical_key_pressed(KEY_SHIFT) or joystick.direction.length() > 0.72
 	player.velocity = direction.limit_length() * (RUN_SPEED if running else SPEED)
 	var previous_position := player.position
 	player.move_and_slide()
+	if not polish.path.is_empty() and player.position.distance_to(previous_position) < 0.01 and direction.length() > 0.1:
+		polish.path.clear()
+	if location == "farm" and not inside_house and not is_walkable(player.position):
+		player.position = previous_position
+		player.velocity = Vector2.ZERO
 	var travel := player.position.distance_to(previous_position)
 	update_walk(delta, travel > 0.01, direction, travel)
 	if festival_active:
@@ -572,8 +597,18 @@ func _physics_process(delta: float) -> void:
 		draw_elapsed = 0.0
 
 func interaction_action() -> String:
+	if location == "farm" and interior_progress.get("greenhouse",false) and player.position.distance_to(FarmBuildings.GREENHOUSE_DOOR)<90: return "greenhouse_enter"
+	if inside_house and interior_progress.get("second_story",false) and (player.position-ROOM_ORIGIN).distance_to(FarmBuildings.STAIRS)<75: return "stairs"
+	if location == "shop" and shop_name=="Greenhouse": return "greenhouse_bed"
+	if location == "shop" and shop_name=="Upper Floor": return ""
+	if is_instance_valid(resources) and resources.interaction() != "": return resources.interaction()
+	if location == "farm" and not inside_house and player.position.distance_to(BARN_DOOR) < 90: return "barn_enter"
+	if location == "shop" and shop_name == "Barn": return "barn_care"
 	if fishing_active: return "catch_fish"
-	if inside_house and int(interior_progress.get("home",0)) >= 2 and (player.position-ROOM_ORIGIN).distance_to(Vector2(1010,450)) < 85: return "cook"
+	if is_instance_valid(polish) and polish.nearest_pet() != null: return "pet_animal"
+	if location == "mountain" and (player.position-REGION_ORIGINS.mountain).distance_to(Vector2(650,900)) < 90: return "onsen_bath"
+	if location == "shop" and shop_name == "Onsen Resort" and (player.position-SHOP_ORIGIN).distance_to(Vector2(690,500)) < 90: return "onsen_bath"
+	if inside_house and int(interior_progress.get("home",0)) >= 2 and (player.position-ROOM_ORIGIN).distance_to(Vector2(1230,450)) < 85: return "cook"
 	if location == "tea":
 		for spot in TEA_SPOTS:
 			if (player.position - REGION_ORIGINS.tea).distance_to(spot) < 70: return "pick_tea"
@@ -627,19 +662,23 @@ func calendar_text() -> String:
 	return "%s %d  |  Year %d" % [SEASONS[season_index], (day - 1) % 28 + 1, int((day - 1) / 112) + 1]
 
 func refresh_hud() -> void:
+	if WeatherLife.forecast(day) == "Hurricane" and not inside_house:
+		set_location(true,ROOM_ORIGIN+interior.ENTRY)
+		return
 	apply_rain_watering()
+	if tool_buttons.size()>1: tool_buttons[1].text="Water %d" % resources.state().water
 	if is_instance_valid(rain_overlay): rain_overlay.visible = is_rainy_day() and not inside_house and location != "shop" and not dialogue_open and not choosing_character and not paused_by_player and window_focused
 	update_resident_presence()
-	if is_instance_valid(town) and town.festival_decorated != gathering_date():
-		town.festival_decorated = gathering_date()
+	if is_instance_valid(town) and town.festival_decorated != (not SeasonalFestivals.today(day).is_empty()):
+		town.festival_decorated = not SeasonalFestivals.today(day).is_empty()
 		town.queue_redraw()
-	quest_label.text = ["", "Wallet: search Yoshi's archive.", "Wallet: return to Taro.", "Lost wallet returned ✓"][lost_item_stage]
+	quest_label.text = ["", "Wallet: search Haruka's archive.", "Wallet: return to Taro.", "Lost wallet returned ✓"][lost_item_stage]
 	if tea_delivery_stage == 1 and lost_item_stage not in [1, 2]: quest_label.text = "Tea delivery: bring Mika's parcel to Naomi."
 	if tea_delivery_stage == 1 and lost_item_stage in [1, 2]: quest_label.text += "\nTea: deliver to Naomi."
 	if fishing_quest_stage in [1, 2]: quest_label.text += ("\nFishing: catch one fish." if fishing_quest_stage == 1 else "\nFishing: report to Masao.")
 	quest_label.text = quest_label.text.strip_edges()
 	quest_label.visible = not dialogue_open and (lost_item_stage > 0 or tea_delivery_stage > 0 or fishing_quest_stage > 0)
-	date_label.text = "%s\n%s   •   ¥%d\nSeeds %d  ·  Harvested %d" % [calendar_text(), clock_text(), coins, seed_count(selected_crop), harvests]
+	date_label.text = "%s\n%s • ¥%d • %s\nSeeds %d · Harvested %d" % [calendar_text(), clock_text(), coins, WeatherLife.forecast(day), seed_count(selected_crop), harvests]
 	health_bar.value = health
 	health_label.text = "Health %d / 100" % int(ceil(health))
 	health_fill.bg_color = Color("a5be83") if health >= 50 else (Color("e7c786") if health >= 25 else Color("da927c"))
@@ -656,6 +695,15 @@ func refresh_hud() -> void:
 	var action := interaction_action()
 	action_button.disabled = false
 	match action:
+		"refill_water": action_button.text = "Refill"
+		"chop_wood": action_button.text = "Chop"
+		"barn_enter": action_button.text = "Enter"
+		"barn_care": action_button.text = "Animals"
+		"greenhouse_enter": action_button.text = "Enter"
+		"greenhouse_bed": action_button.text = "Tend"
+		"stairs": action_button.text = "Upstairs"
+		"pet_animal": action_button.text = "Pet"
+		"onsen_bath": action_button.text = "Soak"
 		"mine_ore": action_button.text = "Mine"
 		"pick_tea": action_button.text = "Pick tea"
 		"fish": action_button.text = "Cast"
@@ -684,6 +732,8 @@ func refresh_hud() -> void:
 			action_button.disabled = location != "farm"
 	var hint := crop_hint()
 	match action:
+		"pet_animal": hint = "Greet the animal with a gentle pat."
+		"onsen_bath": hint = "Onsen · A relaxing soak restores Health."
 		"mine_ore": hint = "Gather ore · %d Health. Rocks refresh tomorrow." % [4 - pick_level * 2]
 		"pick_tea": hint = "Pick fresh leaves, then pack them at the processing shed."
 		"fish": hint = "Fishing spot · Cast, wait for a bite, then Catch."
@@ -695,7 +745,7 @@ func refresh_hud() -> void:
 		"cook": hint = "Kitchen · Cook two vegetables into a meal."
 		"room_activity": hint = "Explore " + InteriorLife.ACTIVITIES[shop_name][0] + "."
 		"counter": hint = "Shop at the counter."
-		"noticeboard": hint = "Plaza Noticeboard · Festival rehearsal and character scenes."
+		"noticeboard": hint = "Plaza Noticeboard · Festivals, requests, and shop hours."
 		"talk_region": hint = "Talk to %s." % regions[location].nearest_npc(player.position - REGION_ORIGINS[location]).first_name
 		"return_town": hint = "Return to Main Town."
 		"historic": hint = "Northwest path · Shrine and local history."
@@ -721,6 +771,7 @@ func refresh_hud() -> void:
 		message_label.text = "Health is low. Rest in bed." if health >= WORK_COSTS[selected_tool] else "Too tired to work. Rest in bed."
 
 func set_location(indoors: bool, destination: Vector2) -> void:
+	if is_instance_valid(polish): polish.path.clear()
 	for room in shops.values(): room.visible = false
 	location = "house" if indoors else "farm"
 	if is_instance_valid(town): town.visible = false
@@ -741,7 +792,9 @@ func set_location(indoors: bool, destination: Vector2) -> void:
 	camera.limit_right = int(ROOM_ORIGIN.x + interior.SIZE.x) if indoors else int(WORLD.x)
 	camera.limit_bottom = int(interior.SIZE.y) if indoors else int(WORLD.y)
 	camera.offset = Vector2(0, -60) if indoors else Vector2(0, -100)
+	if indoors: fit_region_camera(interior.SIZE)
 	camera.reset_smoothing()
+	if not indoors: camera.zoom = Vector2.ONE * maxf(0.58,maxf(get_viewport_rect().size.x/WORLD.x,get_viewport_rect().size.y/WORLD.y))
 	refresh_hud()
 	queue_redraw()
 
@@ -752,6 +805,9 @@ func enter_house() -> void:
 	save_game(false)
 
 func leave_house() -> void:
+	if WeatherLife.forecast(day) == "Hurricane":
+		say("A hurricane is passing. Stay indoors and sleep until tomorrow.")
+		return
 	if not inside_house: return
 	set_location(false, farmhouse.DOOR_POSITION + Vector2(0, 35))
 	say("Back on the farm.")
@@ -820,12 +876,43 @@ func say(text: String) -> void:
 	toast_time = 4.0
 
 func interact() -> void:
+	if is_physics_processing() and is_instance_valid(resources) and resources.action_time > 0: return
 	clear_item_moment()
 	if dialogue_open:
 		advance_dialogue()
 		return
 	if choosing_character or confirming_sleep or paused_by_player: return
+	if WeatherLife.forecast(day) == "Hurricane" and interaction_action() != "sleep":
+		say("Hurricane: rest in bed until tomorrow.")
+		return
 	match interaction_action():
+		"greenhouse_enter":
+			enter_shop("Greenhouse")
+			return
+		"greenhouse_bed":
+			FarmBuildings.open_bed(self)
+			return
+		"stairs":
+			enter_shop("Upper Floor")
+			return
+		"refill_water":
+			resources.refill()
+			return
+		"chop_wood":
+			resources.chop()
+			return
+		"barn_enter":
+			enter_shop("Barn")
+			return
+		"barn_care":
+			BarnLife.open_care(self)
+			return
+		"pet_animal":
+			polish.pet_animal()
+			return
+		"onsen_bath":
+			open_onsen()
+			return
 		"mine_ore":
 			mine_ore()
 			return
@@ -911,10 +998,14 @@ func interact() -> void:
 			offer_sleep()
 			return
 	if location != "farm": return
+	if selected_tool==0 and int((day-1)/28)%4==3:
+		say("Outdoor soil is too cold in winter. Plant in your greenhouse.")
+		return
 	if nearest < 0:
 		say("Move closer to a crop bed.")
 		return
 	var work_cost: float = maxf(1.0, WORK_COSTS[1] - tool_level) if selected_tool == 1 else (maxf(1, WORK_COSTS[2] - harvest_level * 2) if selected_tool == 2 else WORK_COSTS[selected_tool])
+	work_cost *= WeatherLife.work_multiplier(self)
 	if health < work_cost:
 		say("Too tired to work. Rest in bed to restore Health.")
 		return
@@ -926,15 +1017,22 @@ func interact() -> void:
 			else:
 				if selected_crop == "Turnip": seeds -= 1
 				else: extra_seeds[selected_crop] -= 1
-				health -= WORK_COSTS[0]
+				health -= work_cost
+				resources.play("seed", plot.position)
 				plot.crop = selected_crop
 				plot.last_growth_day = day
 				plot.stage = 1
 				plot.growth = 0.0
+				resources.irrigate()
 				say("Planted! Select Water to help it grow.")
 		1:
 			if plot.stage == 1:
-				health -= maxf(1.0, WORK_COSTS[1] - tool_level)
+				if resources.state().water <= 0:
+					say("Your watering can is empty. Refill it at the farm well.")
+					return
+				resources.state().water -= 1
+				resources.play("water", plot.position)
+				health -= work_cost
 				plot.stage = 2
 				say("Watered. This crop grows overnight. Water it again each new day.")
 			elif plot.stage == 0: say("Plant a seed first.")
@@ -944,9 +1042,10 @@ func interact() -> void:
 				if not backpack_has_room() or int(produce[plot.crop]) >= 999:
 					say("Backpack full. Ship some items or buy a larger bag.")
 					return
-				health -= maxf(1, WORK_COSTS[2] - harvest_level * 2)
+				health -= work_cost
 				plot.stage = 0
 				plot.growth = 0.0
+				resources.play("harvest", plot.position)
 				produce[plot.crop] += 1
 				show_item_moment(plot.crop)
 				harvests += 1
@@ -965,7 +1064,7 @@ func save_game(show_message: bool = true) -> void:
 		crop_data.append({"stage": plot.stage, "growth": plot.growth, "crop": plot.crop, "last_growth_day": plot.last_growth_day})
 	var file := FileAccess.open(SAVE_FILE, FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({"version": 16, "interior_progress": interior_progress, "festival_years": festival_years, "pick_level": pick_level, "harvest_level": harvest_level, "stored_items": stored_items, "backpack_level": backpack_level, "mine_lesson_seen": mine_lesson_seen, "ore_basket": ore_basket, "ore_shipping": ore_shipping, "ore_picked_days": ore_picked_days, "tea_lesson_seen": tea_lesson_seen, "tea_leaves": tea_leaves, "packed_tea": packed_tea, "tea_shipping": tea_shipping, "tea_picked_days": tea_picked_days, "fish_basket": fish_basket, "fish_shipping": fish_shipping, "fish_catches": fish_catches, "fishing_quest_stage": fishing_quest_stage, "tea_delivery_stage": tea_delivery_stage, "selected_crop": selected_crop, "extra_seeds": extra_seeds, "produce": produce, "shipping_queue": shipping_queue, "lost_item_stage": lost_item_stage, "day": day, "clock_minutes": clock_minutes, "health": health, "location": location, "shop_name": shop_name, "character": character_choice, "coins": coins, "seeds": seeds, "tool_level": tool_level, "friendship": friendship, "talked_on_day": talked_on_day, "seen_scenes": seen_scenes, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
+		file.store_string(JSON.stringify({"version": 17, "interior_progress": interior_progress, "festival_years": festival_years, "pick_level": pick_level, "harvest_level": harvest_level, "stored_items": stored_items, "backpack_level": backpack_level, "mine_lesson_seen": mine_lesson_seen, "ore_basket": ore_basket, "ore_shipping": ore_shipping, "ore_picked_days": ore_picked_days, "tea_lesson_seen": tea_lesson_seen, "tea_leaves": tea_leaves, "packed_tea": packed_tea, "tea_shipping": tea_shipping, "tea_picked_days": tea_picked_days, "fish_basket": fish_basket, "fish_shipping": fish_shipping, "fish_catches": fish_catches, "fishing_quest_stage": fishing_quest_stage, "tea_delivery_stage": tea_delivery_stage, "selected_crop": selected_crop, "extra_seeds": extra_seeds, "produce": produce, "shipping_queue": shipping_queue, "lost_item_stage": lost_item_stage, "day": day, "clock_minutes": clock_minutes, "health": health, "location": location, "shop_name": shop_name, "character": character_choice, "coins": coins, "seeds": seeds, "tool_level": tool_level, "friendship": friendship, "talked_on_day": talked_on_day, "seen_scenes": seen_scenes, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
 		if show_message: say("Farm saved.")
 	elif show_message: say("Could not save. Check storage permissions.")
 
@@ -975,6 +1074,11 @@ func load_game() -> void:
 	if not parsed is Dictionary and FileAccess.file_exists(SAVE_FILE + ".bak"):
 		parsed = read_saved_json(SAVE_FILE + ".bak")
 	if not parsed is Dictionary: return
+	for field in ["friendship", "talked_on_day"]:
+		var values = parsed.get(field, {})
+		if values is Dictionary and values.has("Yoshi"):
+			values["Haruka"] = maxi(int(values.get("Haruka", 0)), int(values["Yoshi"]))
+			values.erase("Yoshi")
 	var saved_progress = parsed.get("interior_progress",{})
 	interior_progress = saved_progress if saved_progress is Dictionary else {}
 	InteriorLife.add_plots(self,int(interior_progress.get("restoration",0)))
@@ -1041,7 +1145,7 @@ func load_game() -> void:
 		for i in range(mini(3, picked.size())): tea_picked_days[i] = maxi(0, int(picked[i]))
 	fish_catches = maxi(0, int(parsed.get("fish_catches", 0)))
 	fishing_quest_stage = clampi(int(parsed.get("fishing_quest_stage", 0)), 0, 3)
-	var destination := Vector2(450, 1120)
+	var destination := Vector2(775, 590)
 	var indoors := str(parsed.get("location", "farm")) == "house"
 	if indoors: destination = ROOM_ORIGIN + interior.ENTRY
 	if int(parsed.get("version", 1)) >= 2:
@@ -1081,29 +1185,21 @@ func read_saved_json(path: String) -> Variant:
 
 func update_walk(delta: float, moving: bool, direction: Vector2 = Vector2.ZERO, travel: float = -1.0) -> void:
 	if direction.length() > 0.15:
-		facing_direction = posmod(int(round((direction.angle() - PI / 2.0) / (PI / 4.0))), 8)
-	walk_clock = walk_clock + delta if moving else 0.0
-	walk_distance = walk_distance + (travel if travel >= 0.0 else delta * SPEED) if moving else 0.0
-	var step := int(walk_distance / STRIDE_DISTANCE) % 4 if moving else 0
-	var next_frame := facing_direction * 4 + step
-	if next_frame == walk_frame: return
-	walk_frame = next_frame
-	farmer.flip_h = facing_direction in [5, 6, 7]
-	if facing_direction in [0, 4]:
-		farmer.scale = Vector2.ONE * front_scale
-		farmer.texture = active_texture
-		farmer.region_rect = walk_regions[facing_direction * 2 + step % 2]
-		farmer.position = Vector2(0, -farmer.region_rect.size.y * farmer.scale.y * 0.5)
-	else:
-		var row: int = {1: 1, 2: 0, 3: 2, 5: 2, 6: 0, 7: 1}[facing_direction]
-		var index := row * 4 + step
-		farmer.texture = side_texture
-		farmer.region_rect = side_regions[index]
-		# Preserve the cell's hip center and shared ground line instead of
-		# re-centering each trimmed pose, which makes boots slide sideways.
-		farmer.position = side_offsets[index] * side_scale
-		if farmer.flip_h: farmer.position.x = -farmer.position.x
-		farmer.scale = Vector2.ONE * side_scale
+		facing_direction = posmod(int(round((direction.angle()-PI/2)/(PI/4))),8)
+	walk_distance = walk_distance+(travel if travel>=0 else delta*SPEED) if moving else 0.0
+	var phase := int(walk_distance/STRIDE_DISTANCE)%4 if moving else 1
+	var row := 0 if facing_direction==0 else (2 if facing_direction==4 else (1 if facing_direction in [1,2,3] else 3))
+	var mirror := row==1
+	var index := (3 if mirror else row)*4+phase
+	var key := row*4+phase
+	if key==walk_frame: return
+	walk_frame=key
+	farmer.texture=active_texture
+	farmer.flip_h=mirror
+	farmer.region_rect=walk_regions[index]
+	farmer.scale=Vector2.ONE*front_scale
+	farmer.position=side_offsets[index]*front_scale
+	if mirror: farmer.position.x*=-1
 func sprite_bounds(image: Image) -> Rect2i:
 	# Ignore nearly transparent export noise when measuring a stride.
 	var first := image.get_size()
@@ -1119,44 +1215,16 @@ func sprite_bounds(image: Image) -> Rect2i:
 	return Rect2i(first, last - first + Vector2i.ONE) if last.x >= 0 else Rect2i(Vector2i.ZERO, image.get_size())
 
 func set_character(choice: String) -> void:
-	character_choice = "girl" if choice == "girl" else "boy"
-	active_texture = GIRL_TEXTURE if character_choice == "girl" else WALK_TEXTURE
-	side_texture = GIRL_SIDE_TEXTURE if character_choice == "girl" else BOY_SIDE_TEXTURE
-	walk_regions.clear()
-	var sheet_image := active_texture.get_image()
-	var cell := sheet_image.get_size() / 4
-	var tallest_frame := 1.0
-	for index in range(16):
-		var origin := Vector2i(index % 4, index / 4) * cell
-		var bounds := sprite_bounds(sheet_image.get_region(Rect2i(origin, cell)))
-		walk_regions.append(Rect2(bounds.position + origin, bounds.size))
-		tallest_frame = maxf(tallest_frame, bounds.size.y)
-	front_scale = 180.0 / tallest_frame
-	farmer.scale = Vector2.ONE * front_scale
-	build_side_regions()
-	walk_frame = -2
-	update_walk(0.0, false)
-
-func build_side_regions() -> void:
-	side_regions.clear()
-	side_offsets.clear()
-	var sheet := side_texture.get_image()
-	var cell := Vector2i(sheet.get_width() / 4, sheet.get_height() / 3)
-	var tallest := 1.0
-	for row in range(3):
-		var bounds_list: Array[Rect2i] = []
-		var ground := 0.0
-		for phase in range(4):
-			var bounds := sprite_bounds(sheet.get_region(Rect2i(Vector2i(phase, row) * cell, cell)))
-			bounds_list.append(bounds)
-			ground = maxf(ground, bounds.end.y)
-			tallest = maxf(tallest, bounds.size.y)
-		for phase in range(4):
-			var bounds := bounds_list[phase]
-			side_regions.append(Rect2(bounds.position + Vector2i(phase, row) * cell, bounds.size))
-			side_offsets.append(Vector2(bounds.get_center()) - Vector2(cell.x * 0.5, ground))
-	side_scale = 180.0 / tallest
-
+	character_choice="girl" if choice=="girl" else "boy"
+	active_texture=preload("res://CharacterArt.gd").walk(character_choice)
+	var geometry=preload("res://Npc.gd").new()
+	geometry.prepare_walk_geometry(character_choice,active_texture)
+	walk_regions.assign(geometry.regions)
+	side_offsets.assign(geometry.offsets)
+	front_scale=geometry.height_scale*1.2
+	geometry.free()
+	walk_frame=-2
+	update_walk(0,false)
 func choose_character(choice: String) -> void:
 	set_character(choice)
 	choosing_character = false
@@ -1195,10 +1263,10 @@ func show_character_picker() -> void:
 	for choice in ["boy", "girl"]:
 		var option := VBoxContainer.new()
 		row.add_child(option)
-		var texture: Texture2D = GIRL_TEXTURE if choice == "girl" else WALK_TEXTURE
+		var texture: Texture2D = preload("res://CharacterArt.gd").walk(choice)
 		var atlas := AtlasTexture.new()
 		atlas.atlas = texture
-		atlas.region = Rect2(Vector2.ZERO, texture.get_size() / 4.0)
+		atlas.region = Rect2(Vector2(texture.get_width()/4.0,0), texture.get_size() / 4.0)
 		var preview := TextureRect.new()
 		preview.texture = atlas
 		preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -1230,26 +1298,7 @@ func _draw() -> void:
 		draw_rect(Rect2(650,1020,150,65),Color("ead8af"))
 		draw_string(ThemeDB.fallback_font,Vector2(660,1048),"Kenta's work",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color("614b36"))
 		draw_string(ThemeDB.fallback_font,Vector2(660,1075),"Ready tomorrow",HORIZONTAL_ALIGNMENT_LEFT,-1,16,Color("614b36"))
-	var reclaimed: int = int(interior_progress.get("restoration",0))
-	if reclaimed > 0:
-		draw_rect(Rect2(645,1165,reclaimed*68+65,225),Color("a17650"))
-		for x in range(650,650+reclaimed*68+70,34):
-			draw_rect(Rect2(x,1152,6,24),Color("8e704c"))
-		draw_line(Vector2(650,1158),Vector2(650+reclaimed*68+60,1158),Color("b29a6c"),5)
-	# A continuous dirt lane leads north; the transition remains automatic.
-	var lane := PackedVector2Array([Vector2(825, 0), Vector2(970, 0), Vector2(965, 850), Vector2(970, 990), Vector2(995, 1135), Vector2(945, 1210), Vector2(805, 1210), Vector2(825, 1110), Vector2(825, 900)])
-	draw_colored_polygon(lane, Color("d8c393"))
-	# Reuse a quiet dirt patch in short tiles so the walkway matches the painted world.
-	var dirt := preload("res://assets/region-historic-v1.png")
-	for y in range(0, 1080, 120):
-		draw_texture_rect_region(dirt, Rect2(833,y,128,120),Rect2(700,480,70,90))
-	# Quiet texture on the lane, with softened grass edges rather than isolated circles.
-	for y in range(0, 1190, 50):
-		var x := 894 + sin(float(y) * 0.025) * 23
-		draw_line(Vector2(x, y), Vector2(x+16, y+2), Color("cdb987"), 2)
-	for y in range(0, 1100, 22):
-		for x in [826, 967]:
-			draw_line(Vector2(x,y), Vector2(x + (-6 if x < 900 else 6),y-5), Color("a5ad73"), 3)
+	# The natural town lane is painted into the environment asset.
 	# Dynamic beds and crops sit over the static environment, never baked into it.
 	for i in range(plots.size()):
 		var plot: Dictionary = plots[i]
@@ -1303,6 +1352,11 @@ func crop(pos: Vector2, stage: int, crop_name: String = "Turnip", growth: float 
 					draw_line(berry + Vector2(-5, -6), berry + Vector2(5, -6), green, 4)
 					draw_circle(berry, 1.8, Color("e7cf95"))
 func travel_to(area: String, point: Vector2, persist: bool = true) -> void:
+	if WeatherLife.forecast(day) == "Hurricane":
+		set_location(true,ROOM_ORIGIN+interior.ENTRY)
+		say("Hurricane: stay inside and sleep until tomorrow.")
+		return
+	if is_instance_valid(polish): polish.path.clear()
 	clear_item_moment()
 	stop_fishing()
 	# Migrate earlier saves from the removed connecting road.
@@ -1367,9 +1421,9 @@ func start_conversation(npc: Node2D) -> void:
 	if person == "Taro":
 		if lost_item_stage == 0:
 			lost_item_stage = 1
-			dialogue_lines = ["Someone lost a wallet near Yoshi's archive. Could you look inside the archive in the historic district?", "Bring it back to me when you find it. I'll make sure it reaches its owner."]
+			dialogue_lines = ["Someone lost a wallet near Haruka's archive. Could you look inside the archive in the historic district?", "Bring it back to me when you find it. I'll make sure it reaches its owner."]
 		elif lost_item_stage == 1:
-			dialogue_lines = ["Try Yoshi's archive in the historic district. Look beside the old maps."]
+			dialogue_lines = ["Try Haruka's archive in the historic district. Look beside the old maps."]
 		elif lost_item_stage == 2:
 			lost_item_stage = 3
 			coins += 75
@@ -1417,6 +1471,7 @@ func start_conversation(npc: Node2D) -> void:
 
 func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 	dialogue_open = true
+	if is_instance_valid(polish): polish.path.clear()
 	player.velocity = Vector2.ZERO
 	joystick.reset_stick()
 	dialogue_panel = ColorRect.new()
@@ -1435,29 +1490,12 @@ func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 	row.add_theme_constant_override("separation", 20)
 	panel.add_child(row)
 	if portrait:
-		var portraits: Texture2D = preload("res://assets/npc-portraits-first-four.png")
-		var regions := {"Seira": Rect2(80, 110, 350, 620), "Shohei": Rect2(470, 50, 345, 650), "Akira": Rect2(890, 90, 300, 610), "Taro": Rect2(1260, 45, 350, 640)}
-		if town.EXTRA_DIALOGUE.has(title):
-			portraits = load("res://assets/npc-portraits-new-residents-v1.png")
-			var names := ["Ren", "Chanel", "David", "Renji", "Midori"]
-			var width := portraits.get_width() / 5.0
-			regions[title] = Rect2(names.find(title) * width, 0, width, portraits.get_height() * 0.85)
-		elif Cast.DIALOGUE.has(title):
-			var source := Cast.index_of(title)
-			portraits = load("res://assets/npc-portraits-group-%d.png" % source.x)
-			var cell_width := portraits.get_width() / 6.0
-			regions[title] = Rect2(cell_width * source.y + 5, 60, cell_width - 10, 610)
-		var atlas := AtlasTexture.new()
-		atlas.atlas = portraits
-		atlas.region = regions[title]
+		var portrait_texture := preload("res://CharacterArt.gd").portrait(title)
 		var picture := TextureRect.new()
-		picture.texture = atlas
+		picture.texture = portrait_texture
 		picture.custom_minimum_size = Vector2(150, 215)
 		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		var portrait_material := ShaderMaterial.new()
-		portrait_material.shader = preload("res://PortraitPaper.gdshader")
-		picture.material = portrait_material
 		row.add_child(picture)
 	var column := VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1509,15 +1547,18 @@ func close_dialogue() -> void:
 	refresh_hud()
 
 func open_service(service: String) -> void:
-	if service == "Carpentry":
+	if service in ["Carpentry", "Mountain Carpentry"]:
 		InteriorLife.open_carpentry(self)
+		return
+	if service == "Onsen Resort":
+		open_onsen()
 		return
 	if service == "Mine":
 		say("Walk to a rock and press Mine. Exit through the south doorway.")
 		return
 	if REGIONAL_ROOMS.has(service):
 		var column := make_modal(service)
-		dialogue_text.text = {"Archive": "Old maps and family records preserve the town's history. Talk to Yoshi to learn more.", "Shrine Residence": "Rei prepares tea and festival plans here. Walk over to talk.", "Mountain Lodge": "Emi welcomes walkers here. Rest at the lodge for ¥30 to recover 30 Health.", "Tea Farmhouse": "Sachiko and Mika welcome you to their farmhouse. A sitting area and family rooms overlook the tea fields.", "Tea Processing Shed": "Fresh leaves are sorted, dried, and packed here. Talk to Sachiko about tea. Two handfuls of fresh leaves make one packet. Each packet ships for ¥45.", "Harbor Homes": "Ken and Masao have rooms near the harbor. Talk to them about life on the coast.", "Fishing Shop": "Masao keeps tackle and repairs gear here. Fishing equipment purchases will come in a later draft.", "Hiro Cabin": "Hiro keeps field notes and trail supplies in his cabin. Walk over to talk about the mountains."}[service]
+		dialogue_text.text = {"Archive": "Old maps and family records preserve the town's history. Talk to Haruka to learn more.", "Shrine Residence": "Rei prepares tea and festival plans here. Walk over to talk.", "Mountain Lodge": "Emi welcomes walkers here. Rest at the lodge for ¥30 to recover 30 Health.", "Tea Farmhouse": "Sachiko and Mika welcome you to their farmhouse. A sitting area and family rooms overlook the tea fields.", "Tea Processing Shed": "Fresh leaves are sorted, dried, and packed here. Talk to Sachiko about tea. Two handfuls of fresh leaves make one packet. Each packet ships for ¥45.", "Harbor Homes": "Ken and Masao have rooms near the harbor. Talk to them about life on the coast.", "Fishing Shop": "Masao keeps tackle and repairs gear here. Fishing equipment purchases will come in a later draft.", "Hiro Cabin": "Hiro keeps field notes and trail supplies in his cabin. Walk over to talk about the mountains."}[service]
 		if service == "Tea Processing Shed":
 			dialogue_text.text = "Fresh leaves: %d · Packed tea: %d\nTwo handfuls make one packet. Ship packets for ¥45 each." % [tea_leaves, packed_tea]
 			column.add_child(make_button("Pack tea · 2 leaves", process_tea))
@@ -1638,11 +1679,31 @@ func service_door(service: String) -> Vector2:
 		if building.name == service: return building.door * town.ART_SCALE
 	return Vector2(-1000, -1000)
 
+func shop_opening_hours() -> Dictionary:
+	return {"General Store": Vector2(480, 1080), "Blacksmith": Vector2(420, 1020), "Café": Vector2(720, 1140), "Inn": Vector2(360, 1320), "Clinic": Vector2(540, 1020), "Town Hall": Vector2(540, 1020), "Police Box": Vector2(360, 1320), "Fire Station": Vector2(360, 1320), "Archive": Vector2(540, 1080), "Shrine Residence": Vector2(360, 1200), "Mountain Lodge": Vector2(360, 1200), "Tea Farmhouse": Vector2(360, 1200), "Tea Processing Shed": Vector2(360, 1080), "Harbor Homes": Vector2(360, 1200), "Fishing Shop": Vector2(360, 1080), "Hiro Cabin": Vector2(360, 1200), "Mine": Vector2(0, 1440), "Carpentry":Vector2(720,1080), "Mountain Carpentry":Vector2(480,720), "Onsen Resort":Vector2(480,1260), "Barn":Vector2(0,1440),"Greenhouse":Vector2(0,1440),"Upper Floor":Vector2(0,1440)}
+
+func open_shop_hours() -> void:
+	var column := make_modal("Shop opening hours")
+	dialogue_panel.get_child(0).offset_top = -380
+	dialogue_text.text = "Plan your visit. Kenta works in the mountains in the morning and town after noon."
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(0, 160)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(scroll)
+	var label := Label.new()
+	label.text = ""
+	for service in shop_opening_hours():
+		var hours: Vector2 = shop_opening_hours()[service]
+		label.text += "%s: %02d:%02d – %02d:%02d\n" % [service, int(hours.x) / 60, int(hours.x) % 60, int(hours.y) / 60, int(hours.y) % 60]
+	scroll.add_child(label)
+	column.add_child(make_button("Back to noticeboard", open_noticeboard))
+	column.add_child(make_button("Close", close_dialogue))
+
 func open_noticeboard() -> void:
 	var column := make_modal("Plaza Noticeboard")
 	# A scrollable catalog makes every original scene available for critique.
 	dialogue_panel.get_child(0).offset_top = -380
-	dialogue_text.text = "Spring Gathering: Spring 14, 10 AM–6 PM in the plaza. Other buttons preview draft scenes."
+	dialogue_text.text = "Check festival dates, volunteer requests, and opening hours here. Scene previews are below."
 	dialogue_text.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(0, 160)
@@ -1652,6 +1713,9 @@ func open_noticeboard() -> void:
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(list)
 	if gathering_available(): list.add_child(make_button("Join today’s Spring Gathering", start_scheduled_gathering))
+	list.add_child(make_button("Festival calendar", open_calendar))
+	list.add_child(make_button("Requests & volunteering", VolunteerRequests.journal.bind(self)))
+	list.add_child(make_button("Shop opening hours", open_shop_hours))
 	list.add_child(make_button("Community requests and restoration", InteriorLife.open_projects.bind(self)))
 	list.add_child(make_button("Spring Gathering · Preview", begin_festival))
 	for title in CharacterScenes.SCENES:
@@ -1696,29 +1760,35 @@ func advance_scene() -> void:
 	if is_instance_valid(dialogue_panel): dialogue_panel.queue_free()
 	show_scene_step()
 
-func begin_festival() -> void:
+func begin_festival(spec: Dictionary = {}) -> void:
+	current_festival = spec
+	festival_center = Vector2(1200,910) if spec.is_empty() else SeasonalFestivals.center(spec.area)
+	festival_origin = TOWN_ORIGIN if spec.is_empty() or spec.area == "town" else REGION_ORIGINS[spec.area]
+	var host = town if spec.is_empty() or spec.area == "town" else regions[spec.area]
 	scheduled_gathering = false
 	close_dialogue()
 	festival_active = true
-	camera.zoom = Vector2(0.48, 0.48)
+	var view := get_viewport_rect().size
+	camera.zoom = Vector2.ONE * maxf(0.48,maxf(view.x/host.SIZE.x,view.y/host.SIZE.y))
 	festival_elapsed = 0.0
 	festival_people.clear()
 	var all: Array = town.npcs.duplicate()
 	all.append_array(town.visitors)
 	for area in regions.values(): all.append_array(area.npcs)
+	if spec.has("people"): all = all.filter(func(npc): return npc.first_name in spec.people)
 	for i in range(all.size()):
 		var npc = all[i]
 		festival_people.append({"npc": npc, "parent": npc.get_parent(), "position": npc.position, "paused": npc.paused, "facing": npc.facing})
-		if npc.get_parent() != town: npc.reparent(town, false)
+		if npc.get_parent() != host: npc.reparent(host, false)
 		npc.visible = true
 		npc.paused = true
 		npc.label.visible = false
-		npc.position = Vector2(1200, 910) + Vector2(270, 0).rotated(TAU * i / all.size())
+		npc.position = festival_center + Vector2(170 if not current_festival.is_empty() else 270, 0).rotated(TAU * i / all.size())
 		npc.show_frame(0, 1)
-	player.position = TOWN_ORIGIN + Vector2(1200, 1030)
+	player.position = festival_origin + festival_center + Vector2(0,110)
 	festival_button.visible = true
 	if is_instance_valid(tea_challenge_button): tea_challenge_button.queue_free()
-	tea_challenge_button = make_button("Tea challenge",InteriorLife.festival_game.bind(self,0))
+	tea_challenge_button = make_button("Activity",SeasonalFestivals.open_activity.bind(self)) if not spec.is_empty() else make_button("Tea challenge",InteriorLife.festival_game.bind(self,0))
 	hud.add_child(tea_challenge_button)
 	tea_challenge_button.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	tea_challenge_button.position = Vector2(get_viewport_rect().size.x/2-90,85)
@@ -1730,7 +1800,7 @@ func animate_festival() -> void:
 	for i in range(festival_people.size()):
 		var npc = festival_people[i].npc
 		var angle := TAU * i / festival_people.size()
-		npc.position = Vector2(1200, 910) + Vector2(270, 0).rotated(angle) + Vector2(sin(festival_elapsed * 2.0 + i) * 8, cos(festival_elapsed * 3.0 + i) * 3)
+		npc.position = festival_center + Vector2(170 if not current_festival.is_empty() else 270, 0).rotated(angle) + Vector2(sin(festival_elapsed * 2.0 + i) * 8, cos(festival_elapsed * 3.0 + i) * 3)
 		npc.show_frame(0, int(festival_elapsed * 5.0 + i) % 4)
 		npc.z_index = int(npc.position.y / 10)
 
@@ -1746,6 +1816,7 @@ func end_festival() -> void:
 		npc.label.visible = true
 		npc.show_frame(npc.facing, 1)
 	festival_people.clear()
+	SeasonalFestivals.finish(self)
 	if scheduled_gathering:
 		var year := int((day - 1) / 112) + 1
 		if not festival_years.has(year):
@@ -1756,8 +1827,10 @@ func end_festival() -> void:
 		scheduled_gathering = false
 		save_game(false)
 	festival_active = false
+	current_festival = {}
+	town.ambient_period = -1
 	festival_button.text = "End Festival"
-	camera.zoom = Vector2(0.70, 0.70)
+	fit_region_camera(regions[location].SIZE if regions.has(location) else town.SIZE)
 	festival_button.visible = false
 	if toast_time <= 0: say("Thanks for joining the gathering. Town life resumes.")
 	refresh_hud()
@@ -1767,7 +1840,7 @@ func enter_shop(service: String, restoring: bool = false) -> void:
 		open_service(service)
 		return
 	if not restoring:
-		var hours := {"General Store": Vector2(480, 1080), "Blacksmith": Vector2(420, 1020), "Café": Vector2(720, 1140), "Inn": Vector2(360, 1320), "Clinic": Vector2(540, 1020), "Town Hall": Vector2(540, 1020), "Police Box": Vector2(360, 1320), "Fire Station": Vector2(360, 1320), "Archive": Vector2(540, 1080), "Shrine Residence": Vector2(360, 1200), "Mountain Lodge": Vector2(360, 1200), "Tea Farmhouse": Vector2(360, 1200), "Tea Processing Shed": Vector2(360, 1080), "Harbor Homes": Vector2(360, 1200), "Fishing Shop": Vector2(360, 1080), "Hiro Cabin": Vector2(360, 1200), "Mine": Vector2(0, 1440), "Carpentry":Vector2(480,1080)}
+		var hours := shop_opening_hours()
 		if clock_minutes < hours[service].x or clock_minutes >= hours[service].y:
 			say("%s is closed. Please return during opening hours." % service)
 			return
@@ -1778,6 +1851,7 @@ func enter_shop(service: String, restoring: bool = false) -> void:
 	town.visible = false
 	road.visible = false
 	inside_house = false
+	if is_instance_valid(polish): polish.path.clear()
 	location = "shop"
 	shop_name = service
 	SHOP_ORIGIN = shops[service].position
@@ -1797,6 +1871,7 @@ func enter_shop(service: String, restoring: bool = false) -> void:
 	camera.limit_top = 0
 	camera.limit_right = int(SHOP_ORIGIN.x + ShopScript.SIZE.x)
 	camera.limit_bottom = int(ShopScript.SIZE.y)
+	fit_region_camera(ShopScript.SIZE)
 	camera.offset = Vector2.ZERO
 	camera.reset_smoothing()
 	say("Approach a rock and press Mine. Walk out the south doorway to leave." if service == "Mine" else "Welcome to %s. Approach residents or the counter; walk out the south door to leave." % service)
@@ -1807,7 +1882,13 @@ func check_walk_exits() -> void:
 	if location == "shop":
 		var point := player.position - SHOP_ORIGIN
 		if point.y > 755 and absf(point.x - 550) < 110:
-			if REGIONAL_ROOMS.has(shop_name):
+			if shop_name == "Upper Floor":
+				set_location(true,ROOM_ORIGIN+FarmBuildings.STAIRS+Vector2(0,90))
+			elif shop_name == "Greenhouse":
+				travel_to("farm",FarmBuildings.GREENHOUSE_DOOR+Vector2(0,100))
+			elif shop_name == "Barn":
+				travel_to("farm", BARN_DOOR + Vector2(0,110))
+			elif REGIONAL_ROOMS.has(shop_name):
 				travel_to(REGIONAL_ROOMS[shop_name][0], REGIONAL_ROOMS[shop_name][1] + Vector2(0, 110))
 			else:
 				travel_to("town", service_door(shop_name) + Vector2(0, 70))
@@ -1818,6 +1899,12 @@ func check_walk_exits() -> void:
 		return
 	match location:
 		"farm":
+			if interior_progress.get("greenhouse",false) and player.position.distance_to(FarmBuildings.GREENHOUSE_DOOR)<55:
+				enter_shop("Greenhouse")
+				return
+			if player.position.distance_to(BARN_DOOR) < 55:
+				enter_shop("Barn")
+				return
 			if player.position.distance_to(FARM_EXIT) < 55:
 				travel_to("town", Vector2(1200, 2000))
 		"road":
@@ -1894,8 +1981,8 @@ func choose_crop(crop_name: String) -> void:
 
 func open_shipping() -> void:
 	var column := make_modal("Shipping Box")
-	var value := 0
-	var basket := packed_tea
+	var value: int = BarnLife.shipping_value(self)
+	var basket: int = packed_tea + BarnLife.product_count(self)
 	for mineral in ORE:
 		value += int(ore_shipping[mineral]) * ORE[mineral]
 		basket += int(ore_basket[mineral])
@@ -1911,6 +1998,7 @@ func open_shipping() -> void:
 	column.add_child(make_button("Close", close_dialogue))
 
 func ship_produce() -> void:
+	BarnLife.ship(self)
 	for mineral in ORE:
 		ore_shipping[mineral] += ore_basket[mineral]
 		ore_basket[mineral] = 0
@@ -1938,6 +2026,7 @@ func settle_farm_day() -> void:
 	for plot in plots:
 		if int(plot.get("last_growth_day", day)) >= day: continue
 		plot.last_growth_day = day
+		if WeatherLife.heatwave_growth(plot,day): continue
 		if plot.stage == 2:
 			plot.growth += 1
 			plot.stage = 3 if plot.growth >= CROPS[plot.crop].days else 1
@@ -1948,6 +2037,9 @@ func settle_farm_day() -> void:
 		coins += int(fish_shipping[fish_name]) * FISH[fish_name]
 		fish_shipping[fish_name] = 0
 	apply_rain_watering()
+	resources.irrigate()
+	BarnLife.new_day(self)
+	FarmBuildings.new_day(self)
 	queue_redraw()
 func resident_room(person: String) -> String:
 	var morning := clock_minutes < 720
@@ -1971,9 +2063,9 @@ func resident_room(person: String) -> String:
 		"Ken": return "Harbor Homes" if evening else ""
 		"Hiro": return "Hiro Cabin" if evening else ""
 		"Emi": return "Mountain Lodge" if not evening else ""
-		"Yoshi": return "Archive" if morning else ""
+		"Haruka": return "Archive" if morning else ""
 		"Rei": return "Shrine Residence" if evening else ""
-		"Kenta": return "Carpentry" if clock_minutes >= 480 and clock_minutes < 1080 else ""
+		"Kenta": return "Mountain Carpentry" if clock_minutes >= 480 and clock_minutes < 720 else ("Carpentry" if clock_minutes >= 720 and clock_minutes < 1080 else "")
 	return ""
 
 func update_resident_presence() -> void:
@@ -1994,10 +2086,10 @@ func begin_fishing() -> void:
 	if not backpack_has_room():
 		say("Backpack full. Ship some items before fishing.")
 		return
-	if health < 2:
+	if health < 2*WeatherLife.work_multiplier(self):
 		say("Too tired to cast. Rest first.")
 		return
-	health -= 2
+	health -= 2*WeatherLife.work_multiplier(self)
 	fishing_active = true
 	fishing_elapsed = 0
 	joystick.reset_stick()
@@ -2042,13 +2134,14 @@ func harvest_tea() -> void:
 		if tea_picked_days[i] >= day:
 			say("This row needs to rest. Come back tomorrow.")
 			return
-		if health < 2 or tea_leaves >= 999 or not backpack_has_room():
+		if health < 2*WeatherLife.work_multiplier(self) or tea_leaves >= 999 or not backpack_has_room():
 			say("Rest or make room in your leaf basket first.")
 			return
 		tea_picked_days[i] = day
+		resources.play("harvest",player.position)
 		tea_leaves += 1
 		show_item_moment("Tea leaves")
-		health -= 2
+		health -= 2*WeatherLife.work_multiplier(self)
 		say("Fresh tea leaves collected. Basket: %d." % tea_leaves)
 		save_game(false)
 		refresh_hud()
@@ -2078,6 +2171,7 @@ func mine_ore() -> void:
 		health -= 4 - pick_level * 2
 		ore_basket[mineral] += 1
 		show_item_moment(mineral)
+		resources.play("mine",SHOP_ORIGIN+MINE_SPOTS[i])
 		ore_picked_days[i] = day
 		shops.Mine.depleted[i] = true
 		shops.Mine.queue_redraw()
@@ -2104,7 +2198,7 @@ func clear_item_moment() -> void:
 
 
 func backpack_count() -> int:
-	var total := tea_leaves + packed_tea
+	var total: int = tea_leaves + packed_tea + BarnLife.product_count(self)
 	for inventory in [produce, fish_basket, ore_basket]:
 		for count in inventory.values(): total += int(count)
 	return total
@@ -2115,7 +2209,7 @@ func backpack_has_room() -> bool:
 func open_backpack() -> void:
 	clear_item_moment()
 	var column := make_modal("Backpack · %d / %d" % [backpack_count(), BACKPACK_SIZES[backpack_level]])
-	dialogue_text.text = "Seeds and tools use separate pouches. Ship items to free space."
+	dialogue_text.text = "Seeds and tools use separate pouches. Lumber: %d · Water: %d / 24. Ship items to free space." % [resources.state().lumber,resources.state().water]
 	dialogue_text.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(0, 160)
@@ -2125,7 +2219,7 @@ func open_backpack() -> void:
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(list)
 	var contents: Dictionary = {}
-	for inventory in [produce, fish_basket, ore_basket]:
+	for inventory in [produce, fish_basket, ore_basket, BarnLife.state(self).products]:
 		for item in inventory:
 			if int(inventory[item]) > 0: contents[item] = int(inventory[item])
 	if tea_leaves > 0: contents["Tea leaves"] = tea_leaves
@@ -2148,6 +2242,7 @@ func open_backpack() -> void:
 		row.add_child(label)
 	if contents.is_empty(): dialogue_text.text = "Your backpack is empty. Collect crops, fish, tea or ore."
 	dialogue_panel.get_child(0).offset_top = -380
+	column.add_child(make_button("Requests & volunteering",VolunteerRequests.journal.bind(self)))
 	column.add_child(make_button("Change farmer", backpack_change_farmer))
 	column.add_child(make_button("Close", close_dialogue))
 
@@ -2184,13 +2279,15 @@ func purchase_backpack() -> void:
 	open_backpack_shop()
 
 func carried_count(item: String) -> int:
+	if BarnLife.PRICES.has(item): return int(BarnLife.state(self).products[item])
 	if produce.has(item): return int(produce[item])
 	if fish_basket.has(item): return int(fish_basket[item])
 	if ore_basket.has(item): return int(ore_basket[item])
 	return tea_leaves if item == "Tea leaves" else packed_tea
 
 func change_carried(item: String, amount: int) -> void:
-	if produce.has(item): produce[item] += amount
+	if BarnLife.PRICES.has(item): BarnLife.state(self).products[item] += amount
+	elif produce.has(item): produce[item] += amount
 	elif fish_basket.has(item): fish_basket[item] += amount
 	elif ore_basket.has(item): ore_basket[item] += amount
 	elif item == "Tea leaves": tea_leaves += amount
@@ -2209,8 +2306,15 @@ func open_storage(category: String = "Crops") -> void:
 		var button := make_button(group, open_storage.bind(group))
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		tabs.add_child(button)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size=Vector2(0,120)
+	scroll.size_flags_vertical=Control.SIZE_EXPAND_FILL
+	column.add_child(scroll)
+	var list:=VBoxContainer.new()
+	list.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	scroll.add_child(list)
 	for item in STORAGE_GROUPS[category]:
-		column.add_child(make_button("%s · Bag %d · Chest %d" % [item, carried_count(item), stored_items[item]], open_storage_item.bind(item)))
+		list.add_child(make_button("%s · Bag %d · Chest %d" % [item, carried_count(item), stored_items[item]], open_storage_item.bind(item)))
 	column.add_child(make_button("Store everything from bag", store_everything))
 	column.add_child(make_button("Close", close_dialogue))
 
@@ -2253,7 +2357,7 @@ func store_everything() -> void:
 	open_storage()
 
 func is_rainy_day(value: int = -1) -> bool:
-	return (day if value < 0 else value) % 5 == 3
+	return WeatherLife.forecast(day if value<0 else value) in ["Rain","Hurricane"]
 
 func apply_rain_watering() -> void:
 	if not is_rainy_day(): return
@@ -2271,6 +2375,7 @@ func gathering_available() -> bool:
 	return gathering_date() and clock_minutes >= 600 and clock_minutes < 1080 and not festival_years.has(int((day - 1) / 112) + 1)
 
 func check_scheduled_gathering() -> void:
+	SeasonalFestivals.maybe_start(self)
 	if location != "town" or dialogue_open or festival_active or active_scene != "" or choosing_character: return
 	if gathering_available() and (player.position - TOWN_ORIGIN).distance_to(Vector2(1200, 910)) < 340:
 		start_scheduled_gathering()
@@ -2293,7 +2398,7 @@ func open_calendar() -> void:
 	var year := int((day - 1) / 112) + 1
 	var next_year := year + 1 if (day - 1) % 112 > 13 or festival_years.has(year) else year
 	dialogue_text.text = "%s\nTomorrow: %s\n\nSpring Gathering · Spring 14, Year %d\nTown Plaza · 10 AM–6 PM\nWalk into the plaza to join. Finish the gathering for a welcome gift." % [calendar_text(), "Rain (crops watered)" if is_rainy_day(day + 1) else "Clear", next_year]
-	if gathering_available(): dialogue_text.text += "\nThe gathering is today!"
+	dialogue_text.text = "%s\nTomorrow: %s\n\n" % [calendar_text(),WeatherLife.forecast(day+1)] + SeasonalFestivals.calendar(self)
 	column.add_child(make_button("Close", close_dialogue))
 
 func storage_limit() -> int:
@@ -2304,6 +2409,27 @@ func fit_region_camera(dimensions: Vector2) -> void:
 	var fit := maxf(0.70, maxf(viewport_size.x / dimensions.x, viewport_size.y / dimensions.y))
 	camera.zoom = Vector2.ONE * fit
 func refit_camera() -> void:
-	if regions.has(location) and not inside_house:
+	if location == "farm" and not inside_house:
+		camera.zoom = Vector2.ONE * maxf(0.58,maxf(get_viewport_rect().size.x/WORLD.x,get_viewport_rect().size.y/WORLD.y))
+	if inside_house:
+		fit_region_camera(interior.SIZE)
+	elif location=="shop":
+		fit_region_camera(ShopScript.SIZE)
+	elif regions.has(location):
 		fit_region_camera(regions[location].SIZE)
 		camera.offset = Vector2.ZERO
+
+func open_onsen() -> void:
+	var column := make_modal("Mountain Onsen")
+	dialogue_text.text = "A quiet hot-spring bath among the mountain gardens. A soak costs ¥40 and restores 35 Health. Chanel welcomes guests; Ren prepares the baths."
+	column.add_child(make_button("Take a soak · ¥40",take_onsen))
+	column.add_child(make_button("Close",close_dialogue))
+func take_onsen() -> void:
+	if health >= 100: dialogue_text.text = "You are already refreshed. Enjoy the view!"; return
+	if coins < 40: dialogue_text.text = "A bath costs ¥40. Come back when you can spare it."; return
+	coins -= 40
+	health = minf(100,health+35)
+	clock_minutes = minf(LATE_MINUTE,clock_minutes+30)
+	dialogue_text.text = "Warm water, mountain air, and a quiet moment. You feel refreshed."
+	save_game(false)
+	refresh_hud()
