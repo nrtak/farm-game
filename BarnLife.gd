@@ -4,13 +4,13 @@ const PRICES := {"Milk":35,"Wool":65,"Goat milk":30,"Egg":15}
 static var art: Texture2D
 static var art_regions: Array[Rect2] = []
 static func state(farm) -> Dictionary:
-	if not farm.interior_progress.has("barn"):
+	if not farm.interior_progress.get("barn") is Dictionary:
 		farm.interior_progress.barn = {"animals":[],"feed":10,"products":{},"shipping":{},"level":0,"settled":farm.day}
 	var data: Dictionary = farm.interior_progress.barn
 	for key in ["products","shipping"]:
-		if not data.get(key,{}) is Dictionary: data[key] = {}
+		if not data.get(key) is Dictionary: data[key] = {}
 		for item in PRICES: data[key][item] = clampi(int(data[key].get(item,0)),0,999)
-	if not data.get("animals",[]) is Array: data.animals = []
+	if not data.get("animals") is Array: data.animals = []
 	data.feed = clampi(int(data.get("feed",10)),0,999)
 	data.level = clampi(int(data.get("level",0)),0,2)
 	return data

@@ -27,7 +27,7 @@ static func daylight(minute: float) -> Color:
 		if minute <= times[i+1]: return colors[i].lerp(colors[i+1],clampf((minute-times[i])/(times[i+1]-times[i]),0,1))
 	return colors[-1]
 func _unhandled_input(event: InputEvent) -> void:
-	if farm == null or farm.choosing_character or farm.dialogue_open or farm.confirming_sleep or farm.paused_by_player: return
+	if farm == null or farm.choosing_character or farm.dialogue_open or farm.confirming_sleep or farm.sleep_in_progress or farm.paused_by_player: return
 	if event is InputEventScreenTouch and event.pressed: tap(event.position)
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed: tap(event.position)
 func area_node():

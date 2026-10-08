@@ -3,7 +3,9 @@ const ROOMS := {"General Store":"store","Café":"cafe","Clinic":"hospital","Inn"
 static var textures: Dictionary = {}
 static func texture(kind: String) -> Texture2D:
 	if not ROOMS.has(kind): return null
-	if not textures.has(kind): textures[kind]=load("res://assets/interior-"+ROOMS[kind]+"-v2.png")
+	if not textures.has(kind):
+		textures.clear()
+		textures[kind]=load("res://assets/interior-"+ROOMS[kind]+"-v2.png")
 	return textures[kind]
 static func furnishings(kind: String) -> Array[Rect2]:
 	# The artwork keeps service counter and lower central aisle aligned to game coordinates.

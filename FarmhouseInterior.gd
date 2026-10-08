@@ -5,10 +5,10 @@ var FLOOR := Rect2(90, 190, 820, 530)
 const ENTRY := Vector2(500, 665)
 const EXIT := Vector2(500, 700)
 const BED_APPROACH := Vector2(670, 475)
-const BED := Rect2(730, 230, 150, 230)
-const TABLE := Rect2(290, 340, 190, 125)
+const BED := Rect2(730, 190, 158, 265)
+const TABLE := Rect2(270, 310, 175, 110)
 const CALENDAR_APPROACH := Vector2(570, 320)
-const CHEST := Rect2(125, 540, 125, 75)
+const CHEST := Rect2(100, 510, 145, 115)
 const CHEST_APPROACH := Vector2(190, 665)
 const SOLIDS := [BED, TABLE, CHEST, Rect2(110, 200, 140, 85), Rect2(500, 200, 140, 65)]
 
@@ -108,6 +108,14 @@ func _draw() -> void:
 		draw_rect(Rect2(x,630,10,90),Color("785a3b"))
 	# Front entry threshold and doormat.
 	preload("res://InteriorDecor.gd").draw_home(self)
+	# Keep the original room fixed; expansion rooms retain their own furnishings.
+	draw_texture_rect(preload("res://assets/interior-farmhouse-v2.png"),Rect2(0,0,1000,800),false)
+	if home_level>0:
+		draw_rect(Rect2(900,530,90,100),Color("bc9563"))
+		for y in range(535,630,35): draw_line(Vector2(900,y),Vector2(990,y),Color("9a754e"),2)
+	if get_parent().interior_progress.get("second_story",false):
+		for i in range(6): draw_rect(Rect2(555,540+i*12,110,10),Color("97744f"))
+		draw_string(ThemeDB.fallback_font,Vector2(555,635),"Upstairs",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color("493b2d"))
 	draw_rect(Rect2(435, 680, 130, 40), Color("70523a"))
 	draw_rect(Rect2(449, 691, 102, 21), Color("d2b880"))
 

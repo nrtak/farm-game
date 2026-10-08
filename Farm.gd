@@ -3,7 +3,7 @@ extends Node2D
 const WORLD := Vector2(3000, 2000)
 const GROW_SECONDS := 12.0 # Legacy save compatibility only.
 const CROPS := {"Turnip": {"days": 2, "pack": 25, "sale": 20, "color": "e6dac0"}, "Potato": {"days": 3, "pack": 40, "sale": 35, "color": "c39e72"}, "Strawberry": {"days": 4, "pack": 60, "sale": 55, "color": "bf7868"}}
-const SHIPPING_BOX := Vector2(830, 900)
+const SHIPPING_BOX := Vector2(370, 650)
 const BARN_DOOR := Vector2(2420, 435)
 var resources: Node2D
 var selected_crop := "Turnip"
@@ -121,6 +121,10 @@ var health_bar: ProgressBar
 var health_label: Label
 var sleep_prompt: Control
 var confirming_sleep := false
+var sleep_in_progress := false
+var sleep_sequence: Node2D
+var recovering_launch := false
+var game_ready := false
 # Coordinates follow the visible silhouettes on the 1536 x 1024 map.
 const SOLID_OUTLINES := [
     [Vector2(215,107),Vector2(495,107),Vector2(495,266),Vector2(215,266)],
@@ -178,6 +182,9 @@ func _ready() -> void:
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--test-session="):
 			SAVE_FILE = "user://test_" + argument.trim_prefix("--test-session=").validate_filename() + ".json"
+	recovering_launch=FileAccess.file_exists(SAVE_FILE+".starting")
+	var startup_marker := FileAccess.open(SAVE_FILE+".starting",FileAccess.WRITE)
+	if startup_marker: startup_marker.store_string("Loading saved farm")
 	get_tree().auto_accept_quit = false
 	RenderingServer.set_default_clear_color(Color("77a5be"))
 	outdoor_world = Node2D.new()
@@ -279,7 +286,14 @@ func _ready() -> void:
 	layout_ui()
 	refresh_hud()
 	if not FileAccess.file_exists(SAVE_FILE): show_character_picker()
+	game_ready=true
 	queue_redraw()
+	call_deferred("finish_launch")
+
+func finish_launch() -> void:
+	# A failed launch retries at the farmhouse entrance without deleting progress.
+	await get_tree().process_frame
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_FILE+".starting"))
 
 func obstacle(rect: Rect2) -> void:
 	var body := StaticBody2D.new()
@@ -489,7 +503,7 @@ func clock_text() -> String:
 
 func advance_clock(seconds: float) -> void:
 	# One real second advances one game minute. Midnight rolls the calendar.
-	if choosing_character or confirming_sleep or dialogue_open or festival_active or paused_by_player or not window_focused: return
+	if choosing_character or confirming_sleep or sleep_in_progress or dialogue_open or festival_active or paused_by_player or not window_focused: return
 	var remaining := maxf(0.0, seconds)
 	while remaining > 0.0:
 		var step := minf(remaining, 1440.0 - clock_minutes)
@@ -525,7 +539,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	door_retry=maxf(0,door_retry-delta)
-	if choosing_character or confirming_sleep or dialogue_open or paused_by_player or not window_focused: return
+	if choosing_character or confirming_sleep or sleep_in_progress or dialogue_open or paused_by_player or not window_focused: return
 	if pickup_time > 0:
 		pickup_time = maxf(0, pickup_time - delta)
 		item_moment.modulate.a = minf(1, pickup_time / 0.18)
@@ -605,6 +619,7 @@ func _physics_process(delta: float) -> void:
 		draw_elapsed = 0.0
 
 func interaction_action() -> String:
+	if location=="farm" and not inside_house and player.position.distance_to(SHIPPING_BOX)<210: return "shipping"
 	if location == "farm" and interior_progress.get("greenhouse",false) and player.position.distance_to(FarmBuildings.GREENHOUSE_DOOR)<90: return "greenhouse_enter"
 	if inside_house and interior_progress.get("second_story",false) and (player.position-ROOM_ORIGIN).distance_to(FarmBuildings.STAIRS)<75: return "stairs"
 	if location == "shop" and shop_name=="Greenhouse": return "greenhouse_bed"
@@ -786,7 +801,10 @@ func refresh_hud() -> void:
 
 func set_location(indoors: bool, destination: Vector2) -> void:
 	if is_instance_valid(polish): polish.path.clear()
-	for room in shops.values(): room.visible = false
+	for room in shops.values():
+		room.visible = false
+		RenderingServer.canvas_item_clear(room.get_canvas_item())
+	preload("res://InteriorArtwork.gd").textures.clear()
 	location = "house" if indoors else "farm"
 	if is_instance_valid(town): town.visible = false
 	if is_instance_valid(road): road.visible = false
@@ -828,7 +846,7 @@ func leave_house() -> void:
 	save_game(false)
 
 func offer_sleep() -> void:
-	if not inside_house or confirming_sleep: return
+	if not inside_house or confirming_sleep or sleep_in_progress: return
 	confirming_sleep = true
 	player.velocity = Vector2.ZERO
 	joystick.reset_stick()
@@ -858,8 +876,14 @@ func cancel_sleep() -> void:
 	if is_instance_valid(sleep_prompt): sleep_prompt.queue_free()
 
 func sleep_until_morning() -> void:
-	if not inside_house or not confirming_sleep: return
+	if not inside_house or not confirming_sleep or sleep_in_progress: return
 	cancel_sleep()
+	if not is_instance_valid(sleep_sequence):
+		sleep_sequence=preload("res://SleepSequence.gd").new()
+		add_child(sleep_sequence)
+	sleep_sequence.begin(self)
+
+func finish_sleep_day() -> void:
 	if clock_minutes >= WAKE_MINUTE: day += 1
 	InteriorLife.complete_construction(self)
 	clock_minutes = WAKE_MINUTE
@@ -895,7 +919,7 @@ func interact() -> void:
 	if dialogue_open:
 		advance_dialogue()
 		return
-	if choosing_character or confirming_sleep or paused_by_player: return
+	if choosing_character or confirming_sleep or sleep_in_progress or paused_by_player: return
 	if WeatherLife.forecast(day) == "Hurricane" and interaction_action() != "sleep":
 		say("Hurricane: rest in bed until tomorrow.")
 		return
@@ -1068,7 +1092,7 @@ func interact() -> void:
 	save_game(false)
 
 func save_game(show_message: bool = true) -> void:
-	if choosing_character: return
+	if choosing_character or not game_ready or sleep_in_progress: return
 	if FileAccess.file_exists(SAVE_FILE):
 		var previous = read_saved_json(SAVE_FILE)
 		if previous is Dictionary:
@@ -1076,9 +1100,14 @@ func save_game(show_message: bool = true) -> void:
 	var crop_data: Array = []
 	for plot in plots:
 		crop_data.append({"stage": plot.stage, "growth": plot.growth, "crop": plot.crop, "last_growth_day": plot.last_growth_day})
-	var file := FileAccess.open(SAVE_FILE, FileAccess.WRITE)
+	var file := FileAccess.open(SAVE_FILE+".pending", FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({"version": 17, "interior_progress": interior_progress, "festival_years": festival_years, "pick_level": pick_level, "harvest_level": harvest_level, "stored_items": stored_items, "backpack_level": backpack_level, "mine_lesson_seen": mine_lesson_seen, "ore_basket": ore_basket, "ore_shipping": ore_shipping, "ore_picked_days": ore_picked_days, "tea_lesson_seen": tea_lesson_seen, "tea_leaves": tea_leaves, "packed_tea": packed_tea, "tea_shipping": tea_shipping, "tea_picked_days": tea_picked_days, "fish_basket": fish_basket, "fish_shipping": fish_shipping, "fish_catches": fish_catches, "fishing_quest_stage": fishing_quest_stage, "tea_delivery_stage": tea_delivery_stage, "selected_crop": selected_crop, "extra_seeds": extra_seeds, "produce": produce, "shipping_queue": shipping_queue, "lost_item_stage": lost_item_stage, "day": day, "clock_minutes": clock_minutes, "health": health, "location": location, "shop_name": shop_name, "character": character_choice, "coins": coins, "seeds": seeds, "tool_level": tool_level, "friendship": friendship, "talked_on_day": talked_on_day, "seen_scenes": seen_scenes, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
+		file.store_string(JSON.stringify({"version": 18, "interior_progress": interior_progress, "festival_years": festival_years, "pick_level": pick_level, "harvest_level": harvest_level, "stored_items": stored_items, "backpack_level": backpack_level, "mine_lesson_seen": mine_lesson_seen, "ore_basket": ore_basket, "ore_shipping": ore_shipping, "ore_picked_days": ore_picked_days, "tea_lesson_seen": tea_lesson_seen, "tea_leaves": tea_leaves, "packed_tea": packed_tea, "tea_shipping": tea_shipping, "tea_picked_days": tea_picked_days, "fish_basket": fish_basket, "fish_shipping": fish_shipping, "fish_catches": fish_catches, "fishing_quest_stage": fishing_quest_stage, "tea_delivery_stage": tea_delivery_stage, "selected_crop": selected_crop, "extra_seeds": extra_seeds, "produce": produce, "shipping_queue": shipping_queue, "lost_item_stage": lost_item_stage, "day": day, "clock_minutes": clock_minutes, "health": health, "location": location, "shop_name": shop_name, "character": character_choice, "coins": coins, "seeds": seeds, "tool_level": tool_level, "friendship": friendship, "talked_on_day": talked_on_day, "seen_scenes": seen_scenes, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
+		file.flush()
+		file.close()
+		if DirAccess.rename_absolute(ProjectSettings.globalize_path(SAVE_FILE+".pending"),ProjectSettings.globalize_path(SAVE_FILE))!=OK:
+			if show_message: say("Could not replace the save. Your previous save is preserved.")
+			return
 		if show_message: say("Farm saved.")
 	elif show_message: say("Could not save. Check storage permissions.")
 
@@ -1095,6 +1124,9 @@ func load_game() -> void:
 			values.erase("Yoshi")
 	var saved_progress = parsed.get("interior_progress",{})
 	interior_progress = saved_progress if saved_progress is Dictionary else {}
+	for section in ["resources","construction","story","activities"]:
+		if interior_progress.has(section) and not interior_progress[section] is Dictionary: interior_progress.erase(section)
+	interior_progress.home=clampi(int(interior_progress.get("home",0)),0,2)
 	InteriorLife.add_plots(self,int(interior_progress.get("restoration",0)))
 	coins = maxi(0, int(parsed.get("coins", 500)))
 	festival_years = []
@@ -1160,9 +1192,10 @@ func load_game() -> void:
 	fish_catches = maxi(0, int(parsed.get("fish_catches", 0)))
 	fishing_quest_stage = clampi(int(parsed.get("fishing_quest_stage", 0)), 0, 3)
 	var destination := Vector2(775, 590)
-	var indoors := str(parsed.get("location", "farm")) == "house"
+	if OS.has_feature("ios") and int(parsed.get("version",1))<=17 and str(parsed.get("location","farm"))=="house": recovering_launch=true
+	var indoors := str(parsed.get("location", "farm")) == "house" and not recovering_launch
 	if indoors: destination = ROOM_ORIGIN + interior.ENTRY
-	if int(parsed.get("version", 1)) >= 2:
+	if int(parsed.get("version", 1)) >= 2 and not recovering_launch:
 		var saved_position := Vector2(float(parsed.get("x", 450)), float(parsed.get("y", 1120)))
 		if (indoors and interior.is_walkable(saved_position - ROOM_ORIGIN)) or (not indoors and is_walkable(saved_position)):
 			destination = saved_position
@@ -1179,7 +1212,7 @@ func load_game() -> void:
 	set_location(indoors, destination)
 	lost_item_stage = clampi(int(parsed.get("lost_item_stage", 0)), 0, 3)
 	tea_delivery_stage = clampi(int(parsed.get("tea_delivery_stage", 0)), 0, 2)
-	var saved_area := str(parsed.get("location", "farm"))
+	var saved_area := "farm" if recovering_launch else str(parsed.get("location", "farm"))
 	if saved_area in ["town", "road"]:
 		var origin := TOWN_ORIGIN if saved_area == "town" else ROAD_ORIGIN
 		var point := Vector2(float(parsed.get("x", origin.x + 500)), float(parsed.get("y", 500))) - origin
@@ -1248,7 +1281,7 @@ func choose_character(choice: String) -> void:
 	say("Welcome home. Your farmer is ready.")
 
 func show_character_picker() -> void:
-	if choosing_character or confirming_sleep or dialogue_open: return
+	if choosing_character or confirming_sleep or sleep_in_progress or dialogue_open: return
 	choosing_character = true
 	player.velocity = Vector2.ZERO
 	joystick.reset_stick()
@@ -1310,7 +1343,9 @@ func _draw() -> void:
 	queued += tea_shipping
 	for count in ore_shipping.values(): queued += int(count)
 	if queued > 0: draw_circle(Vector2.ZERO + Vector2(43, -30), 7, Color("e5cb85"))
-	draw_string(ThemeDB.fallback_font, Vector2.ZERO + Vector2(-60, 60), "Shipping", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("493b2d"))
+	for y in [-3,10,24]: draw_line(Vector2(-30,y),Vector2(30,y),Color("705239"),1.5)
+	draw_style_box(parchment(),Rect2(-42,42,92,22))
+	draw_string(ThemeDB.fallback_font,Vector2(-34,59),"Shipping",HORIZONTAL_ALIGNMENT_LEFT,-1,15,Color("493b2d"))
 	draw_set_transform(Vector2.ZERO,0,Vector2.ONE)
 	if interior_progress.has("construction"):
 		draw_rect(Rect2(650,1020,150,65),Color("ead8af"))
@@ -1381,7 +1416,10 @@ func travel_to(area: String, point: Vector2, persist: bool = true) -> void:
 	if area == "road":
 		travel_to("town", Vector2(1200, 2000), persist)
 		return
-	for room in shops.values(): room.visible = false
+	for room in shops.values():
+		room.visible = false
+		RenderingServer.canvas_item_clear(room.get_canvas_item())
+	preload("res://InteriorArtwork.gd").textures.clear()
 	if festival_active: end_festival()
 	for region in regions.values(): region.visible = false
 	if area == "farm":
@@ -1867,7 +1905,10 @@ func enter_shop(service: String, restoring: bool = false) -> void:
 		if clock_minutes < hours[service].x or clock_minutes >= hours[service].y:
 			say("%s is closed. Please return during opening hours." % service)
 			return
-	for room in shops.values(): room.visible = false
+	for room in shops.values():
+		room.visible = false
+		RenderingServer.canvas_item_clear(room.get_canvas_item())
+	preload("res://InteriorArtwork.gd").textures.clear()
 	for region in regions.values(): region.visible = false
 	outdoor_world.visible = false
 	interior.visible = false
@@ -1880,6 +1921,7 @@ func enter_shop(service: String, restoring: bool = false) -> void:
 	if not restoring: preload("res://DailyErrands.gd").visit(self,service)
 	SHOP_ORIGIN = shops[service].position
 	shops[service].visible = true
+	shops[service].queue_redraw()
 	if service == "Mine":
 		shops.Mine.depleted = []
 		for picked_day in ore_picked_days: shops.Mine.depleted.append(int(picked_day) >= day)
@@ -1978,14 +2020,14 @@ func check_walk_exits() -> void:
 					travel_to("town", arrivals[location])
 
 func open_map() -> void:
-	if choosing_character or confirming_sleep or dialogue_open: return
+	if choosing_character or confirming_sleep or sleep_in_progress or dialogue_open: return
 	var column := make_modal("Walking Routes")
 	dialogue_panel.get_child(0).offset_top = -340
 	dialogue_text.text = "Farm → Town walkway → Main Town.\n\nFrom town: north to Mountain & Onsen; east to Tea Country; west to the Harbor; northwest through the large torii to Shrine Grounds.\n\nHarbor: return east toward town. Tea Country: return west. Shrine Grounds: return southeast. Mountains: return south. Walk through doors and gateways to change areas automatically. The library is northeast of the town square."
 	column.add_child(make_button("Close", close_dialogue))
 
 func open_guide() -> void:
-	if choosing_character or confirming_sleep or dialogue_open: return
+	if choosing_character or confirming_sleep or sleep_in_progress or dialogue_open: return
 	var column := make_modal("Welcome Home")
 	dialogue_panel.get_child(0).offset_top = -380
 	dialogue_text.text = "Move with arrows/WASD or the joystick. Hold Shift, or push the joystick farther, to run.\n\nChoose seeds → Plant → Water daily → Sleep → Harvest → Shipping box. Sleep in the house to recover Health.\n\nWalk onto the Town walkway on the farm to enter town directly. All marked region exits work by walking through them; Routes shows directions. Visit the store for seeds, the forge for an upgrade, and the café for meals.\n\nTown exits: north mountain/lake, east tea fields, west harbor, northwest shrine. The plaza Events board previews scenes and the festival."
@@ -2025,6 +2067,7 @@ func choose_crop(crop_name: String) -> void:
 	save_game(false)
 
 func open_shipping() -> void:
+	if dialogue_open: close_dialogue()
 	var column := make_modal("Shipping Box")
 	var value: int = BarnLife.shipping_value(self)
 	var basket: int = packed_tea + BarnLife.product_count(self)
@@ -2038,11 +2081,14 @@ func open_shipping() -> void:
 	for fish_name in FISH:
 		value += int(fish_shipping[fish_name]) * FISH[fish_name]
 		basket += int(fish_basket[fish_name])
-	dialogue_text.text = "Basket: %d items. Box: ¥%d payable next morning.\nTurnip ¥20 · Potato ¥35 · Strawberry ¥55\nSardine ¥12 · Mackerel ¥25 · Sea Bream ¥40 · Tea ¥45\nCopper ¥30 · Iron ¥50" % [basket, value]
-	column.add_child(make_button("Ship all produce", ship_produce))
+	dialogue_text.text = "Carrying: %d goods. Queued payment: ¥%d.\nShipped crops, fish, ore, tea packets and animal products are paid for next morning." % [basket, value]
+	var ship_button := make_button("Ship all carried goods" if basket>0 else "Nothing to ship — harvest or gather first",ship_produce)
+	ship_button.disabled=basket==0
+	column.add_child(ship_button)
 	column.add_child(make_button("Close", close_dialogue))
 
 func ship_produce() -> void:
+	var shipped_count := backpack_count()
 	BarnLife.ship(self)
 	for mineral in ORE:
 		ore_shipping[mineral] += ore_basket[mineral]
@@ -2055,8 +2101,9 @@ func ship_produce() -> void:
 	for fish_name in FISH:
 		fish_shipping[fish_name] += fish_basket[fish_name]
 		fish_basket[fish_name] = 0
-	dialogue_text.text = "Produce is in the box. Payment arrives next morning."
 	save_game(false)
+	open_shipping()
+	dialogue_text.text = "Shipped %d goods.\n" % (shipped_count-backpack_count()) + dialogue_text.text
 
 func settle_farm_day() -> void:
 	for mineral in ORE:

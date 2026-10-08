@@ -19,13 +19,13 @@ func setup(game) -> void:
 	for kind in ["water","seed","axe","mine","harvest"]:
 		sounds[kind] = load("res://assets/audio/"+kind+".wav")
 func state() -> Dictionary:
-	if not farm.interior_progress.has("resources"):
+	if not farm.interior_progress.get("resources") is Dictionary:
 		farm.interior_progress.resources = {"water":WATER_CAPACITY,"lumber":0,"chopped":{},"irrigation":0}
 	var data: Dictionary = farm.interior_progress.resources
 	data.water = clampi(int(data.get("water",WATER_CAPACITY)),0,WATER_CAPACITY)
 	data.lumber = clampi(int(data.get("lumber",0)),0,9999)
 	data.irrigation = clampi(int(data.get("irrigation",0)),0,2)
-	if not data.get("chopped",{}) is Dictionary: data.chopped = {}
+	if not data.get("chopped") is Dictionary: data.chopped = {}
 	return data
 func wood_index() -> int:
 	if farm.inside_house or not WOOD_SPOTS.has(farm.location): return -1
