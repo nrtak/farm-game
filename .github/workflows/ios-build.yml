@@ -4,6 +4,10 @@ on:
     branches: [ios-preparation]
   workflow_dispatch:
     inputs:
+      diagnose_crash:
+        description: Rebuild crash symbols without uploading an app
+        type: boolean
+        default: false
       upload_existing:
         description: Upload the verified signed build 2 to TestFlight
         type: boolean
@@ -28,8 +32,11 @@ permissions:
   contents: read
   actions: read
 jobs:
+  diagnose:
+    if: ${{ inputs.diagnose_crash }}
+    uses: ./.github/workflows/ios-crash-check.yml
   build:
-    if: ${{ !inputs.upload_existing }}
+    if: ${{ !inputs.upload_existing && !inputs.diagnose_crash }}
     runs-on: macos-26
     timeout-minutes: 60
     environment: ${{ inputs.signed && 'ios' || 'ios-check' }}
