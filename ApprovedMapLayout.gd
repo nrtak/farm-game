@@ -1,6 +1,5 @@
 extends RefCounted
 static var cached: Dictionary = {}
-static var images: Dictionary = {}
 static func spec(kind: String) -> Dictionary:
 	if cached.is_empty(): cached=JSON.parse_string(FileAccess.get_file_as_string("res://data/approved_maps.json"))
 	return cached.get(kind,{})
@@ -42,8 +41,4 @@ static func scenery(kind: String) -> Array:
 	return result
 static func buildings(kind: String) -> Array: return rects(kind,"buildings")
 static func is_path(kind: String, point: Vector2, size: Vector2) -> bool:
-	if not images.has(kind): images[kind]=load("res://assets/map-"+kind+"-approved-v1.png").get_image()
-	var img: Image=images[kind]
-	var uv=point/size
-	var c=img.get_pixel(clampi(int(uv.x*img.get_width()),0,img.get_width()-1),clampi(int(uv.y*img.get_height()),0,img.get_height()-1))
-	return c.r>0.55 and c.g>0.45 and c.r>c.g*0.97
+	return preload("res://MapHabitat.gd").sample(kind,point,size,"path")

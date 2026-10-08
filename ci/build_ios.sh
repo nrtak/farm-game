@@ -5,6 +5,14 @@ python3 ci/configure_ios.py
 mkdir -p export/ios
 "$GODOT_BIN" --headless --path . --import
 "$GODOT_BIN" --headless --path . --export-release iOS export/ios/CoastalFarm.zip
+# Run the exported pack in an empty folder. Editor files must not hide omissions.
+pack=$(find "$PWD/export/ios" -name '*.pck' -type f | head -n 1)
+[[ -n "$pack" ]]
+probe_dir=$(mktemp -d)
+"$GODOT_BIN" --headless --path "$probe_dir" --main-pack "$pack" --script "$PWD/ci/pack_startup.gd" --quit-after 600 -- --test-session="ios-export-$BUILD_NUMBER" > export/pack-startup.log 2>&1
+cat export/pack-startup.log
+grep -q '^PASS:' export/pack-startup.log
+if grep -qE 'SCRIPT ERROR:|^ERROR:' export/pack-startup.log; then exit 1; fi
 project=export/ios/CoastalFarm.xcodeproj
 if [[ ! -d "$project" ]]; then
   echo 'Godot did not generate the expected Xcode project' >&2

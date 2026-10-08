@@ -5,7 +5,8 @@ static var textures: Dictionary = {}
 static func turnaround(group: int) -> Texture2D:
 	if textures.has(group): return textures[group]
 	var source: Texture2D = load("res://assets/npc-turnaround-group-%d.png" % group)
-	var image := source.get_image()
+	var image := preload("res://RuntimeArt.gd").readable_image(source)
+	if image==null: return null
 	image.convert(Image.FORMAT_RGBA8)
 	# Remove only the connected paper outside the outlined figures. White
 	# clothing enclosed by outlines stays opaque. This happens once per sheet.

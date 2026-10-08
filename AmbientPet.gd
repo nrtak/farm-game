@@ -14,6 +14,10 @@ func _ready() -> void:
 	if artwork.is_empty(): return
 	shiba_sprite = Sprite2D.new()
 	shiba_sprite.texture = load(artwork)
+	if shiba_sprite.texture==null:
+		shiba_sprite.free()
+		shiba_sprite=null
+		return
 	shiba_sprite.hframes = 4
 	shiba_sprite.vframes = 2
 	var cell_height := shiba_sprite.texture.get_height() / 2.0

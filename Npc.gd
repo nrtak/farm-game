@@ -25,6 +25,10 @@ var leg_origins: Array[Vector2] = []
 var current_row := -1
 
 func setup_turnaround(person: String, texture: Texture2D, character_row: int, group: int = 2) -> void:
+	var image := preload("res://RuntimeArt.gd").readable_image(texture)
+	if image==null:
+		setup(person,texture)
+		return
 	first_name = person
 	sheet = texture
 	turnaround = true
@@ -33,7 +37,6 @@ func setup_turnaround(person: String, texture: Texture2D, character_row: int, gr
 	sprite.region_enabled = true
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(sprite)
-	var image := texture.get_image()
 	# Explicit row cuts keep neighbouring figures and labels out of sprites.
 	var cuts: Array = {2: [45, 248, 470, 692, 922, 1134, 1360], 3: [50, 280, 512, 780, 1018, 1248, 1448], 4: [45, 268, 532, 747, 1010, 1235, 1448]}[group]
 	var reference_height := 1374.0 if group == 2 else 1448.0
@@ -95,6 +98,11 @@ func setup(person: String, texture: Texture2D) -> void:
 	show_frame(0, 1)
 
 func prepare_walk_geometry(person: String, texture: Texture2D) -> void:
+	if texture==null:
+		for i in range(16):
+			regions.append(Rect2(0,0,1,1))
+			offsets.append(Vector2.ZERO)
+		return
 	if texture.resource_path.contains("/characters/"):
 		if new_geometry_cache.is_empty():
 			var parsed = JSON.parse_string(FileAccess.get_file_as_string("res://assets/characters/walk-geometry.json"))
@@ -116,7 +124,15 @@ func prepare_walk_geometry(person: String, texture: Texture2D) -> void:
 		for values in entry.offsets: offsets.append(Vector2(values[0], values[1]))
 		height_scale = entry.scale
 		return
-	var image := texture.get_image()
+	var image := preload("res://RuntimeArt.gd").readable_image(texture)
+	if image==null:
+		var cell_size := Vector2(texture.get_size())/4.0
+		for row in range(4):
+			for column in range(4):
+				regions.append(Rect2(Vector2(column,row)*cell_size,cell_size))
+				offsets.append(Vector2(0,-cell_size.y/2.0))
+		height_scale=150.0/maxf(1.0,cell_size.y)
+		return
 	var cell := Vector2i(image.get_width() / 4, image.get_height() / 4)
 	var tallest := 1.0
 	for row in range(4):
@@ -134,6 +150,7 @@ func prepare_walk_geometry(person: String, texture: Texture2D) -> void:
 	height_scale = 150.0 / tallest
 
 func alpha_bounds(image: Image) -> Rect2i:
+	if image==null or image.is_empty(): return Rect2i(0,0,1,1)
 	var first := image.get_size()
 	var last := Vector2i(-1, -1)
 	for y in range(image.get_height()):
@@ -179,6 +196,7 @@ func face_player(player_position: Vector2) -> void:
 	show_frame(facing, 1)
 
 func show_frame(row: int, phase: int) -> void:
+	if sheet==null or not is_instance_valid(sprite): return
 	if turnaround:
 		show_turnaround(row, phase)
 		return

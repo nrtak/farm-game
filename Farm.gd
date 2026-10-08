@@ -249,7 +249,8 @@ func _ready() -> void:
 	farmer = Sprite2D.new()
 	farmer.texture = preload("res://assets/farmer-v2.png")
 	farmer.region_enabled = true
-	farmer.region_rect = farmer.texture.get_image().get_used_rect()
+	var initial_image := preload("res://RuntimeArt.gd").readable_image(farmer.texture)
+	farmer.region_rect = initial_image.get_used_rect() if initial_image!=null else Rect2(Vector2.ZERO,farmer.texture.get_size())
 	farmer.scale = Vector2.ONE * (180.0 / farmer.region_rect.size.y)
 	farmer.position.y = -90
 	player.add_child(farmer)
@@ -1311,6 +1312,7 @@ func show_character_picker() -> void:
 		var option := VBoxContainer.new()
 		row.add_child(option)
 		var texture: Texture2D = preload("res://CharacterArt.gd").walk(choice)
+		if texture==null: continue
 		var atlas := AtlasTexture.new()
 		atlas.atlas = texture
 		atlas.region = Rect2(Vector2(texture.get_width()/4.0,0), texture.get_size() / 4.0)

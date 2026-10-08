@@ -152,11 +152,12 @@ static func draw_room(room) -> void:
 		var animal: Dictionary = data.animals[i]
 		if art == null and ResourceLoader.exists("res://assets/characters/barn-animals-v1.png"):
 			art=load("res://assets/characters/barn-animals-v1.png")
-			var image := art.get_image()
-			var cell_width := int(image.get_width()/4)
+			var image := preload("res://RuntimeArt.gd").readable_image(art)
+			var cell_size := Vector2(art.get_size())/Vector2(4,1) if art!=null else Vector2.ONE
 			for column in range(4):
-				var bounds := image.get_region(Rect2i(column*cell_width,0,cell_width,image.get_height())).get_used_rect()
-				art_regions.append(Rect2(bounds.position+Vector2i(column*cell_width,0),bounds.size))
+				var bounds := Rect2i(Vector2i.ZERO,Vector2i(cell_size))
+				if image!=null: bounds=image.get_region(Rect2i(Vector2i(column*cell_size.x,0),Vector2i(cell_size))).get_used_rect()
+				art_regions.append(Rect2(bounds.position+Vector2i(column*cell_size.x,0),bounds.size))
 		if art != null:
 			var species_index: int = SPECIES.keys().find(animal.species)
 			var region := art_regions[species_index]

@@ -4,25 +4,14 @@ var sightings := {}
 var elapsed := 0.0
 var refresh := 0.0
 var last_key := ""
-var habitat_images := {}
 func setup(game) -> void:
 	farm=game
 	z_index=180
 func habitat(area: String,point: Vector2) -> bool:
 	var node = farm if area=="farm" else (farm.town if area=="town" else farm.regions[area])
 	if not node.is_walkable(point): return false
-	var texture: Texture2D
 	var size: Vector2 = farm.WORLD if area=="farm" else node.SIZE
-	if area=="farm": texture=farm.get_node("OutdoorWorld/Environment").texture
-	elif area=="town":
-		for child in node.get_children():
-			if child is Sprite2D and child.z_index==-10: texture=child.texture
-	else: texture=node.background
-	if not habitat_images.has(area): habitat_images[area]=texture.get_image()
-	var image: Image=habitat_images[area]
-	var pixel := Vector2i(point/size*Vector2(image.get_size()))
-	var c := image.get_pixelv(pixel)
-	return c.r>0.4 and c.g>0.52 and c.g>c.r*1.12 and c.g>c.b*1.2
+	return preload("res://MapHabitat.gd").sample(area,point,size,"grass")
 func populate(area: String) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed=hash(area+str(farm.day))
@@ -37,7 +26,7 @@ func populate(area: String) -> void:
 	sightings[area+str(farm.day)]=animals
 func _process(delta: float) -> void:
 	if farm==null: return
-	if farm.paused_by_player or farm.dialogue_open or not farm.window_focused: return
+	if farm.choosing_character or farm.sleep_in_progress or farm.paused_by_player or farm.dialogue_open or not farm.window_focused: return
 	if farm.inside_house or farm.location in ["shop","road"]: visible=false; return
 	visible=true
 	elapsed+=delta

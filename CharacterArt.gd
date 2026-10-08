@@ -23,7 +23,7 @@ static func walk(person: String) -> Texture2D:
 		var old := "yoshi" if person == "Haruka" else person.to_lower()
 		path = "res://assets/npc-%s-walk.png" % old
 		if not ResourceLoader.exists(path): path = "res://assets/npc-%s-walk-v1.png" % old
-	var texture: Texture2D = load(path)
+	var texture: Texture2D = load(path) if ResourceLoader.exists(path) else null
 	walk_cache[person] = texture
 	return texture
 
@@ -33,7 +33,8 @@ static func portrait(person: String) -> Texture2D:
 	if not PORTRAITS.has(person): return null
 	var info: Array = PORTRAITS[person]
 	var texture: Texture2D = load("res://assets/characters/portraits-%s-v2.png" % info[0])
-	var source := texture.get_image()
+	var source := preload("res://RuntimeArt.gd").readable_image(texture)
+	if source==null: return null
 	var width := float(source.get_width()) / int(info[2])
 	# Display the upper body, excluding sheet labels and neighbouring figures.
 	var top := 20 if person != "Haruka" else 35
@@ -52,6 +53,7 @@ static func is_paper(color: Color) -> bool:
 	return minf(color.r, minf(color.g, color.b)) > 0.57 and color.g >= color.r - 0.025 and color.g >= color.b - 0.025 and maxf(color.r, maxf(color.g, color.b)) - minf(color.r, minf(color.g, color.b)) < 0.25
 
 static func clear_connected_background(image: Image) -> void:
+	if image==null or image.is_empty(): return
 	var width := image.get_width()
 	var height := image.get_height()
 	var seen := PackedByteArray()
