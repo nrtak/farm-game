@@ -561,6 +561,7 @@ func _physics_process(delta: float) -> void:
 			say("The fish slipped away. Cast again when ready.")
 		refresh_hud()
 		return
+	polish.recover_player()
 	var direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	if Input.is_physical_key_pressed(KEY_A): direction.x -= 1
 	if Input.is_physical_key_pressed(KEY_D): direction.x += 1
@@ -570,22 +571,13 @@ func _physics_process(delta: float) -> void:
 	direction = polish.direction(direction)
 	running = Input.is_physical_key_pressed(KEY_SHIFT) or joystick.direction.length() > 0.72
 	player.velocity = direction.limit_length() * (RUN_SPEED if running else SPEED)
+	if not polish.path.is_empty():
+		player.velocity = player.velocity.limit_length(player.position.distance_to(polish.path[0])/maxf(delta,0.001))
 	var previous_position := player.position
 	player.move_and_slide()
-	if not polish.path.is_empty() and player.position.distance_to(previous_position) < 0.01 and direction.length() > 0.1:
+	polish.constrain_motion(previous_position)
+	if not polish.path.is_empty() and player.position.distance_to(previous_position)<0.01 and direction.length()>0.1:
 		polish.path.clear()
-	if location == "farm" and not inside_house and not is_walkable(player.position):
-		player.position = previous_position
-		player.velocity = Vector2.ZERO
-	if inside_house and not interior.is_walkable(player.position-ROOM_ORIGIN):
-		player.position=previous_position
-		player.velocity=Vector2.ZERO
-	elif location == "town" and not town.is_walkable(player.position-TOWN_ORIGIN):
-		player.position=previous_position
-		player.velocity=Vector2.ZERO
-	elif regions.has(location) and not regions[location].is_walkable(player.position-REGION_ORIGINS[location]):
-		player.position=previous_position
-		player.velocity=Vector2.ZERO
 	var travel := player.position.distance_to(previous_position)
 	update_walk(delta, travel > 0.01, direction, travel)
 	if festival_active:

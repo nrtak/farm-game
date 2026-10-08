@@ -35,14 +35,31 @@ static func portrait(person: String) -> Texture2D:
 	var texture: Texture2D = load("res://assets/characters/portraits-%s-v2.png" % info[0])
 	var source := preload("res://RuntimeArt.gd").readable_image(texture)
 	if source==null: return null
-	var width := float(source.get_width()) / int(info[2])
-	# Display the upper body, excluding sheet labels and neighbouring figures.
-	var top := 20 if person != "Haruka" else 35
-	var height := mini(850 if person != "Haruka" else 1360, source.get_height() - top)
-	var image := source.get_region(Rect2i(int(width * int(info[1])) + 3, top, int(width) - 6, height))
+	var cuts: Array = {
+		"wardrobe":[0.0,0.219,0.35,0.495,0.656,0.787,1.0],
+		"town":[0.0,0.238,0.515,0.716,1.0],
+		"romance":[0.0,0.165,0.319,0.466,0.65,0.824,1.0],
+		"shops":[0.0,0.159,0.317,0.5,0.64,0.84,1.0],
+		"regions":[0.0,0.184,0.35,0.489,0.637,0.826,1.0],
+		"onsen":[0.018,0.23,0.39,0.593,0.793,0.98],
+		"haruka":[0.0,1.0]
+	}[info[0]]
+	var left:=int(cuts[int(info[1])]*source.get_width())
+	var right:=int(cuts[int(info[1])+1]*source.get_width())
+	if person=="Mika": right=int(source.get_width()*0.463)
+	if person=="Yuta": left=int(source.get_width()*0.478)
+	if person=="Gen": left=int(source.get_width()*0.326)
+	# Upper-body framing uses the sheet dimensions, preserving heads and shoulders.
+	var image:=source.get_region(Rect2i(left,0,right-left,int(source.get_height()*0.61)))
 	image.convert(Image.FORMAT_RGBA8)
 	clear_connected_background(image)
-	image = image.get_region(Rect2i(0,0,image.get_width(),mini(675,image.get_height())))
+	# Two figures touch their neighbours below the shoulders on the source sheet.
+	if person in ["Gen","Keiko"]:
+		var seam_x:=int(source.get_width()*(0.326 if person=="Gen" else 0.365))-left
+		var seam_y:=int(source.get_height()*(0.47 if person=="Gen" else 0.40))
+		for y in range(seam_y,image.get_height()):
+			for x in range(maxi(0,seam_x)): image.set_pixel(x,y,Color.TRANSPARENT)
+	keep_main_figure(image)
 	var bounds := image.get_used_rect()
 	if bounds.has_area(): image = image.get_region(bounds)
 	var result := ImageTexture.create_from_image(image)
@@ -77,3 +94,31 @@ static func clear_connected_background(image: Image) -> void:
 		if x < width - 1 and not seen[index + 1]: pending.append(index + 1)
 		if y > 0 and not seen[index - width]: pending.append(index - width)
 		if y < height - 1 and not seen[index + width]: pending.append(index + width)
+
+static func keep_main_figure(image: Image) -> void:
+	# Remove disconnected pieces of neighbouring figures at atlas boundaries.
+	var width:=image.get_width()
+	var height:=image.get_height()
+	var seen:=PackedByteArray()
+	seen.resize(width*height)
+	var largest:=PackedInt32Array()
+	for seed in range(width*height):
+		if seen[seed] or image.get_pixel(seed%width,int(seed/width)).a<0.1: continue
+		var component:=PackedInt32Array([seed])
+		seen[seed]=1
+		var cursor:=0
+		while cursor<component.size():
+			var index:=component[cursor]
+			cursor+=1
+			var x:=index%width
+			var y:=int(index/width)
+			for next in [index-1 if x>0 else -1,index+1 if x<width-1 else -1,index-width if y>0 else -1,index+width if y<height-1 else -1]:
+				if next<0 or seen[next]: continue
+				seen[next]=1
+				if image.get_pixel(next%width,int(next/width)).a>=0.1: component.append(next)
+		if component.size()>largest.size(): largest=component
+	var keep:=PackedByteArray()
+	keep.resize(width*height)
+	for index in largest: keep[index]=1
+	for index in range(width*height):
+		if not keep[index]: image.set_pixel(index%width,int(index/width),Color.TRANSPARENT)

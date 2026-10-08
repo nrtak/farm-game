@@ -22,7 +22,7 @@ func _process(delta: float) -> void:
 	elif not path.is_empty(): queue_redraw()
 static func daylight(minute: float) -> Color:
 	var times := [0.0,300.0,420.0,600.0,900.0,1050.0,1140.0,1260.0,1440.0]
-	var colors := [Color("687896"),Color("687896"),Color("f5dfc7"),Color.WHITE,Color.WHITE,Color("f2c69f"),Color("bc9fba"),Color("687896"),Color("687896")]
+	var colors := [Color("687896"),Color("687896"),Color("fffdf8"),Color.WHITE,Color.WHITE,Color("fff3e8"),Color("d9dfea"),Color("687896"),Color("687896")]
 	for i in range(times.size()-1):
 		if minute <= times[i+1]: return colors[i].lerp(colors[i+1],clampf((minute-times[i])/(times[i+1]-times[i]),0,1))
 	return colors[-1]
@@ -65,7 +65,7 @@ func plan(world: Vector2) -> void:
 			for x in range(grid.region.size.x):
 				var point := Vector2(x*32+16,y*32+16)
 				var clear: bool = area.is_walkable(point) if area.has_method("is_walkable") else false
-				if area == farm.interior: clear = farm.interior.FLOOR.grow(-16).has_point(point) and not blocked(point+origin)
+				clear = clear and not blocked(point+origin)
 				grid.set_point_solid(Vector2i(x,y),not clear)
 		grids[key] = grid
 	var grid: AStarGrid2D = grids[key]
@@ -77,10 +77,14 @@ func plan(world: Vector2) -> void:
 	marker_time = 1.0
 	queue_redraw()
 func blocked(point: Vector2) -> bool:
-	var query := PhysicsPointQueryParameters2D.new()
-	query.position = point
+	var query := PhysicsShapeQueryParameters2D.new()
+	var shape:=CircleShape2D.new()
+	shape.radius=farm.PLAYER_RADIUS+1
+	query.shape=shape
+	query.transform=Transform2D(0,point)
 	query.collision_mask = farm.player.collision_mask
-	return not farm.get_world_2d().direct_space_state.intersect_point(query,1).is_empty()
+	query.exclude = [farm.player.get_rid()]
+	return not farm.get_world_2d().direct_space_state.intersect_shape(query,1).is_empty()
 func nearest_cell(grid: AStarGrid2D, cell: Vector2i) -> Vector2i:
 	cell.x = clampi(cell.x,0,grid.region.size.x-1)
 	cell.y = clampi(cell.y,0,grid.region.size.y-1)
@@ -120,3 +124,27 @@ func pet_animal() -> void:
 func _draw() -> void:
 	if marker_time > 0:
 		draw_arc(marker,18,0,TAU,24,Color(0.96,0.89,0.7,marker_time),3)
+
+func clear_position(world: Vector2) -> bool:
+	var area=area_node()
+	return area.is_walkable(world-area_origin()) and not blocked(world)
+func recover_player() -> bool:
+	if clear_position(farm.player.position): return false
+	var start: Vector2=farm.player.position
+	for radius in range(12,385,12):
+		for step in range(32):
+			var candidate:=start+Vector2.from_angle(step*TAU/32)*radius
+			if clear_position(candidate):
+				farm.player.position=candidate
+				farm.player.velocity=Vector2.ZERO
+				path.clear()
+				return true
+	return false
+func constrain_motion(previous: Vector2) -> void:
+	if clear_position(farm.player.position): return
+	var moved: Vector2=farm.player.position-previous
+	farm.player.position=previous
+	for motion in [Vector2(moved.x,0),Vector2(0,moved.y)]:
+		var candidate: Vector2=farm.player.position+motion
+		if clear_position(candidate) and not farm.player.test_move(farm.player.global_transform,motion):
+			farm.player.position=candidate
