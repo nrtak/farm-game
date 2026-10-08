@@ -101,13 +101,13 @@ func run() -> void:
 	farm.interact()
 	assert(farm.health == 0 and farm.plots[0].stage == 2, "Upgraded watering works with one Health")
 	for area_name in ["town", "tea", "harbor", "mountain", "historic"]:
-		var point := Vector2(1200, 1600) if area_name == "town" else (Vector2(500, 500) if area_name == "road" else Vector2(800, 950))
+		var point := Vector2(1200, 1200) if area_name == "town" else (Vector2(500, 500) if area_name == "road" else Vector2(800, 950))
 		farm.travel_to(area_name, point, false)
 		farm.save_game(false)
 		var saved_position: Vector2 = farm.player.position
 		farm.travel_to("farm", Vector2(450, 1120), false)
 		farm.load_game()
-		assert(farm.location == area_name and farm.player.position == saved_position, "Save restores every area")
+		assert(farm.location == area_name and farm.player.position == saved_position, "Save restores every area: " + area_name)
 	assert(farm.seeds == 10 and farm.tool_level == 1, "Save keeps inventory and tool upgrade")
 	farm.friendship["Emi"] = 17
 	farm.save_game(false)
