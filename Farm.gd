@@ -41,16 +41,16 @@ var tea_leaves := 0
 var packed_tea := 0
 var tea_shipping := 0
 var tea_picked_days := [0, 0, 0]
-const TEA_SPOTS := [Vector2(788,812),Vector2(900,910),Vector2(1354,810)]
+const TEA_SPOTS := [Vector2(860,826),Vector2(860,996),Vector2(1333,844)]
 const FISH := {"Sardine": 12, "Mackerel": 25, "Sea Bream": 40}
-const FISHING_SPOTS := [Vector2(570,865),Vector2(570,965)]
+const FISHING_SPOTS := [Vector2(600,865),Vector2(600,965)]
 var fish_basket := {"Sardine": 0, "Mackerel": 0, "Sea Bream": 0}
 var fish_shipping := {"Sardine": 0, "Mackerel": 0, "Sea Bream": 0}
 var fishing_active := false
 var fishing_elapsed := 0.0
 var fish_catches := 0
 var fishing_quest_stage := 0
-const REGIONAL_ROOMS := {"Onsen Resort":["mountain",Vector2(615,445)],"Mountain Lodge":["mountain",Vector2(1073,480)],"Mountain Carpentry":["mountain",Vector2(1427,715)],"Mine":["mountain",Vector2(1380,205)],"Tea Farmhouse":["tea",Vector2(453,311)],"Tea Processing Shed":["tea",Vector2(1042,621)],"Fishing Shop":["harbor",Vector2(665,574)],"Harbor Homes":["harbor",Vector2(1016,615)],"Shrine Residence":["historic",Vector2(406,363)]}
+const REGIONAL_ROOMS := {"Onsen Resort":["mountain",Vector2(615,445)],"Mountain Lodge":["mountain",Vector2(1073,480)],"Mountain Carpentry":["mountain",Vector2(1427,715)],"Mine":["mountain",Vector2(1380,205)],"Tea Farmhouse":["tea",Vector2(453,330)],"Tea Processing Shed":["tea",Vector2(1042,630)],"Fishing Shop":["harbor",Vector2(665,550)],"Harbor Homes":["harbor",Vector2(1016,610)],"Shrine Residence":["historic",Vector2(406,363)]}
 var quest_label: Label
 var hud_elapsed := 0.0
 var draw_elapsed := 0.0
@@ -2012,13 +2012,13 @@ func check_walk_exits() -> void:
 			elif point.x < 100 and absf(point.y - 800) < 130:
 				travel_to("harbor", Vector2(1480,585))
 			elif point.x > 2300 and absf(point.y - 800) < 130:
-				travel_to("tea", Vector2(140,585))
+				travel_to("tea", Vector2(140,665))
 			elif point.x < 430 and point.y < 160:
 				travel_to("historic", Vector2(1440,1060))
 		_:
 			if regions.has(location):
 				var point: Vector2 = player.position - REGION_ORIGINS[location]
-				if ((location=="harbor" and point.x>1520 and absf(point.y-585)<120) or (location=="tea" and point.x<75 and absf(point.y-585)<120) or (location=="historic" and point.x>1520 and point.y>1070) or (location=="mountain" and point.y>1120 and absf(point.x-800)<100)):
+				if ((location=="harbor" and point.x>1520 and absf(point.y-585)<120) or (location=="tea" and point.x<75 and absf(point.y-665)<120) or (location=="historic" and point.x>1520 and point.y>1070) or (location=="mountain" and point.y>1120 and absf(point.x-800)<100)):
 					var arrivals := {"mountain": Vector2(1200, 180), "harbor": Vector2(220, 1080), "tea": Vector2(2180, 1080), "historic": Vector2(180,300)}
 					travel_to("town", town.design(arrivals[location]))
 

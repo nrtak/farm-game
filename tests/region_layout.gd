@@ -8,7 +8,7 @@ func run() -> void:
 	f.interior_progress.story={"intro":true}; f.day=1
 	for area in f.regions:
 		var region=f.regions[area]
-		var arrivals := {"harbor":Vector2(1480,585),"tea":Vector2(140,585),"historic":Vector2(1440,1060),"mountain":Vector2(800,950)}
+		var arrivals := {"harbor":Vector2(1480,585),"tea":Vector2(140,665),"historic":Vector2(1440,1060),"mountain":Vector2(800,950)}
 		f.travel_to(area,arrivals[area],false)
 		for room in f.REGIONAL_ROOMS:
 			if f.REGIONAL_ROOMS[room][0]!=area: continue

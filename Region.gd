@@ -13,13 +13,21 @@ var title := ""
 var background: Texture2D
 var scenery_polygons: Array = []
 var scenery_circles: Array = []
+var land_outline := PackedVector2Array()
+var pond_outline := PackedVector2Array()
+var pier_area := Rect2()
 const MINE_DOOR := Vector2(1380,205)
 
 func setup(area: String, people: Array) -> void:
 	kind = area
 	title = {"tea": "Tea Country", "harbor": "Western Harbor", "mountain": "Mountain & Lake", "historic": "Shrine Grounds"}[kind]
-	var art := {"harbor":"map-harbor-approved-v1.png","mountain":"map-mountain-approved-v1.png","historic":"map-historic-approved-v1.png","tea":"map-tea-approved-v1.png"}
+	var art := {"harbor":"map-harbor-open-v2.png","mountain":"map-mountain-approved-v1.png","historic":"map-historic-approved-v1.png","tea":"map-tea-open-v2.png"}
 	background = load("res://assets/"+art[kind])
+	var spec: Dictionary=preload("res://ApprovedMapLayout.gd").spec(kind)
+	for point in spec.get("land",[]): land_outline.append(Vector2(point[0],point[1]))
+	for point in spec.get("pond",[]): pond_outline.append(Vector2(point[0],point[1]))
+	var dock: Array=spec.get("pier",spec.get("dock",[]))
+	if dock.size()==4: pier_area=Rect2(dock[0],dock[1],dock[2],dock[3])
 	for rect in preload("res://ApprovedMapLayout.gd").buildings(kind)+preload("res://ApprovedMapLayout.gd").scenery(kind):
 		solids.append(rect)
 		obstacle(rect)
@@ -42,7 +50,7 @@ func setup(area: String, people: Array) -> void:
 		var person: String = people[i]
 		var npc := NpcScript.new()
 		add_child(npc)
-		var posts := {"Mika":Vector2(700,480),"Sachiko":Vector2(1235,680),"Ken":Vector2(420,620),"Masao":Vector2(1200,530),"Emi":Vector2(470,520),"Hiro":Vector2(1210,530),"Haruka":Vector2(470,520),"Rei":Vector2(1190,550)}
+		var posts := {"Mika":Vector2(600,440),"Sachiko":Vector2(1235,680),"Ken":Vector2(770,470),"Masao":Vector2(1230,480),"Emi":Vector2(470,520),"Hiro":Vector2(1210,530),"Haruka":Vector2(470,520),"Rei":Vector2(1190,550)}
 		npc.position = safe_npc_point(posts.get(person,Vector2(800,600)))
 		var index := Cast.index_of(person)
 		var walk_path := "res://assets/npc-%s-walk.png" % person.to_lower()
@@ -53,7 +61,7 @@ func setup(area: String, people: Array) -> void:
 		npcs.append(npc)
 	add_label(title, Vector2(570, 60), Vector2(460, 50))
 	var return_labels := {"harbor":["East · Town",Vector2(1350,555)],"tea":["West · Town",Vector2(24,555)],"historic":["Southeast · Town",Vector2(1300,1070)],"mountain":["South · Town",Vector2(680,1070)]}
-	add_label(return_labels[kind][0],return_labels[kind][1],Vector2(260,45))
+	if kind not in ["tea","harbor"]: add_label(return_labels[kind][0],return_labels[kind][1],Vector2(260,45))
 	# Signs are painted beside each building in the approved artwork.
 	queue_redraw()
 
@@ -99,7 +107,9 @@ func nearest_npc(point: Vector2) -> Node2D:
 
 func is_walkable(point: Vector2) -> bool:
 	for offset in [Vector2.ZERO,Vector2(12,0),Vector2(-12,0),Vector2(0,12),Vector2(0,-12)]:
-		if kind in ["harbor","tea"] and preload("res://MapHabitat.gd").sample(kind,point+offset,SIZE,"water"): return false
+		var foot: Vector2=point+offset
+		if kind=="harbor" and not Geometry2D.is_point_in_polygon(foot,land_outline) and not pier_area.has_point(foot): return false
+		if kind=="tea" and Geometry2D.is_point_in_polygon(foot,pond_outline) and not pier_area.has_point(foot): return false
 	if not Rect2(Vector2(24, 24), SIZE - Vector2(48, 48)).has_point(point): return false
 	for polygon in scenery_polygons:
 		if Geometry2D.is_point_in_polygon(point,polygon): return false
@@ -124,13 +134,13 @@ func _draw() -> void:
 			pass # Onsen and workshop are included in the map artwork.
 			draw_string(ThemeDB.fallback_font, MINE_DOOR+Vector2(-40,45), "Mine", HORIZONTAL_ALIGNMENT_CENTER, 110, 24, Color("493b2d"))
 		if kind == "tea":
-			for spot in [Vector2(788,812),Vector2(900,910),Vector2(1354,810)]:
+			for spot in [Vector2(860,826),Vector2(860,996),Vector2(1333,844)]:
 				draw_circle(spot, 25, Color("d8c393"))
 				draw_line(spot + Vector2(0, 10), spot + Vector2(0, -10), Color("60834f"), 4)
 				draw_circle(spot + Vector2(-7, -3), 8, Color("60834f"))
 				draw_circle(spot + Vector2(7, -9), 8, Color("60834f"))
 		if kind == "harbor":
-			for spot in [Vector2(570,865),Vector2(570,965)]:
+			for spot in [Vector2(600,865),Vector2(600,965)]:
 				draw_circle(spot, 26, Color(0.90, 0.83, 0.63, 0.7))
 				draw_line(spot + Vector2(-8, 8), spot + Vector2(8, -8), Color("493b2d"), 4)
 				draw_string(ThemeDB.fallback_font, spot + Vector2(-42, -36), "Fish", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("493b2d"))
@@ -192,7 +202,7 @@ func safe_npc_point(preferred: Vector2) -> Vector2:
 	for radius in range(0,500,32):
 		for step in range(24):
 			var candidate := preferred+Vector2.from_angle(step*TAU/24)*radius
-			if not is_walkable(candidate) or not preload("res://ApprovedMapLayout.gd").is_path(kind,candidate,SIZE): continue
+			if not is_walkable(candidate) or not (preload("res://ApprovedMapLayout.gd").is_path(kind,candidate,SIZE) or preload("res://MapHabitat.gd").sample(kind,candidate,SIZE,"grass")): continue
 			var clear := true
 			for door in doors:
 				if absf(candidate.x-door.x)<180 and candidate.y>door.y-40 and candidate.y<door.y+180: clear=false
