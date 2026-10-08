@@ -1,0 +1,42 @@
+name: Diagnose iOS crash
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  symbols:
+    runs-on: macos-26
+    timeout-minutes: 40
+    environment: ios-check
+    env:
+      APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+      IOS_BUNDLE_ID: ${{ vars.IOS_BUNDLE_ID }}
+      APP_VERSION: '0.1.0'
+      BUILD_NUMBER: '7'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 99f6d81996088e6284c029fdabd21c08263d8d52
+      - run: bash ci/install_godot.sh
+      - name: Rebuild matching release with crash symbols
+        shell: bash
+        run: |
+          python3 ci/configure_ios.py
+          mkdir -p export/ios
+          "$GODOT_BIN" --headless --path . --import
+          "$GODOT_BIN" --headless --path . --export-release iOS export/ios/CoastalFarm.zip
+          xcodebuild -project export/ios/CoastalFarm.xcodeproj -scheme CoastalFarm -configuration Release -destination 'generic/platform=iOS' -archivePath export/Crash.xcarchive CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO archive > export/crash-build.log 2>&1
+          binary=export/Crash.xcarchive/Products/Applications/CoastalFarm.app/CoastalFarm
+          symbols=export/Crash.xcarchive/dSYMs/CoastalFarm.app.dSYM
+          xcrun dwarfdump --uuid "$binary"
+          xcrun dwarfdump --uuid "$symbols"
+          xcrun atos -arch arm64 -o "$symbols/Contents/Resources/DWARF/CoastalFarm" -l 0x100000000 0x1003d9208 0x100695fd4 0x102c2b04c 0x102929890 0x100691c88 0x1012f4f80 0x1019c36f4 0x101324518 0x1002a1420 0x100f0346c | tee export/crash-functions.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-crash-symbols-build7
+          path: |
+            export/crash-functions.txt
+            export/crash-build.log
+            export/Crash.xcarchive/dSYMs
+          retention-days: 7
