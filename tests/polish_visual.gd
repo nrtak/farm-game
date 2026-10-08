@@ -18,12 +18,12 @@ func run():
 	f.clock_minutes=800
 	f.town.tick_ambient(0.1,800,false,f.shops,f.regions)
 	for service in f.shops:
-		if service == "Mine": continue
 		f.enter_shop(service,true)
+		if service=="Mine": f.player.position=f.SHOP_ORIGIN+Vector2(550,380)
 		await create_timer(0.55).timeout
 		await capture(f,"polish-room-"+service.replace(" ","-"))
 	for area in ["town","historic","mountain","harbor","tea","farm"]:
-		f.travel_to(area,Vector2(800,890) if area == "mountain" else (Vector2(1200,1940) if area == "town" else (Vector2(1000,850) if area == "farm" else Vector2(800,600))),false)
+		f.travel_to(area,Vector2(800,890) if area == "mountain" else (Vector2(1200,850) if area == "town" else (Vector2(1000,850) if area == "farm" else Vector2(800,600))),false)
 		await create_timer(0.55).timeout
 		await capture(f,"polish-"+area)
 	for minute in [420,720,1050,1260]:

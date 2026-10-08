@@ -33,11 +33,13 @@ const EXTRA_DIALOGUE := {
 const REST_BENCHES := [Rect2(1540, 562.963, 105, 23.7037), Rect2(865, 800, 105, 23.7037)]
 var solids: Array[Rect2] = []
 var navigation := AStarGrid2D.new()
+var land_outline := PackedVector2Array()
 const TREE_CLUSTERS := []
 
 func _ready() -> void:
+	for point in preload("res://ApprovedMapLayout.gd").spec("town").land: land_outline.append(Vector2(point[0],point[1]))
 	var background := Sprite2D.new()
-	background.texture = preload("res://assets/map-town-approved-v1.png")
+	background.texture = preload("res://assets/map-town-open-v2.png")
 	background.centered = false
 	background.scale = SIZE / Vector2(background.texture.get_size())
 	background.z_index = -10
@@ -54,7 +56,7 @@ func _ready() -> void:
 	for rect in [Rect2(-24, -17.7778, 2448, 17.7778), Rect2(-24, 1600, 2448, 17.7778), Rect2(-24, 0, 24, 1600), Rect2(2400, 0, 24, 1600)]: add_obstacle(rect)
 	add_label("South · Farm", Vector2(1020, 1511.11), Vector2(360, 29.6296))
 	add_label("North · Mountain & Lake", Vector2(980, 37.037), Vector2(440, 29.6296))
-	add_label("West · Harbor", Vector2(20, 648.148), Vector2(290, 29.6296))
+	add_label("West · Harbor", Vector2(260, 750), Vector2(290, 29.6296))
 	add_label("East · Tea Country", Vector2(2030, 648.148), Vector2(340, 29.6296))
 	add_label("Northwest · Shrine", Vector2(350, 300), Vector2(340, 40))
 	add_label("Events", Vector2(1260, 511.111), Vector2(180, 23.7037))
@@ -221,7 +223,7 @@ func tick(delta: float, minute: float, rainy: bool = false) -> void:
 
 func is_walkable(point: Vector2) -> bool:
 	for offset in [Vector2.ZERO,Vector2(12,0),Vector2(-12,0),Vector2(0,12),Vector2(0,-12)]:
-		if preload("res://MapHabitat.gd").sample("town",point+offset,SIZE,"water"): return false
+		if not Geometry2D.is_point_in_polygon(point+offset,land_outline): return false
 	if not Rect2(Vector2(24, 24), SIZE - Vector2(48, 48)).has_point(point): return false
 	for cluster in TREE_CLUSTERS:
 		if point.distance_to(cluster[0]) < float(cluster[1])+16: return false
@@ -247,7 +249,10 @@ func nearest_service(point: Vector2) -> String:
 
 func _draw() -> void:
 	for bench in REST_BENCHES:
-		draw_texture_rect_region(preload("res://assets/town-background-v2-square.png"), Rect2(bench.position - Vector2(0, 14.8148), Vector2(105, 48.1481)), Rect2(878, 302.963, 57, 26.6667))
+		for dx in [8,87]: draw_rect(Rect2(bench.position+Vector2(dx,8),Vector2(9,22)),Color("624830"))
+		draw_rect(bench,Color("aa7849"))
+		for dy in [2,10,19]: draw_line(bench.position+Vector2(0,dy),bench.position+Vector2(105,dy),Color("d0a16b"),3)
+		draw_rect(Rect2(bench.position-Vector2(0,14),Vector2(105,12)),Color("9a693e"))
 	if festival_decorated:
 		for y in [720, 1100]:
 			draw_line(Vector2(1000, y), Vector2(1400, y), Color("765b3b"), 3)

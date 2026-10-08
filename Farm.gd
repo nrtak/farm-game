@@ -789,7 +789,7 @@ func refresh_hud() -> void:
 		"sleep": hint = "Rest in bed to start the next day."
 		_:
 			if inside_house: hint = "Walk beside the bed to sleep, or the front doorway to leave."
-			elif location == "shop": hint = "Talk to residents or use the counter. Walk through the south door to leave."
+			elif location == "shop": hint = "Approach copper or iron rocks to mine. Walk south toward daylight to leave." if shop_name=="Mine" else "Talk to residents or use the counter. Walk through the south door to leave."
 			elif location == "road": hint = "Town to the north · Farm to the south. Push farther or hold Shift to run."
 			elif location == "town": hint = "Approach a resident to talk, or a shop door to visit."
 			elif regions.has(location): hint = "Meet the residents or approach a building doorway to visit."
@@ -1329,7 +1329,7 @@ func show_character_picker() -> void:
 func _draw() -> void:
 	if location != "farm": return
 	if interior_progress.get("greenhouse",false):
-		preload("res://EntrancePaths.gd").draw_path(self,PackedVector2Array([FarmBuildings.GREENHOUSE_DOOR,Vector2(780,1620),Vector2(920,1650)]),72)
+		preload("res://EntrancePaths.gd").draw_path(self,PackedVector2Array([FarmBuildings.GREENHOUSE_DOOR,Vector2(780,1620),Vector2(920,1650)]),120)
 	draw_set_transform(SHIPPING_BOX,0,Vector2.ONE*2.4)
 	crop_oval(Vector2.ZERO + Vector2(0, 32), Vector2(48, 12), Color(0.15, 0.18, 0.12, 0.25))
 	draw_rect(Rect2(Vector2.ZERO + Vector2(-42, -16), Vector2(84, 48)), Color("896748"))
@@ -2009,7 +2009,7 @@ func check_walk_exits() -> void:
 				travel_to("farm", FARM_EXIT + Vector2(0, 100))
 			elif point.y < 65 and absf(point.x - 1280) < 180:
 				travel_to("mountain", Vector2(800, 950))
-			elif point.x < 100 and absf(point.y - 800) < 130:
+			elif point.x < 320 and absf(point.y - 800) < 100:
 				travel_to("harbor", Vector2(1480,585))
 			elif point.x > 2300 and absf(point.y - 800) < 130:
 				travel_to("tea", Vector2(140,665))
@@ -2019,7 +2019,7 @@ func check_walk_exits() -> void:
 			if regions.has(location):
 				var point: Vector2 = player.position - REGION_ORIGINS[location]
 				if ((location=="harbor" and point.x>1520 and absf(point.y-585)<120) or (location=="tea" and point.x<75 and absf(point.y-665)<120) or (location=="historic" and point.x>1520 and point.y>1070) or (location=="mountain" and point.y>1120 and absf(point.x-800)<100)):
-					var arrivals := {"mountain": Vector2(1200, 180), "harbor": Vector2(220, 1080), "tea": Vector2(2180, 1080), "historic": Vector2(180,300)}
+					var arrivals := {"mountain": Vector2(1200, 180), "harbor": Vector2(350, 1080), "tea": Vector2(2180, 1080), "historic": Vector2(180,300)}
 					travel_to("town", town.design(arrivals[location]))
 
 func open_map() -> void:

@@ -72,20 +72,7 @@ func _draw() -> void:
 		preload("res://BarnLife.gd").draw_room(self)
 		return
 	if kind == "Mine":
-		draw_rect(Rect2(Vector2.ZERO, SIZE), Color("454940"))
-		draw_rect(Rect2(90, 70, 920, 740), Color("68665b"))
-		draw_rect(Rect2(110, 170, 880, 620), Color("a7987b"))
-		draw_rect(Rect2(440, 670, 220, 120), Color("c7b792"))
-		for i in range(solids.size()):
-			var rect: Rect2 = solids[i]
-			draw_style_box(rock_box(), rect)
-			if not depleted[i]:
-				var tint := Color("bc8a63") if i % 2 == 0 else Color("c0c5c0")
-				draw_rect(Rect2(rect.get_center() - Vector2(18, 10), Vector2(36, 20)), tint)
-		for x in [160, 930]:
-			draw_rect(Rect2(x, 185, 12, 420), Color("72523d"))
-			draw_circle(Vector2(x + 6, 240), 14, Color("e5cb85"))
-		draw_string(ThemeDB.fallback_font, Vector2(450, 770), "Exit ↓", HORIZONTAL_ALIGNMENT_CENTER, 200, 24, Color("493b2d"))
+		preload("res://MineDecor.gd").draw_room(self)
 		return
 	if kind in preload("res://InteriorPlan.gd").ROOMS:
 		preload("res://InteriorPlan.gd").draw_room(self)

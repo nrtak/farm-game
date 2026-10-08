@@ -16,14 +16,21 @@ var scenery_circles: Array = []
 var land_outline := PackedVector2Array()
 var pond_outline := PackedVector2Array()
 var pier_area := Rect2()
+var walk_outline := PackedVector2Array()
+var water_polygons: Array[PackedVector2Array] = []
 const MINE_DOOR := Vector2(1380,205)
 
 func setup(area: String, people: Array) -> void:
 	kind = area
 	title = {"tea": "Tea Country", "harbor": "Western Harbor", "mountain": "Mountain & Lake", "historic": "Shrine Grounds"}[kind]
-	var art := {"harbor":"map-harbor-open-v2.png","mountain":"map-mountain-approved-v1.png","historic":"map-historic-approved-v1.png","tea":"map-tea-open-v2.png"}
+	var art := {"harbor":"map-harbor-open-v2.png","mountain":"map-mountain-open-v2.png","historic":"map-historic-approved-v1.png","tea":"map-tea-open-v2.png"}
 	background = load("res://assets/"+art[kind])
 	var spec: Dictionary=preload("res://ApprovedMapLayout.gd").spec(kind)
+	for point in spec.get("walk_outline",[]): walk_outline.append(Vector2(point[0],point[1]))
+	for outline in spec.get("water_polygons",[]):
+		var polygon := PackedVector2Array()
+		for point in outline: polygon.append(Vector2(point[0],point[1]))
+		water_polygons.append(polygon)
 	for point in spec.get("land",[]): land_outline.append(Vector2(point[0],point[1]))
 	for point in spec.get("pond",[]): pond_outline.append(Vector2(point[0],point[1]))
 	var dock: Array=spec.get("pier",spec.get("dock",[]))
@@ -108,6 +115,9 @@ func nearest_npc(point: Vector2) -> Node2D:
 func is_walkable(point: Vector2) -> bool:
 	for offset in [Vector2.ZERO,Vector2(12,0),Vector2(-12,0),Vector2(0,12),Vector2(0,-12)]:
 		var foot: Vector2=point+offset
+		if not walk_outline.is_empty() and not Geometry2D.is_point_in_polygon(foot,walk_outline): return false
+		for water in water_polygons:
+			if Geometry2D.is_point_in_polygon(foot,water): return false
 		if kind=="harbor" and not Geometry2D.is_point_in_polygon(foot,land_outline) and not pier_area.has_point(foot): return false
 		if kind=="tea" and Geometry2D.is_point_in_polygon(foot,pond_outline) and not pier_area.has_point(foot): return false
 	if not Rect2(Vector2(24, 24), SIZE - Vector2(48, 48)).has_point(point): return false

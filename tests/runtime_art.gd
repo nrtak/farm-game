@@ -15,7 +15,7 @@ func run():
  missing.setup("missing",null)
  missing.show_frame(0,1)
  missing.free()
- var sources={"farm":"farm-environment-v9-overhead.png","town":"map-town-approved-v1.png","tea":"map-tea-open-v2.png","mountain":"map-mountain-approved-v1.png","harbor":"map-harbor-open-v2.png","historic":"map-historic-approved-v1.png"}
+ var sources={"farm":"farm-environment-v10-wide.png","town":"map-town-open-v2.png","tea":"map-tea-open-v2.png","mountain":"map-mountain-open-v2.png","harbor":"map-harbor-open-v2.png","historic":"map-historic-approved-v1.png"}
  for kind in sources:
   var texture:Texture2D=load("res://assets/"+sources[kind])
   var image=Art.readable_image(texture)
