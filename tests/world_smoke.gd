@@ -156,14 +156,15 @@ func run() -> void:
 	assert(farm.clock_text() == "7:00 AM")
 	farm.clock_minutes = 450
 	assert(farm.clock_text() == "7:30 AM")
-	var exits := {"mountain": Vector2(1200, 60), "harbor": Vector2(60, 900), "tea": Vector2(2340, 900), "historic": Vector2(60, 390)}
+	var exits := {"mountain": Vector2(1280, 60), "harbor": Vector2(60, 1080), "tea": Vector2(2340, 1080), "historic": Vector2(180,150)}
 	for area in exits:
 		farm.travel_to("town", exits[area], false)
 		farm._physics_process(0.016)
 		assert(farm.location == area, "Walk into " + area)
 		farm._physics_process(0.016)
 		assert(farm.location == area, "Arrival does not bounce back")
-		farm.player.position = farm.REGION_ORIGINS[area] + (Vector2(800,60) if area == "harbor" else Vector2(800,1130))
+		var returns := {"harbor":Vector2(1540,585),"tea":Vector2(60,585),"historic":Vector2(1540,1100),"mountain":Vector2(800,1130)}
+		farm.player.position = farm.REGION_ORIGINS[area] + returns[area]
 		farm._physics_process(0.016)
 		assert(farm.location == "town", "Walk back from " + area)
 		farm._physics_process(0.016)
@@ -232,7 +233,7 @@ func run() -> void:
 		var entrance = farm.REGIONAL_ROOMS[room_name]
 		assert(farm.regions[entrance[0]].is_walkable(entrance[1]), "Exterior door has clear approach")
 		farm.travel_to(entrance[0], entrance[1], false)
-		assert(farm.interaction_action() == "regional_door", "Regional doorway reachable")
+		assert(farm.interaction_action() == "regional_door", "Regional doorway reachable: " + room_name + " (" + farm.interaction_action() + ")")
 		farm.interact()
 		assert(farm.location == "shop" and farm.shop_name == room_name)
 		assert(farm.shops[room_name].is_walkable(farm.ShopScript.ENTRY))

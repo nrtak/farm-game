@@ -41,16 +41,16 @@ var tea_leaves := 0
 var packed_tea := 0
 var tea_shipping := 0
 var tea_picked_days := [0, 0, 0]
-const TEA_SPOTS := [Vector2(430, 800), Vector2(430, 950), Vector2(1150, 800)]
+const TEA_SPOTS := [Vector2(788,812),Vector2(900,910),Vector2(1354,810)]
 const FISH := {"Sardine": 12, "Mackerel": 25, "Sea Bream": 40}
-const FISHING_SPOTS := [Vector2(1305,850),Vector2(1305,1070)]
+const FISHING_SPOTS := [Vector2(570,865),Vector2(570,965)]
 var fish_basket := {"Sardine": 0, "Mackerel": 0, "Sea Bream": 0}
 var fish_shipping := {"Sardine": 0, "Mackerel": 0, "Sea Bream": 0}
 var fishing_active := false
 var fishing_elapsed := 0.0
 var fish_catches := 0
 var fishing_quest_stage := 0
-const REGIONAL_ROOMS := {"Onsen Resort":["mountain",Vector2(350,820)],"Mountain Carpentry":["mountain",Vector2(1310,880)],"Mine": ["mountain", Vector2(850,155)],"Archive": ["historic", Vector2(410, 430)], "Shrine Residence": ["historic", Vector2(1190, 450)], "Mountain Lodge": ["mountain", Vector2(455, 430)], "Tea Farmhouse": ["tea", Vector2(410, 430)], "Tea Processing Shed": ["tea", Vector2(1235,590)], "Harbor Homes": ["harbor", Vector2(410,560)], "Fishing Shop": ["harbor", Vector2(1190, 430)], "Hiro Cabin": ["mountain", Vector2(1190, 430)]}
+const REGIONAL_ROOMS := {"Onsen Resort":["mountain",Vector2(615,445)],"Mountain Lodge":["mountain",Vector2(1073,480)],"Mountain Carpentry":["mountain",Vector2(1427,715)],"Mine":["mountain",Vector2(1380,205)],"Tea Farmhouse":["tea",Vector2(453,311)],"Tea Processing Shed":["tea",Vector2(1042,621)],"Fishing Shop":["harbor",Vector2(665,574)],"Harbor Homes":["harbor",Vector2(1016,615)],"Shrine Residence":["historic",Vector2(406,363)]}
 var quest_label: Label
 var hud_elapsed := 0.0
 var draw_elapsed := 0.0
@@ -103,6 +103,8 @@ const ROOM_ORIGIN := Vector2(3000, 0)
 const SEASONS := ["Spring", "Summer", "Autumn", "Winter"]
 var outdoor_world: Node2D
 var season_scenery = preload("res://SeasonScenery.gd").new()
+var wildlife: Node2D
+var door_retry := 0.0
 var farmhouse: Node2D
 var interior: Node2D
 var inside_house := false
@@ -268,6 +270,9 @@ func _ready() -> void:
 	add_child(resources)
 	resources.setup(self)
 	season_scenery.setup(self)
+	wildlife=preload("res://Wildlife.gd").new()
+	add_child(wildlife)
+	wildlife.setup(self)
 	make_ui()
 	load_game()
 	get_viewport().size_changed.connect(layout_ui)
@@ -519,6 +524,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		if event.physical_keycode in [KEY_SPACE, KEY_E, KEY_ENTER]: interact()
 
 func _physics_process(delta: float) -> void:
+	door_retry=maxf(0,door_retry-delta)
 	if choosing_character or confirming_sleep or dialogue_open or paused_by_player or not window_focused: return
 	if pickup_time > 0:
 		pickup_time = maxf(0, pickup_time - delta)
@@ -607,8 +613,12 @@ func interaction_action() -> String:
 	if location == "farm" and not inside_house and player.position.distance_to(BARN_DOOR) < 90: return "barn_enter"
 	if location == "shop" and shop_name == "Barn": return "barn_care"
 	if fishing_active: return "catch_fish"
+	if regions.has(location):
+		var door_point: Vector2 = player.position - REGION_ORIGINS[location]
+		for room_name in REGIONAL_ROOMS:
+			if REGIONAL_ROOMS[room_name][0] == location and door_point.distance_to(REGIONAL_ROOMS[room_name][1]) < 90: return "regional_door"
 	if is_instance_valid(polish) and polish.nearest_pet() != null: return "pet_animal"
-	if location == "mountain" and (player.position-REGION_ORIGINS.mountain).distance_to(Vector2(650,900)) < 90: return "onsen_bath"
+	if location == "mountain" and (player.position-REGION_ORIGINS.mountain).distance_to(Vector2(520,550)) < 90: return "onsen_bath"
 	if location == "shop" and shop_name == "Onsen Resort" and (player.position-SHOP_ORIGIN).distance_to(Vector2(690,500)) < 90: return "onsen_bath"
 	if inside_house and int(interior_progress.get("home",0)) >= 2 and (player.position-ROOM_ORIGIN).distance_to(Vector2(1230,450)) < 85: return "cook"
 	if location == "tea":
@@ -617,7 +627,7 @@ func interaction_action() -> String:
 	if location == "harbor":
 		for spot in FISHING_SPOTS:
 			if (player.position - REGION_ORIGINS.harbor).distance_to(spot) < 70: return "fish"
-	if location == "farm" and player.position.distance_to(SHIPPING_BOX) < 100: return "shipping"
+	if location == "farm" and player.position.distance_to(SHIPPING_BOX) < 170: return "shipping"
 	if location == "shop":
 		if shop_name == "Mine":
 			for spot in MINE_SPOTS:
@@ -696,6 +706,7 @@ func refresh_hud() -> void:
 	hud.get_node("MapButton").visible = not dialogue_open
 	message_label.visible = not dialogue_open
 	var action := interaction_action()
+	if action in ["enter","leave","service","regional_door","barn_enter","greenhouse_enter","stairs","north","west","east","historic","town","road","return_town"]: action_button.visible=false
 	action_button.disabled = false
 	match action:
 		"refill_water": action_button.text = "Refill"
@@ -719,7 +730,7 @@ func refresh_hud() -> void:
 		"noticeboard": action_button.text = "Events"
 		"talk_region": action_button.text = "Talk"
 		"return_town": action_button.text = "Town"
-		"historic": action_button.text = "Historic"
+		"historic": action_button.text = "Shrine"
 		"town": action_button.text = "Town"
 		"road": action_button.text = "Farm"
 		"talk": action_button.text = "Talk"
@@ -812,7 +823,7 @@ func leave_house() -> void:
 		say("A hurricane is passing. Stay indoors and sleep until tomorrow.")
 		return
 	if not inside_house: return
-	set_location(false, farmhouse.DOOR_POSITION + Vector2(0, 35))
+	set_location(false, farmhouse.DOOR_POSITION + Vector2(0, 110))
 	say("Back on the farm.")
 	save_game(false)
 
@@ -967,7 +978,7 @@ func interact() -> void:
 			travel_to("town", Vector2(1200, 910))
 			return
 		"historic":
-			travel_to("historic", Vector2(800, 950))
+			travel_to("historic", Vector2(1440,1060))
 			return
 		"town":
 			travel_to("town", Vector2(1200, 2000))
@@ -983,7 +994,7 @@ func interact() -> void:
 			return
 		"north", "west", "east":
 			var destination: String = {"north": "mountain", "west": "harbor", "east": "tea"}[interaction_action()]
-			travel_to(destination, Vector2(800,180) if destination=="harbor" else Vector2(800,950))
+			travel_to(destination, Vector2(1480,585) if destination=="harbor" else Vector2(800,950))
 			return
 		"enter":
 			enter_house()
@@ -1282,21 +1293,25 @@ func show_character_picker() -> void:
 
 func _draw() -> void:
 	if location != "farm": return
-	crop_oval(SHIPPING_BOX + Vector2(0, 32), Vector2(48, 12), Color(0.15, 0.18, 0.12, 0.25))
-	draw_rect(Rect2(SHIPPING_BOX + Vector2(-42, -16), Vector2(84, 48)), Color("896748"))
-	draw_colored_polygon(PackedVector2Array([SHIPPING_BOX + Vector2(-42, -16), SHIPPING_BOX + Vector2(-30, -36), SHIPPING_BOX + Vector2(52, -36), SHIPPING_BOX + Vector2(42, -16)]), Color("c1a16e"))
-	draw_rect(Rect2(SHIPPING_BOX + Vector2(-30, -26), Vector2(58, 7)), Color("594b38"))
-	for x in [-33, 31]: draw_rect(Rect2(SHIPPING_BOX + Vector2(x, -15), Vector2(6, 46)), Color("c1a16e"))
-	draw_rect(Rect2(SHIPPING_BOX + Vector2(-14, -6), Vector2(28, 26)), Color("e6dac0"))
-	draw_line(SHIPPING_BOX + Vector2(-7, 8), SHIPPING_BOX + Vector2(7, 8), Color("687e56"), 4)
-	draw_line(SHIPPING_BOX + Vector2(2, 2), SHIPPING_BOX + Vector2(8, 8), Color("687e56"), 4)
+	if interior_progress.get("greenhouse",false):
+		preload("res://EntrancePaths.gd").draw_path(self,PackedVector2Array([FarmBuildings.GREENHOUSE_DOOR,Vector2(780,1620),Vector2(920,1650)]),72)
+	draw_set_transform(SHIPPING_BOX,0,Vector2.ONE*2.4)
+	crop_oval(Vector2.ZERO + Vector2(0, 32), Vector2(48, 12), Color(0.15, 0.18, 0.12, 0.25))
+	draw_rect(Rect2(Vector2.ZERO + Vector2(-42, -16), Vector2(84, 48)), Color("896748"))
+	draw_colored_polygon(PackedVector2Array([Vector2.ZERO + Vector2(-42, -16), Vector2.ZERO + Vector2(-30, -36), Vector2.ZERO + Vector2(52, -36), Vector2.ZERO + Vector2(42, -16)]), Color("c1a16e"))
+	draw_rect(Rect2(Vector2.ZERO + Vector2(-30, -26), Vector2(58, 7)), Color("594b38"))
+	for x in [-33, 31]: draw_rect(Rect2(Vector2.ZERO + Vector2(x, -15), Vector2(6, 46)), Color("c1a16e"))
+	draw_rect(Rect2(Vector2.ZERO + Vector2(-14, -6), Vector2(28, 26)), Color("e6dac0"))
+	draw_line(Vector2.ZERO + Vector2(-7, 8), Vector2.ZERO + Vector2(7, 8), Color("687e56"), 4)
+	draw_line(Vector2.ZERO + Vector2(2, 2), Vector2.ZERO + Vector2(8, 8), Color("687e56"), 4)
 	var queued := 0
 	for count in shipping_queue.values(): queued += int(count)
 	for count in fish_shipping.values(): queued += int(count)
 	queued += tea_shipping
 	for count in ore_shipping.values(): queued += int(count)
-	if queued > 0: draw_circle(SHIPPING_BOX + Vector2(43, -30), 7, Color("e5cb85"))
-	draw_string(ThemeDB.fallback_font, SHIPPING_BOX + Vector2(-60, 60), "Shipping", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("493b2d"))
+	if queued > 0: draw_circle(Vector2.ZERO + Vector2(43, -30), 7, Color("e5cb85"))
+	draw_string(ThemeDB.fallback_font, Vector2.ZERO + Vector2(-60, 60), "Shipping", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("493b2d"))
+	draw_set_transform(Vector2.ZERO,0,Vector2.ONE)
 	if interior_progress.has("construction"):
 		draw_rect(Rect2(650,1020,150,65),Color("ead8af"))
 		draw_string(ThemeDB.fallback_font,Vector2(660,1048),"Kenta's work",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color("614b36"))
@@ -1426,9 +1441,9 @@ func start_conversation(npc: Node2D) -> void:
 	if person == "Taro":
 		if lost_item_stage == 0:
 			lost_item_stage = 1
-			dialogue_lines = ["Someone lost a wallet near Haruka's archive. Could you look inside the archive in the historic district?", "Bring it back to me when you find it. I'll make sure it reaches its owner."]
+			dialogue_lines = ["Someone lost a wallet near Haruka's archive. Could you look inside the library in town?", "Bring it back to me when you find it. I'll make sure it reaches its owner."]
 		elif lost_item_stage == 1:
-			dialogue_lines = ["Try Haruka's archive in the historic district. Look beside the old maps."]
+			dialogue_lines = ["Try Haruka's library in town. Look beside the old maps."]
 		elif lost_item_stage == 2:
 			lost_item_stage = 3
 			coins += 75
@@ -1898,11 +1913,32 @@ func check_walk_exits() -> void:
 			elif shop_name == "Barn":
 				travel_to("farm", BARN_DOOR + Vector2(0,110))
 			elif REGIONAL_ROOMS.has(shop_name):
-				travel_to(REGIONAL_ROOMS[shop_name][0], REGIONAL_ROOMS[shop_name][1] + (Vector2(260,50) if shop_name == "Onsen Resort" else Vector2(0,110)))
+				travel_to(REGIONAL_ROOMS[shop_name][0], REGIONAL_ROOMS[shop_name][1] + (Vector2(0,70) if shop_name == "Onsen Resort" else Vector2(0,70)))
 			else:
 				travel_to("town", service_door(shop_name) + Vector2(0, 70))
 		return
-	if inside_house or festival_active: return
+	if festival_active or dialogue_open: return
+	if inside_house:
+		var local := player.position-ROOM_ORIGIN
+		if local.distance_to(interior.EXIT)<20: leave_house()
+		elif interior_progress.get("second_story",false) and local.distance_to(FarmBuildings.STAIRS)<45: enter_shop("Upper Floor")
+		return
+	if location=="farm" and player.position.distance_to(farmhouse.DOOR_POSITION)<50:
+		enter_house()
+		return
+	if door_retry<=0:
+		if location=="town":
+			for building in town.BUILDINGS:
+				if player.position.distance_to(TOWN_ORIGIN+building.door*town.ART_SCALE)<50:
+					door_retry=1.5
+					enter_shop(building.name)
+					return
+		elif regions.has(location):
+			for room in REGIONAL_ROOMS:
+				if REGIONAL_ROOMS[room][0]==location and player.position.distance_to(REGION_ORIGINS[location]+REGIONAL_ROOMS[room][1])<50:
+					door_retry=1.5
+					enter_shop(room)
+					return
 	if location == "mountain" and (player.position - REGION_ORIGINS.mountain).distance_to(RegionScript.MINE_DOOR) < 45:
 		enter_shop("Mine")
 		return
@@ -1926,26 +1962,26 @@ func check_walk_exits() -> void:
 			var point := player.position - TOWN_ORIGIN
 			if point.y > 2090 and absf(point.x - 1200) < 180:
 				travel_to("farm", FARM_EXIT + Vector2(0, 100))
-			elif point.y < 80 and absf(point.x - 1200) < 220:
+			elif point.y < 80 and absf(point.x - 1280) < 180:
 				travel_to("mountain", Vector2(800, 950))
-			elif point.x < 100 and absf(point.y - 900) < 160:
-				travel_to("harbor", Vector2(800,180))
-			elif point.x > 2300 and absf(point.y - 900) < 160:
-				travel_to("tea", Vector2(800, 950))
-			elif point.x < 100 and absf(point.y - 390) < 100:
-				travel_to("historic", Vector2(800, 950))
+			elif point.x < 100 and absf(point.y - 1080) < 160:
+				travel_to("harbor", Vector2(1480,585))
+			elif point.x > 2300 and absf(point.y - 1080) < 160:
+				travel_to("tea", Vector2(140,585))
+			elif point.x < 400 and point.y < 190:
+				travel_to("historic", Vector2(1440,1060))
 		_:
 			if regions.has(location):
 				var point: Vector2 = player.position - REGION_ORIGINS[location]
-				if ((location=="harbor" and point.y<80) or (location!="harbor" and point.y>1120)) and absf(point.x-800)<100:
-					var arrivals := {"mountain": Vector2(1200, 180), "harbor": Vector2(220, 900), "tea": Vector2(2180, 900), "historic": Vector2(240, 390)}
+				if ((location=="harbor" and point.x>1520 and absf(point.y-585)<120) or (location=="tea" and point.x<75 and absf(point.y-585)<120) or (location=="historic" and point.x>1520 and point.y>1070) or (location=="mountain" and point.y>1120 and absf(point.x-800)<100)):
+					var arrivals := {"mountain": Vector2(1200, 180), "harbor": Vector2(220, 1080), "tea": Vector2(2180, 1080), "historic": Vector2(180,300)}
 					travel_to("town", arrivals[location])
 
 func open_map() -> void:
 	if choosing_character or confirming_sleep or dialogue_open: return
 	var column := make_modal("Walking Routes")
 	dialogue_panel.get_child(0).offset_top = -340
-	dialogue_text.text = "Farm → Town walkway → Main Town.\n\nFrom town: north road to Mountain & Lake; east road to Tea Country; west road to the Harbor; northwest path to the Shrine.\n\nWalk onto each marked exit to continue. Harbor: return by the north path. Other regions: return by the south path."
+	dialogue_text.text = "Farm → Town walkway → Main Town.\n\nFrom town: north to Mountain & Onsen; east to Tea Country; west to the Harbor; northwest through the large torii to Shrine Grounds.\n\nHarbor: return east toward town. Tea Country: return west. Shrine Grounds: return southeast. Mountains: return south. Walk through doors and gateways to change areas automatically. The library is northeast of the town square."
 	column.add_child(make_button("Close", close_dialogue))
 
 func open_guide() -> void:
@@ -2070,10 +2106,10 @@ func resident_room(person: String) -> String:
 		"Mika": return "Tea Farmhouse" if evening else ""
 		"Masao": return "Harbor Homes" if evening else ("Fishing Shop" if not morning else "")
 		"Ken": return "Harbor Homes" if evening else ""
-		"Hiro": return "Hiro Cabin" if evening else ""
+		"Hiro": return "Mountain Lodge" if evening else ""
 		"Emi": return "Mountain Lodge" if not evening else ""
 		"Haruka": return "Archive" if morning else ""
-		"Rei": return "Shrine Residence" if evening else ""
+		"Rei": return ""
 		"Kenta": return "Mountain Carpentry" if clock_minutes >= 480 and clock_minutes < 720 else ("Carpentry" if clock_minutes >= 720 and clock_minutes < 1080 else "")
 	return ""
 

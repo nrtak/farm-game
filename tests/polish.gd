@@ -29,7 +29,7 @@ func run():
 	f.refresh_hud()
 	assert(f.shops.Carpentry.residents[0].visible)
 	assert(not f.shops["Mountain Carpentry"].residents[0].visible)
-	f.travel_to("mountain",Vector2(650,900),false)
+	f.travel_to("mountain",Vector2(520,550),false)
 	assert(f.interaction_action() == "onsen_bath")
 	f.coins=100
 	f.health=40

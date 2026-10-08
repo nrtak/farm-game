@@ -2,20 +2,21 @@ extends Node2D
 var festival_decorated := false
 
 const SIZE := Vector2(2400, 2160)
-const ART_SCALE := 2400.0 / 1448.0
+const ART_SCALE := 1.0
 const NpcScript = preload("res://Npc.gd")
 const Cast = preload("res://Cast.gd")
 const SpriteLibrary = preload("res://SpriteLibrary.gd")
 const BUILDINGS := [
-	{"name":"Carpentry","rect":Rect2(190,1050,250,135),"door":Vector2(315,1210)},
-	{"name": "Town Hall", "rect": Rect2(245, 40, 300, 205), "door": Vector2(405, 265)},
-	{"name": "Clinic", "rect": Rect2(975, 45, 235, 205), "door": Vector2(1080, 265)},
-	{"name": "General Store", "rect": Rect2(205, 300, 280, 155), "door": Vector2(345, 475)},
-	{"name": "Café", "rect": Rect2(1015, 300, 285, 160), "door": Vector2(1165, 480)},
-	{"name": "Blacksmith", "rect": Rect2(170, 555, 305, 200), "door": Vector2(310, 780)},
-	{"name": "Inn", "rect": Rect2(920, 565, 370, 195), "door": Vector2(1100, 790)},
-	{"name": "Police Box", "rect": Rect2(325, 820, 190, 165), "door": Vector2(420, 1005)},
-	{"name": "Fire Station", "rect": Rect2(900, 805, 310, 180), "door": Vector2(1050, 1005)}
+	{"name":"Town Hall","rect":Rect2(1055,253,344,359),"door":Vector2(1225,650)},
+	{"name":"Clinic","rect":Rect2(609,348,297,264),"door":Vector2(762,639)},
+	{"name":"General Store","rect":Rect2(481,747,286,287),"door":Vector2(620,1055)},
+	{"name":"Café","rect":Rect2(844,717,250,316),"door":Vector2(997,1055)},
+	{"name":"Archive","rect":Rect2(1562,458,344,312),"door":Vector2(1719,791)},
+	{"name":"Blacksmith","rect":Rect2(1719,966,308,274),"door":Vector2(1888,1266)},
+	{"name":"Inn","rect":Rect2(950,1373,288,316),"door":Vector2(1086,1719)},
+	{"name":"Police Box","rect":Rect2(638,1164,269,295),"door":Vector2(772,1485)},
+	{"name":"Fire Station","rect":Rect2(1400,1365,250,312),"door":Vector2(1509,1698)},
+	{"name":"Carpentry","rect":Rect2(1828,1392,367,306),"door":Vector2(1930,1730)}
 ]
 var npcs: Array[Node2D] = []
 var visitors: Array[Node2D] = []
@@ -32,29 +33,35 @@ const EXTRA_DIALOGUE := {
 const REST_BENCHES := [Rect2(1540, 760, 105, 32), Rect2(865, 1080, 105, 32)]
 var solids: Array[Rect2] = []
 var navigation := AStarGrid2D.new()
-const TREE_CLUSTERS := [[Vector2(105,180),65],[Vector2(950,300),45],[Vector2(1470,280),55],[Vector2(2320,400),65],[Vector2(2250,1440),70],[Vector2(255,1530),65],[Vector2(1550,2020),55],[Vector2(975,2080),65]]
+const TREE_CLUSTERS := []
 
 func _ready() -> void:
 	var background := Sprite2D.new()
-	background.texture = preload("res://assets/town-background-v3-layout.png")
+	background.texture = preload("res://assets/map-town-approved-v1.png")
 	background.centered = false
 	background.scale = SIZE / Vector2(background.texture.get_size())
 	background.z_index = -10
 	add_child(background)
+	for scenery in preload("res://ApprovedMapLayout.gd").scenery("town"):
+		solids.append(scenery)
+		add_obstacle(scenery)
 	for building in BUILDINGS:
 		var rect: Rect2 = building.rect
 		rect = Rect2(rect.position * ART_SCALE, rect.size * ART_SCALE)
 		solids.append(rect)
 		add_obstacle(rect)
-		add_child(preload("res://WorldSigns.gd").label(building.name,building.door*ART_SCALE+Vector2(-56,25)))
+		pass # Physical name boards are included in the approved map artwork.
 	for rect in [Rect2(-24, -24, 2448, 24), Rect2(-24, 2160, 2448, 24), Rect2(-24, 0, 24, 2160), Rect2(2400, 0, 24, 2160)]: add_obstacle(rect)
 	add_label("South · Farm", Vector2(1020, 2040), Vector2(360, 40))
 	add_label("North · Mountain & Lake", Vector2(980, 50), Vector2(440, 40))
 	add_label("West · Harbor", Vector2(20, 875), Vector2(290, 40))
 	add_label("East · Tea Country", Vector2(2030, 875), Vector2(340, 40))
-	add_label("Northwest · Shrine", Vector2(20, 370), Vector2(340, 40))
+	add_label("Northwest · Shrine", Vector2(20,235), Vector2(340, 40))
 	add_label("Events", Vector2(1260, 690), Vector2(180, 32))
 	var board := Rect2(1310, 615, 80, 65)
+	var fountain := Rect2(1280,940,130,180)
+	solids.append(fountain)
+	add_obstacle(fountain)
 	solids.append(board)
 	add_obstacle(board)
 	for bench in REST_BENCHES:
@@ -195,6 +202,7 @@ func tick(delta: float, minute: float, rainy: bool = false) -> void:
 	update_supporting_routes(minute)
 	for npc in npcs:
 		if not npc.visible: continue
+		if not is_npc_walkable(npc.position): settle_on_road(npc)
 		npc.tick(delta)
 		npc.z_index = clampi(int(npc.position.y / 10), 1, 179)
 	for i in range(npcs.size()):
@@ -288,7 +296,7 @@ func tick_ambient(delta: float, minute: float, rainy: bool, rooms: Dictionary = 
 					"Chanel": destination = rooms["Onsen Resort"]; point = Vector2(530,390)
 					"Ren":
 						destination = rooms["Onsen Resort"] if minute >= 720 or rainy else regions.mountain
-						point = Vector2(690,510) if destination == rooms["Onsen Resort"] else Vector2(750,920)
+						point = Vector2(690,510) if destination == rooms["Onsen Resort"] else Vector2(530,584)
 					"Renji": destination = rooms["Mountain Carpentry" if minute < 720 else "Carpentry"]; point = Vector2(730,520)
 					"David":
 						destination = regions.harbor if minute < 720 and not rainy else rooms["General Store"]
@@ -297,7 +305,7 @@ func tick_ambient(delta: float, minute: float, rainy: bool, rooms: Dictionary = 
 				if minute >= 1260: destination = rooms["Inn"]; point = Vector2(450+(i%3)*110,510+(i/3)*90)
 			else: point = Vector2(1200,520+i*260)
 			if npc.get_parent() != destination: npc.reparent(destination,false)
-			npc.position = destination.safe_point(point) if destination.has_method("safe_point") else point
+			npc.position = destination.safe_npc_point(point) if destination.has_method("safe_npc_point") else destination.safe_point(point) if destination.has_method("safe_point") else point
 			npc.set_route([])
 			npc.show_frame(0,1)
 		for i in range(pets.size()):
@@ -313,7 +321,8 @@ func tick_ambient(delta: float, minute: float, rainy: bool, rooms: Dictionary = 
 				continue
 			var shelter := Vector2(1450 + i * 45, 1310)
 			pet.position = Vector2(900+i*900,850)
-			pet.route = [shelter, shelter+Vector2(30,0)] if rainy else [pet.position,pet.position+Vector2(35,0)]
+			settle_on_road(pet)
+			pet.route = walk_route(pet.position,[shelter] if rainy else [pet.position+Vector2(35,0)])
 			pet.index = 0
 	for npc in visitors:
 		npc.tick(delta)
@@ -336,10 +345,8 @@ func tick_ambient(delta: float, minute: float, rainy: bool, rooms: Dictionary = 
 		for npc in visitors: npc.label.text = npc.first_name
 
 func is_npc_walkable(point: Vector2) -> bool:
-	if not is_walkable(point): return false
-	if Rect2(1070,24,270,2112).has_point(point): return true
-	if Rect2(24,790,2352,210).has_point(point): return true
 	for building in BUILDINGS:
 		var door: Vector2 = building.door*ART_SCALE
-		if Rect2(minf(door.x,1200)-45,door.y-45,absf(door.x-1200)+90,95).has_point(point): return true
-	return false
+		if absf(point.x-door.x)<maxf(100,building.rect.size.x*ART_SCALE*0.5+30) and point.y>door.y-35 and point.y<door.y+170: return false
+	if not is_walkable(point): return false
+	return preload("res://ApprovedMapLayout.gd").is_path("town",point,SIZE)

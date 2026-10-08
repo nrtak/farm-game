@@ -85,11 +85,19 @@ func nearest_cell(grid: AStarGrid2D, cell: Vector2i) -> Vector2i:
 	cell.x = clampi(cell.x,0,grid.region.size.x-1)
 	cell.y = clampi(cell.y,0,grid.region.size.y-1)
 	if not grid.is_point_solid(cell): return cell
+	var nearest := cell
+	var distance := INF
 	for radius in range(1,8):
 		for y in range(maxi(0,cell.y-radius),mini(grid.region.size.y-1,cell.y+radius)+1):
 			for x in range(maxi(0,cell.x-radius),mini(grid.region.size.x-1,cell.x+radius)+1):
-				if not grid.is_point_solid(Vector2i(x,y)): return Vector2i(x,y)
-	return cell
+				var candidate := Vector2i(x,y)
+				if grid.is_point_solid(candidate): continue
+				var candidate_distance := Vector2(candidate-cell).length_squared()
+				if candidate_distance < distance:
+					nearest=candidate
+					distance=candidate_distance
+		if distance < float(radius*radius): return nearest
+	return nearest
 func direction(manual: Vector2) -> Vector2:
 	if manual.length() > 0.1: path.clear(); return manual
 	while not path.is_empty() and farm.player.position.distance_to(path[0]) < 12: path.pop_front()

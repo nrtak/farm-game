@@ -27,9 +27,10 @@ func setup(service: String) -> void:
 	else:
 		solids.append_array([Rect2(170, 440, 150, 100), Rect2(780, 440, 150, 100), Rect2(170, 650, 150, 100), Rect2(780, 650, 150, 100)])
 	apply_expanded_layout()
+	if preload("res://InteriorArtwork.gd").ROOMS.has(kind): solids=preload("res://InteriorArtwork.gd").furnishings(kind)
 	for rect in [Rect2(90, 150, 920, 20), Rect2(90, 790, 920, 20), Rect2(90, 170, 20, 620), Rect2(990, 170, 20, 620)]: obstacle(rect)
 	for rect in solids: obstacle(rect)
-	var people: Array = {"General Store": ["Keiko", "Seira"], "Blacksmith": ["Gen", "Shohei"], "Café": ["Naomi", "Keiko", "Akira"], "Inn": ["Yumi", "Hana"], "Clinic": ["Kenji", "Aya"], "Town Hall": ["Akira"], "Police Box": ["Taro"], "Fire Station": ["Jiro", "Yuta"], "Archive": ["Haruka"], "Shrine Residence": ["Rei"], "Mountain Lodge": ["Emi"], "Tea Farmhouse": ["Sachiko", "Mika"], "Tea Processing Shed": ["Sachiko"], "Harbor Homes": ["Ken", "Masao"], "Fishing Shop": ["Masao"], "Hiro Cabin": ["Hiro"], "Mine": [], "Carpentry":["Kenta"], "Mountain Carpentry":["Kenta"], "Onsen Resort":[],"Barn":[],"Greenhouse":[],"Upper Floor":[]}[kind]
+	var people: Array = {"General Store": ["Keiko", "Seira"], "Blacksmith": ["Gen", "Shohei"], "Café": ["Naomi", "Keiko", "Akira"], "Inn": ["Yumi", "Hana"], "Clinic": ["Kenji", "Aya"], "Town Hall": ["Akira"], "Police Box": ["Taro"], "Fire Station": ["Jiro", "Yuta"], "Archive": ["Haruka"], "Shrine Residence": ["Rei"], "Mountain Lodge": ["Emi", "Hiro"], "Tea Farmhouse": ["Sachiko", "Mika"], "Tea Processing Shed": ["Sachiko"], "Harbor Homes": ["Ken", "Masao"], "Fishing Shop": ["Masao"], "Hiro Cabin": ["Hiro"], "Mine": [], "Carpentry":["Kenta"], "Mountain Carpentry":["Kenta"], "Onsen Resort":[],"Barn":[],"Greenhouse":[],"Upper Floor":[]}[kind]
 	for i in range(people.size()):
 		var person: String = people[i]
 		var keeper = preload("res://Npc.gd").new()
@@ -82,6 +83,10 @@ func _draw() -> void:
 			draw_rect(Rect2(x, 185, 12, 420), Color("72523d"))
 			draw_circle(Vector2(x + 6, 240), 14, Color("e5cb85"))
 		draw_string(ThemeDB.fallback_font, Vector2(450, 770), "Exit ↓", HORIZONTAL_ALIGNMENT_CENTER, 200, 24, Color("493b2d"))
+		return
+	var artwork: Texture2D=preload("res://InteriorArtwork.gd").texture(kind)
+	if artwork != null:
+		draw_texture_rect(artwork,Rect2(Vector2.ZERO,SIZE),false)
 		return
 	draw_rect(Rect2(Vector2.ZERO, SIZE), Color("33473d"))
 	draw_rect(Rect2(90, 70, 920, 740), Color("72523d"))

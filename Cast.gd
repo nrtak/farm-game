@@ -12,13 +12,14 @@ const ROLES := {
 	"Sachiko": "Senior tea farmer", "Kenta": "Carpenter", "Haruka": "Historian", "Rei": "Shrine caretaker", "Masao": "Senior fisherman", "Emi": "Mountain Lodge owner"
 }
 const HOMES := {
+	"Haruka":Vector2(2070,2020),
 	"Aya": Vector2(1860, 455), "Kenji": Vector2(1730, 455),
 	"Hana": Vector2(1820, 1295), "Yumi": Vector2(1930, 1295),
 	"Yuta": Vector2(1690, 1660), "Jiro": Vector2(1810, 1660),
 	"Keiko": Vector2(590, 820), "Gen": Vector2(490, 1295),
 	"Naomi": Vector2(1890, 820), "Kenta": Vector2(1200, 280)
 }
-const REGION := {"Mika": "tea", "Sachiko": "tea", "Ken": "harbor", "Masao": "harbor", "Hiro": "mountain", "Emi": "mountain", "Haruka": "historic", "Rei": "historic"}
+const REGION := {"Mika": "tea", "Sachiko": "tea", "Ken": "harbor", "Masao": "harbor", "Hiro": "mountain", "Emi": "mountain", "Rei": "historic"}
 const DIALOGUE := {
 	"Aya": ["I'm Aya. I help Kenji at the clinic. I moved here after deciding city life wasn't for me.", "Settling in takes time. A cup of tea and a walk by the lake usually help me."],
 	"Hana": ["Welcome. I'm Hana. My mother Yumi and I look after the inn.", "I've been sketching ideas for the rooms. I want to make them brighter without losing the inn's character."],
