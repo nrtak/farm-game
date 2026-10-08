@@ -42,7 +42,7 @@ func setup(area: String, people: Array) -> void:
 		var person: String = people[i]
 		var npc := NpcScript.new()
 		add_child(npc)
-		var posts := {"Mika":Vector2(470,510),"Sachiko":Vector2(1235,680),"Ken":Vector2(420,620),"Masao":Vector2(1200,530),"Emi":Vector2(470,520),"Hiro":Vector2(1210,530),"Haruka":Vector2(470,520),"Rei":Vector2(1190,550)}
+		var posts := {"Mika":Vector2(700,480),"Sachiko":Vector2(1235,680),"Ken":Vector2(420,620),"Masao":Vector2(1200,530),"Emi":Vector2(470,520),"Hiro":Vector2(1210,530),"Haruka":Vector2(470,520),"Rei":Vector2(1190,550)}
 		npc.position = safe_npc_point(posts.get(person,Vector2(800,600)))
 		var index := Cast.index_of(person)
 		var walk_path := "res://assets/npc-%s-walk.png" % person.to_lower()
@@ -98,6 +98,8 @@ func nearest_npc(point: Vector2) -> Node2D:
 	return result
 
 func is_walkable(point: Vector2) -> bool:
+	for offset in [Vector2.ZERO,Vector2(12,0),Vector2(-12,0),Vector2(0,12),Vector2(0,-12)]:
+		if kind in ["harbor","tea"] and preload("res://MapHabitat.gd").sample(kind,point+offset,SIZE,"water"): return false
 	if not Rect2(Vector2(24, 24), SIZE - Vector2(48, 48)).has_point(point): return false
 	for polygon in scenery_polygons:
 		if Geometry2D.is_point_in_polygon(point,polygon): return false
@@ -190,7 +192,7 @@ func safe_npc_point(preferred: Vector2) -> Vector2:
 	for radius in range(0,500,32):
 		for step in range(24):
 			var candidate := preferred+Vector2.from_angle(step*TAU/24)*radius
-			if not is_walkable(candidate): continue
+			if not is_walkable(candidate) or not preload("res://ApprovedMapLayout.gd").is_path(kind,candidate,SIZE): continue
 			var clear := true
 			for door in doors:
 				if absf(candidate.x-door.x)<180 and candidate.y>door.y-40 and candidate.y<door.y+180: clear=false

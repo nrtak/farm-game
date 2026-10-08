@@ -12,10 +12,10 @@ const ROLES := {
 	"Sachiko": "Senior tea farmer", "Kenta": "Carpenter", "Haruka": "Historian", "Rei": "Shrine caretaker", "Masao": "Senior fisherman", "Emi": "Mountain Lodge owner"
 }
 const HOMES := {
-	"Haruka":Vector2(2070,2020),
+	"Haruka":Vector2(1820,650),
 	"Aya": Vector2(1860, 455), "Kenji": Vector2(1730, 455),
 	"Hana": Vector2(1820, 1295), "Yumi": Vector2(1930, 1295),
-	"Yuta": Vector2(1690, 1660), "Jiro": Vector2(1810, 1660),
+	"Yuta": Vector2(1760, 1320), "Jiro": Vector2(1300, 1300),
 	"Keiko": Vector2(590, 820), "Gen": Vector2(490, 1295),
 	"Naomi": Vector2(1890, 820), "Kenta": Vector2(1200, 280)
 }

@@ -8,7 +8,7 @@ static func sample(kind: String, point: Vector2, world_size: Vector2, layer: Str
 		if not data is Dictionary: return false
 		for key in data:
 			var entry: Dictionary = data[key]
-			masks[key] = {"width":int(entry.width),"height":int(entry.height),"path":Marshalls.base64_to_raw(entry.path),"grass":Marshalls.base64_to_raw(entry.grass)}
+			masks[key] = {"width":int(entry.width),"height":int(entry.height),"path":Marshalls.base64_to_raw(entry.path),"grass":Marshalls.base64_to_raw(entry.grass),"water":Marshalls.base64_to_raw(entry.get("water",""))}
 	if not masks.has(kind) or world_size.x<=0 or world_size.y<=0: return false
 	var entry: Dictionary = masks[kind]
 	var width: int = entry.width

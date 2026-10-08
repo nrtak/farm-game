@@ -29,7 +29,7 @@ func run():
 	assert(f.interior_progress.has("construction"))
 	f.clock_minutes = 1439
 	f.advance_clock(1)
-	assert(f.plots.size() == 18 and not f.interior_progress.has("construction"))
+	assert(f.plots.size() == 115 and not f.interior_progress.has("construction"))
 	for level in [1,2]:
 		f.InteriorLife.order_upgrade(f,"home")
 		f.close_dialogue()

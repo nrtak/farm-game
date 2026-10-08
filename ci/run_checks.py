@@ -3,7 +3,7 @@ from pathlib import Path
 root = Path(__file__).resolve().parents[1]
 override = root / "override.cfg"
 previous = override.read_bytes() if override.exists() else None
-checks = ["world_smoke", "farming_loop", "fishing", "tea", "mining", "item_moment", "backpack", "storage", "upgrades_weather", "calendar", "routines", "ambient", "progression", "stewardship", "polish", "farm_systems", "region_layout", "daily_polish", "walk_feedback", "home_recovery", "runtime_art"]
+checks = ["world_smoke", "farming_loop", "fishing", "tea", "mining", "item_moment", "backpack", "storage", "upgrades_weather", "calendar", "routines", "ambient", "progression", "stewardship", "polish", "farm_systems", "region_layout", "daily_polish", "walk_feedback", "home_recovery", "runtime_art", "layout_feedback"]
 try:
     for name in checks:
         override.write_text('[application]\nconfig/use_custom_user_dir=true\nconfig/custom_user_dir_name="CoastalFarmCI/' + name + '-' + uuid.uuid4().hex + '"\n', encoding="utf-8")

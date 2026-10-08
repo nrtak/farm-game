@@ -36,7 +36,7 @@ func run():
 	assert(f.plots.size() == size_before)
 	f.day += 1
 	f.InteriorLife.complete_construction(f)
-	assert(f.plots.size() == 18)
+	assert(f.plots.size() == 115)
 	f.interior.apply_upgrade(2)
 	assert(f.interior.is_walkable(Vector2(1010,450)))
 	print("PASS: mayor visits, extension, village vote, overnight land upgrade and expanded home")

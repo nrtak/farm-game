@@ -28,6 +28,7 @@ func setup(service: String) -> void:
 		solids.append_array([Rect2(170, 440, 150, 100), Rect2(780, 440, 150, 100), Rect2(170, 650, 150, 100), Rect2(780, 650, 150, 100)])
 	apply_expanded_layout()
 	if preload("res://InteriorArtwork.gd").ROOMS.has(kind): solids=preload("res://InteriorArtwork.gd").furnishings(kind)
+	if kind in preload("res://InteriorPlan.gd").ROOMS: solids=preload("res://InteriorPlan.gd").furnishings(kind)
 	for rect in [Rect2(90, 150, 920, 20), Rect2(90, 790, 920, 20), Rect2(90, 170, 20, 620), Rect2(990, 170, 20, 620)]: obstacle(rect)
 	for rect in solids: obstacle(rect)
 	var people: Array = {"General Store": ["Keiko", "Seira"], "Blacksmith": ["Gen", "Shohei"], "Café": ["Naomi", "Keiko", "Akira"], "Inn": ["Yumi", "Hana"], "Clinic": ["Kenji", "Aya"], "Town Hall": ["Akira"], "Police Box": ["Taro"], "Fire Station": ["Jiro", "Yuta"], "Archive": ["Haruka"], "Shrine Residence": ["Rei"], "Mountain Lodge": ["Emi", "Hiro"], "Tea Farmhouse": ["Sachiko", "Mika"], "Tea Processing Shed": ["Sachiko"], "Harbor Homes": ["Ken", "Masao"], "Fishing Shop": ["Masao"], "Hiro Cabin": ["Hiro"], "Mine": [], "Carpentry":["Kenta"], "Mountain Carpentry":["Kenta"], "Onsen Resort":[],"Barn":[],"Greenhouse":[],"Upper Floor":[]}[kind]
@@ -37,6 +38,8 @@ func setup(service: String) -> void:
 		add_child(keeper)
 		keeper.setup(person, preload("res://CharacterArt.gd").walk(person))
 		keeper.position = Vector2(550, 230) if i == 0 else Vector2(730, 540 + (i-1)*110)
+		if kind in preload("res://InteriorPlan.gd").ROOMS: keeper.position=Vector2(650,410+i*150)
+		keeper.position=safe_point(keeper.position)
 		keeper.paused = i == 0
 		if i > 0: keeper.set_route([])
 		keeper.show_frame(0, 1)
@@ -83,6 +86,9 @@ func _draw() -> void:
 			draw_rect(Rect2(x, 185, 12, 420), Color("72523d"))
 			draw_circle(Vector2(x + 6, 240), 14, Color("e5cb85"))
 		draw_string(ThemeDB.fallback_font, Vector2(450, 770), "Exit ↓", HORIZONTAL_ALIGNMENT_CENTER, 200, 24, Color("493b2d"))
+		return
+	if kind in preload("res://InteriorPlan.gd").ROOMS:
+		preload("res://InteriorPlan.gd").draw_room(self)
 		return
 	var artwork: Texture2D=preload("res://InteriorArtwork.gd").texture(kind)
 	if artwork != null:
@@ -289,3 +295,11 @@ func draw_expanded_room() -> void:
 			room_label("Examination area",Vector2(790,490))
 			room_label("Waiting seats",Vector2(135,670))
 			room_label("Clean supplies",Vector2(790,690))
+
+func safe_point(preferred: Vector2) -> Vector2:
+	if is_walkable(preferred): return preferred
+	for radius in range(24,600,24):
+		for step in range(24):
+			var candidate:=preferred+Vector2.from_angle(step*TAU/24)*radius
+			if is_walkable(candidate): return candidate
+	return ENTRY

@@ -1,7 +1,7 @@
 extends Node2D
 
 var SIZE := Vector2(1000, 800)
-var FLOOR := Rect2(90, 190, 820, 530)
+var FLOOR := Rect2(90, 230, 820, 490)
 const ENTRY := Vector2(500, 665)
 const EXIT := Vector2(500, 700)
 const BED_APPROACH := Vector2(670, 475)
@@ -13,7 +13,7 @@ const CHEST_APPROACH := Vector2(190, 665)
 const SOLIDS := [BED, TABLE, CHEST, Rect2(110, 200, 140, 85), Rect2(500, 200, 140, 65)]
 
 func _ready() -> void:
-	for rect in [Rect2(70,170,FLOOR.size.x+40,20),Rect2(70,720,FLOOR.size.x+40,20),Rect2(70,190,20,530),Rect2(FLOOR.end.x,190,20,530)]:
+	for rect in [Rect2(70,210,FLOOR.size.x+40,20),Rect2(70,720,FLOOR.size.x+40,20),Rect2(70,230,20,490),Rect2(FLOOR.end.x,230,20,490)]:
 		obstacle(rect)
 	for rect in SOLIDS: obstacle(rect)
 	for level in range(home_level):
@@ -128,7 +128,7 @@ func panel(color: Color) -> StyleBoxFlat:
 var home_level := 0
 func apply_upgrade(level: int) -> void:
 	home_level = clampi(level,0,2)
-	FLOOR = Rect2(90,190,820+home_level*220,530)
+	FLOOR = Rect2(90,230,820+home_level*220,490)
 	SIZE = Vector2(1000+home_level*220,800)
 	for child in get_children():
 		if child is StaticBody2D:

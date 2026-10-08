@@ -225,9 +225,7 @@ func _ready() -> void:
 		regions[key] = area
 	for group in Cast.GROUPS:
 		for person in group: friendship[person] = 0
-	for row in range(3):
-		for col in range(5):
-			plots.append({"position": Vector2(1120 + col * 100, 900 + row * 100), "stage": 0, "growth": 0.0, "crop": "Turnip", "last_growth_day": day})
+	preload("res://FarmPlots.gd").fill(self,0)
 	for rect in [Rect2(-24, -24, 3048, 24), Rect2(-24, 2000, 3048, 24), Rect2(-24, 0, 24, 2000), Rect2(3000, 0, 24, 2000)]:
 		obstacle(rect)
 	# The separate farmhouse scene owns its facade collision.
@@ -579,6 +577,15 @@ func _physics_process(delta: float) -> void:
 	if location == "farm" and not inside_house and not is_walkable(player.position):
 		player.position = previous_position
 		player.velocity = Vector2.ZERO
+	if inside_house and not interior.is_walkable(player.position-ROOM_ORIGIN):
+		player.position=previous_position
+		player.velocity=Vector2.ZERO
+	elif location == "town" and not town.is_walkable(player.position-TOWN_ORIGIN):
+		player.position=previous_position
+		player.velocity=Vector2.ZERO
+	elif regions.has(location) and not regions[location].is_walkable(player.position-REGION_ORIGINS[location]):
+		player.position=previous_position
+		player.velocity=Vector2.ZERO
 	var travel := player.position.distance_to(previous_position)
 	update_walk(delta, travel > 0.01, direction, travel)
 	if festival_active:
@@ -663,15 +670,15 @@ func interaction_action() -> String:
 		return ""
 	if location == "town":
 		var point := player.position - TOWN_ORIGIN
-		if point.distance_to(Vector2(1350, 730)) < 110: return "noticeboard"
+		if point.distance_to(town.design(Vector2(1350, 730))) < 110: return "noticeboard"
 		if town.nearest_service(point) != "" and point.distance_to(service_door(town.nearest_service(point))) < 80: return "service"
 		if town.nearest_npc(point) != null: return "talk"
 		if town.nearest_service(point) != "": return "service"
-		if point.y > 2010 and absf(point.x - 1200) < 180: return "road"
-		if point.y < 160: return "north"
+		if point.y > 1490 and absf(point.x - 1200) < 180: return "road"
+		if point.y < 120: return "north"
 		if point.x < 180: return "west"
 		if point.x > 2200: return "east"
-		if point.x < 400 and point.y < 450: return "historic"
+		if point.x < 400 and point.y < 340: return "historic"
 		return ""
 	if location == "road": return ""
 	if location == "farm" and player.position.distance_to(FARM_EXIT) < 110: return "town"
@@ -1000,13 +1007,13 @@ func interact() -> void:
 			start_conversation(regions[location].nearest_npc(player.position - REGION_ORIGINS[location]))
 			return
 		"return_town":
-			travel_to("town", Vector2(1200, 910))
+			travel_to("town", town.design(Vector2(1200,910)))
 			return
 		"historic":
 			travel_to("historic", Vector2(1440,1060))
 			return
 		"town":
-			travel_to("town", Vector2(1200, 2000))
+			travel_to("town", town.design(Vector2(1200,2000)))
 			return
 		"road":
 			travel_to("farm", FARM_EXIT + Vector2(0, 100))
@@ -1103,7 +1110,7 @@ func save_game(show_message: bool = true) -> void:
 		crop_data.append({"stage": plot.stage, "growth": plot.growth, "crop": plot.crop, "last_growth_day": plot.last_growth_day})
 	var file := FileAccess.open(SAVE_FILE+".pending", FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({"version": 18, "interior_progress": interior_progress, "festival_years": festival_years, "pick_level": pick_level, "harvest_level": harvest_level, "stored_items": stored_items, "backpack_level": backpack_level, "mine_lesson_seen": mine_lesson_seen, "ore_basket": ore_basket, "ore_shipping": ore_shipping, "ore_picked_days": ore_picked_days, "tea_lesson_seen": tea_lesson_seen, "tea_leaves": tea_leaves, "packed_tea": packed_tea, "tea_shipping": tea_shipping, "tea_picked_days": tea_picked_days, "fish_basket": fish_basket, "fish_shipping": fish_shipping, "fish_catches": fish_catches, "fishing_quest_stage": fishing_quest_stage, "tea_delivery_stage": tea_delivery_stage, "selected_crop": selected_crop, "extra_seeds": extra_seeds, "produce": produce, "shipping_queue": shipping_queue, "lost_item_stage": lost_item_stage, "day": day, "clock_minutes": clock_minutes, "health": health, "location": location, "shop_name": shop_name, "character": character_choice, "coins": coins, "seeds": seeds, "tool_level": tool_level, "friendship": friendship, "talked_on_day": talked_on_day, "seen_scenes": seen_scenes, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
+		file.store_string(JSON.stringify({"version": 19, "interior_progress": interior_progress, "festival_years": festival_years, "pick_level": pick_level, "harvest_level": harvest_level, "stored_items": stored_items, "backpack_level": backpack_level, "mine_lesson_seen": mine_lesson_seen, "ore_basket": ore_basket, "ore_shipping": ore_shipping, "ore_picked_days": ore_picked_days, "tea_lesson_seen": tea_lesson_seen, "tea_leaves": tea_leaves, "packed_tea": packed_tea, "tea_shipping": tea_shipping, "tea_picked_days": tea_picked_days, "fish_basket": fish_basket, "fish_shipping": fish_shipping, "fish_catches": fish_catches, "fishing_quest_stage": fishing_quest_stage, "tea_delivery_stage": tea_delivery_stage, "selected_crop": selected_crop, "extra_seeds": extra_seeds, "produce": produce, "shipping_queue": shipping_queue, "lost_item_stage": lost_item_stage, "day": day, "clock_minutes": clock_minutes, "health": health, "location": location, "shop_name": shop_name, "character": character_choice, "coins": coins, "seeds": seeds, "tool_level": tool_level, "friendship": friendship, "talked_on_day": talked_on_day, "seen_scenes": seen_scenes, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
 		file.flush()
 		file.close()
 		if DirAccess.rename_absolute(ProjectSettings.globalize_path(SAVE_FILE+".pending"),ProjectSettings.globalize_path(SAVE_FILE))!=OK:
@@ -1217,8 +1224,9 @@ func load_game() -> void:
 	if saved_area in ["town", "road"]:
 		var origin := TOWN_ORIGIN if saved_area == "town" else ROAD_ORIGIN
 		var point := Vector2(float(parsed.get("x", origin.x + 500)), float(parsed.get("y", 500))) - origin
+		if saved_area=="town" and int(parsed.get("version",1))<19: point=town.design(point)
 		var valid: bool = town.is_walkable(point) if saved_area == "town" else Rect2(Vector2(30, 90), Vector2(940, 820)).has_point(point)
-		travel_to(saved_area, point if valid else (Vector2(1200, 1600) if saved_area == "town" else Vector2(500, 500)), false)
+		travel_to(saved_area, point if valid else (Vector2(1200, 1200) if saved_area == "town" else Vector2(500, 500)), false)
 	elif regions.has(saved_area):
 		var point := Vector2(float(parsed.get("x", 0)), float(parsed.get("y", 0))) - Vector2(REGION_ORIGINS[saved_area])
 		travel_to(saved_area, point if regions[saved_area].is_walkable(point) else Vector2(800, 950), false)
@@ -1416,7 +1424,7 @@ func travel_to(area: String, point: Vector2, persist: bool = true) -> void:
 	stop_fishing()
 	# Migrate earlier saves from the removed connecting road.
 	if area == "road":
-		travel_to("town", Vector2(1200, 2000), persist)
+		travel_to("town", town.design(Vector2(1200,2000)), persist)
 		return
 	for room in shops.values():
 		room.visible = false
@@ -1784,7 +1792,7 @@ func open_noticeboard() -> void:
 
 func start_scene(title: String) -> void:
 	close_dialogue()
-	travel_to("town", Vector2(1200, 1090), false)
+	travel_to("town", town.design(Vector2(1200,1090)), false)
 	scene_steps = CharacterScenes.SCENES[title]
 	scene_step = 0
 	active_scene = title
@@ -1823,6 +1831,7 @@ func advance_scene() -> void:
 func begin_festival(spec: Dictionary = {}) -> void:
 	current_festival = spec
 	festival_center = Vector2(1200,910) if spec.is_empty() else SeasonalFestivals.center(spec.area)
+	if spec.is_empty() or spec.area=="town": festival_center=town.design(festival_center)
 	festival_origin = TOWN_ORIGIN if spec.is_empty() or spec.area == "town" else REGION_ORIGINS[spec.area]
 	var host = town if spec.is_empty() or spec.area == "town" else regions[spec.area]
 	scheduled_gathering = false
@@ -1995,31 +2004,31 @@ func check_walk_exits() -> void:
 				enter_shop("Barn")
 				return
 			if player.position.distance_to(FARM_EXIT) < 55:
-				travel_to("town", Vector2(1200, 2000))
+				travel_to("town", town.design(Vector2(1200,2000)))
 		"road":
 			var point := player.position - ROAD_ORIGIN
 			if point.y < 70 and absf(point.x - 500) < 170:
-				travel_to("town", Vector2(1200, 2000))
+				travel_to("town", town.design(Vector2(1200,2000)))
 			elif point.y > 930 and absf(point.x - 500) < 170:
 				travel_to("farm", FARM_EXIT + Vector2(0, 100))
 		"town":
 			var point := player.position - TOWN_ORIGIN
-			if point.y > 2090 and absf(point.x - 1200) < 180:
+			if point.y > 1520 and absf(point.x - 1200) < 180:
 				travel_to("farm", FARM_EXIT + Vector2(0, 100))
-			elif point.y < 80 and absf(point.x - 1280) < 180:
+			elif point.y < 65 and absf(point.x - 1280) < 180:
 				travel_to("mountain", Vector2(800, 950))
-			elif point.x < 100 and absf(point.y - 1080) < 160:
+			elif point.x < 100 and absf(point.y - 800) < 130:
 				travel_to("harbor", Vector2(1480,585))
-			elif point.x > 2300 and absf(point.y - 1080) < 160:
+			elif point.x > 2300 and absf(point.y - 800) < 130:
 				travel_to("tea", Vector2(140,585))
-			elif point.x < 400 and point.y < 190:
+			elif point.x < 430 and point.y < 160:
 				travel_to("historic", Vector2(1440,1060))
 		_:
 			if regions.has(location):
 				var point: Vector2 = player.position - REGION_ORIGINS[location]
 				if ((location=="harbor" and point.x>1520 and absf(point.y-585)<120) or (location=="tea" and point.x<75 and absf(point.y-585)<120) or (location=="historic" and point.x>1520 and point.y>1070) or (location=="mountain" and point.y>1120 and absf(point.x-800)<100)):
 					var arrivals := {"mountain": Vector2(1200, 180), "harbor": Vector2(220, 1080), "tea": Vector2(2180, 1080), "historic": Vector2(180,300)}
-					travel_to("town", arrivals[location])
+					travel_to("town", town.design(arrivals[location]))
 
 func open_map() -> void:
 	if choosing_character or confirming_sleep or sleep_in_progress or dialogue_open: return

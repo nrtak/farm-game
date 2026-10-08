@@ -26,11 +26,7 @@ const PROJECTS := [
 	["Reclaim the ancestral beds", 400, 15]
 ]
 static func add_plots(farm, level: int) -> void:
-	var wanted := 15 + clampi(level,0,3)*3
-	while farm.plots.size() > wanted: farm.plots.pop_back()
-	while farm.plots.size() < wanted:
-		var n: int = farm.plots.size()-15
-		farm.plots.append({"position":Vector2(1620+(n/3)*100,900+(n%3)*100),"stage":0,"growth":0.0,"crop":"Turnip","last_growth_day":farm.day})
+	preload("res://FarmPlots.gd").fill(farm,level)
 static func open_room(farm, room: String) -> void:
 	var info: Array = ACTIVITIES[room]
 	var column = farm.make_modal(info[0])

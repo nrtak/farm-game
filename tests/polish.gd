@@ -44,7 +44,7 @@ func run():
 	f.take_onsen()
 	assert(f.coins == 60,"Full Health never charges for a soak")
 	f.close_dialogue()
-	f.travel_to("town",Vector2(900,850),false)
+	f.travel_to("town",f.town.pets[0].position,false)
 	assert(f.polish.nearest_pet() != null)
 	f.polish.pet_animal()
 	assert(f.town.pets[0].affection_time > 0)

@@ -158,7 +158,7 @@ func run() -> void:
 	assert(farm.clock_text() == "7:30 AM")
 	var exits := {"mountain": Vector2(1280, 60), "harbor": Vector2(60, 1080), "tea": Vector2(2340, 1080), "historic": Vector2(180,150)}
 	for area in exits:
-		farm.travel_to("town", exits[area], false)
+		farm.travel_to("town", farm.town.design(exits[area]), false)
 		farm._physics_process(0.016)
 		assert(farm.location == area, "Walk into " + area)
 		farm._physics_process(0.016)
@@ -231,14 +231,15 @@ func run() -> void:
 	for room_name in farm.REGIONAL_ROOMS:
 		farm.clock_minutes = 600 if room_name == "Mountain Carpentry" else 800
 		var entrance = farm.REGIONAL_ROOMS[room_name]
-		assert(farm.regions[entrance[0]].is_walkable(entrance[1]), "Exterior door has clear approach")
+		assert(farm.regions[entrance[0]].is_walkable(entrance[1]), "Exterior door has clear approach: " + room_name)
 		farm.travel_to(entrance[0], entrance[1], false)
 		assert(farm.interaction_action() == "regional_door", "Regional doorway reachable: " + room_name + " (" + farm.interaction_action() + ")")
 		farm.interact()
 		assert(farm.location == "shop" and farm.shop_name == room_name)
 		assert(farm.shops[room_name].is_walkable(farm.ShopScript.ENTRY))
 		var room = farm.shops[room_name]
-		farm.player.position = farm.SHOP_ORIGIN + (farm.MINE_SPOTS[0] if room_name == "Mine" else room.COUNTER)
+		var fixture: Rect2 = room.solids[0]
+		farm.player.position = farm.SHOP_ORIGIN + Vector2(fixture.get_center().x,fixture.end.y+35)
 		await physics_frame
 		assert(farm.player.move_and_collide(Vector2(0, -100), true) != null, "Rock or counter blocks movement")
 		for resident in room.residents:
@@ -284,5 +285,3 @@ func run() -> void:
 	farm.queue_free()
 	await process_frame
 	quit(0)
-
-

@@ -10,7 +10,7 @@ func run():
 	f.town.tick_ambient(0.1, 480, false, f.shops, f.regions)
 	for step in range(1200):
 		f.town.tick_ambient(0.1, 480, false, f.shops, f.regions)
-		for npc in f.town.visitors: assert(npc.get_parent().is_walkable(npc.position))
+		for npc in f.town.visitors: assert(npc.get_parent().is_walkable(npc.position),npc.first_name+" at "+str(npc.position))
 		for pet in f.town.pets: assert(pet.get_parent().is_walkable(pet.position))
 	for npc in f.town.visitors:
 		f.start_conversation(npc)
@@ -19,7 +19,7 @@ func run():
 	f.town.tick_ambient(0.1, 800, true, f.shops, f.regions)
 	for npc in f.town.visitors:
 		assert(npc.get_parent() != f.town)
-		assert(npc.get_parent().is_walkable(npc.position))
+		assert(npc.get_parent().is_walkable(npc.position),npc.first_name+" at "+str(npc.position))
 	f.town.tick_ambient(0.1, 480, false, f.shops, f.regions)
 	assert(f.town.visitors[0].get_parent() == f.regions.mountain)
 	assert(f.town.visitors[1].get_parent() == f.shops["Onsen Resort"])
