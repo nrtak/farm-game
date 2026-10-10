@@ -23,6 +23,10 @@ func run() -> void:
 	preload("res://TeaTasting.gd").serve(game,0,0)
 	assert(game.tea_leaves==0 and game.interior_progress.tasting_day==1)
 	game.close_dialogue()
+	game.clock_minutes=780
+	game.enter_shop("Café",true)
+	preload("res://TownActivities.gd").accept_delivery(game)
+	assert(game.interior_progress.cafe_delivery.status=="accepted")
 	game.set_location(true,game.ROOM_ORIGIN+game.interior.BED_APPROACH)
 	game.offer_sleep()
 	game.sleep_until_morning()
@@ -36,6 +40,7 @@ func run() -> void:
 	var restored=load("res://Main.tscn").instantiate()
 	root.add_child(restored)
 	for frame in range(90): await process_frame
+	assert(restored.interior_progress.cafe_delivery.status=="accepted","New request survives exported save/relaunch")
 	assert(restored.day==2 and restored.character_choice=="girl")
 	assert(restored.interior_progress.tasting_day==1 and restored.interior_progress.tasting_notes.Mika=="Fresh green")
 	print("PASS: isolated exported startup, farmer selection, house sleep and saved relaunch")

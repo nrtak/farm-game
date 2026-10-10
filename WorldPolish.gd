@@ -6,20 +6,25 @@ var marker := Vector2.ZERO
 var marker_time := 0.0
 var light: CanvasModulate
 var light_time := 0.0
+var movement_query := PhysicsShapeQueryParameters2D.new()
+var movement_shape := CircleShape2D.new()
 func setup(game) -> void:
 	farm = game
 	light = CanvasModulate.new()
 	add_child(light)
 	z_index = 300
+	movement_shape.radius=farm.PLAYER_RADIUS+1
+	movement_query.shape=movement_shape
+	movement_query.exclude=[farm.player.get_rid()]
 func _process(delta: float) -> void:
 	if farm == null: return
 	light_time -= delta
 	if light_time <= 0:
 		light_time = 0.5
 		light.color = daylight(farm.clock_minutes) if farm.location != "shop" and not farm.inside_house else Color.WHITE
+	var marker_was_visible := marker_time > 0
 	marker_time = maxf(0,marker_time-delta)
-	if marker_time > 0: queue_redraw()
-	elif not path.is_empty(): queue_redraw()
+	if marker_was_visible: queue_redraw()
 static func daylight(minute: float) -> Color:
 	var times := [0.0,300.0,420.0,600.0,900.0,1050.0,1140.0,1260.0,1440.0]
 	var colors := [Color("687896"),Color("687896"),Color("fffdf8"),Color.WHITE,Color.WHITE,Color("fff3e8"),Color("d9dfea"),Color("687896"),Color("687896")]
@@ -77,14 +82,10 @@ func plan(world: Vector2) -> void:
 	marker_time = 1.0
 	queue_redraw()
 func blocked(point: Vector2) -> bool:
-	var query := PhysicsShapeQueryParameters2D.new()
-	var shape:=CircleShape2D.new()
-	shape.radius=farm.PLAYER_RADIUS+1
-	query.shape=shape
-	query.transform=Transform2D(0,point)
-	query.collision_mask = farm.player.collision_mask
-	query.exclude = [farm.player.get_rid()]
-	return not farm.get_world_2d().direct_space_state.intersect_shape(query,1).is_empty()
+	movement_query.transform=Transform2D(0,point)
+	movement_query.collision_mask=farm.player.collision_mask
+	return not farm.get_world_2d().direct_space_state.intersect_shape(movement_query,1).is_empty()
+
 func nearest_cell(grid: AStarGrid2D, cell: Vector2i) -> Vector2i:
 	cell.x = clampi(cell.x,0,grid.region.size.x-1)
 	cell.y = clampi(cell.y,0,grid.region.size.y-1)

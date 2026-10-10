@@ -702,12 +702,12 @@ func refresh_hud() -> void:
 	if is_instance_valid(town) and town.festival_decorated != (not SeasonalFestivals.today(day).is_empty()):
 		town.festival_decorated = not SeasonalFestivals.today(day).is_empty()
 		town.queue_redraw()
-	quest_label.text = ["", "Wallet: search Haruka's archive.", "Wallet: return to Taro.", "Lost wallet returned ✓"][lost_item_stage]
+	quest_label.text = ["", "Wallet: search Haruka's archive.", "Wallet: return to Taro.", ""][lost_item_stage]
 	if tea_delivery_stage == 1 and lost_item_stage not in [1, 2]: quest_label.text = "Tea delivery: bring Mika's parcel to Naomi."
 	if tea_delivery_stage == 1 and lost_item_stage in [1, 2]: quest_label.text += "\nTea: deliver to Naomi."
 	if fishing_quest_stage in [1, 2]: quest_label.text += ("\nFishing: catch one fish." if fishing_quest_stage == 1 else "\nFishing: report to Masao.")
 	quest_label.text = quest_label.text.strip_edges()
-	quest_label.visible = not dialogue_open and (lost_item_stage > 0 or tea_delivery_stage > 0 or fishing_quest_stage > 0)
+	quest_label.visible = not dialogue_open and not quest_label.text.is_empty()
 	date_label.text = "%s\n%s • ¥%d • %s\nSeeds %d · Harvested %d" % [calendar_text(), clock_text(), coins, WeatherLife.forecast(day), seed_count(selected_crop), harvests]
 	health_bar.value = health
 	health_label.text = "Health %d / 100" % int(ceil(health))
@@ -1526,6 +1526,8 @@ func start_conversation(npc: Node2D) -> void:
 			friendship.Masao = mini(100, int(friendship.Masao) + 3)
 			friendship.Ken = mini(100, int(friendship.Ken) + 3)
 			dialogue_lines = ["Your first catch! Nicely done. Here's ¥50 to help you get started.", "Fish go into your basket. Put them in the farm shipping box to sell them next day."]
+	var delivery_message: String = preload("res://TownActivities.gd").deliver_to(self,person)
+	if not delivery_message.is_empty(): dialogue_lines.append(delivery_message)
 	dialogue_index = 0
 	make_modal(person, true)
 	dialogue_text.text = dialogue_lines[0]
@@ -1547,6 +1549,10 @@ func accept_story_request() -> void:
 	say("Request accepted. Your objective is shown below the clock.")
 
 func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
+	# Replace only the panel, preserving an active conversation and its request.
+	if is_instance_valid(dialogue_panel):
+		dialogue_panel.hide()
+		dialogue_panel.queue_free()
 	dialogue_open = true
 	if is_instance_valid(polish): polish.path.clear()
 	player.velocity = Vector2.ZERO
@@ -1635,6 +1641,12 @@ func open_service(service: String) -> void:
 	if service == "Mine":
 		say("Walk to a rock and press Mine. Exit through the south doorway.")
 		return
+	if service == "Archive":
+		preload("res://TownActivities.gd").library(self)
+		return
+	if service == "Town Hall":
+		preload("res://TownActivities.gd").hall(self)
+		return
 	if REGIONAL_ROOMS.has(service):
 		var column := make_modal(service)
 		dialogue_text.text = {"Archive": "Old maps and family records preserve the town's history. Talk to Haruka to learn more.", "Shrine Residence": "Rei prepares tea and festival plans here. Walk over to talk.", "Mountain Lodge": "Emi welcomes walkers here. Rest at the lodge for ¥30 to recover 30 Health.", "Tea Farmhouse": "Sachiko and Mika welcome you to their farmhouse. A sitting area and family rooms overlook the tea fields.", "Tea Processing Shed": "Fresh leaves are sorted, dried, and packed here. Talk to Sachiko about tea. Two handfuls of fresh leaves make one packet. Each packet ships for ¥45.", "Harbor Homes": "Ken and Masao have rooms near the harbor. Talk to them about life on the coast.", "Fishing Shop": "Masao keeps tackle and repairs gear here. Fishing equipment purchases will come in a later draft.", "Hiro Cabin": "Hiro keeps field notes and trail supplies in his cabin. Walk over to talk about the mountains."}[service]
@@ -1658,10 +1670,7 @@ func open_service(service: String) -> void:
 		column.add_child(make_button("Close", close_dialogue))
 		return
 	if service == "Inn":
-		var column := make_modal("Inn · Yumi")
-		dialogue_text.text = "Welcome. Take a short rest in a guest room.\nA rest restores 30 Health for ¥30."
-		column.add_child(make_button("Rest · ¥30", purchase_meal))
-		column.add_child(make_button("Close", close_dialogue))
+		preload("res://TownActivities.gd").inn(self)
 		return
 	if service == "General Store":
 		if clock_minutes < 480 or clock_minutes >= 1080:
@@ -1678,10 +1687,7 @@ func open_service(service: String) -> void:
 		if clock_minutes < 720 or clock_minutes >= 1140:
 			say("Naomi's café opens noon–7 PM. Lunch will be ready then.")
 			return
-		var column := make_modal("Café · Naomi")
-		dialogue_text.text = "A warm home-cooked meal restores 30 Health.\nHealth: %d / 100   ·   Money: ¥%d" % [int(health), coins]
-		column.add_child(make_button("Enjoy a meal · ¥30", purchase_meal))
-		column.add_child(make_button("Leave", close_dialogue))
+		preload("res://TownActivities.gd").cafe(self)
 	elif service == "Blacksmith":
 		if clock_minutes < 420 or clock_minutes >= 1020:
 			say("The forge opens 7 AM–5 PM.")
@@ -1692,6 +1698,7 @@ func open_service(service: String) -> void:
 		if tool_level == 0: column.add_child(make_button("Light watering can · ¥100 + 2 Copper", purchase_upgrade))
 		if pick_level == 0: column.add_child(make_button("Copper pick · ¥150 + 2 Copper", purchase_ore_upgrade.bind("pick")))
 		if harvest_level == 0: column.add_child(make_button("Harvest tools · ¥250 + 2 Iron", purchase_ore_upgrade.bind("harvest")))
+		column.add_child(make_button("Tool care workshop",InteriorLife.open_room.bind(self,"Blacksmith")))
 		if tool_level + pick_level + harvest_level == 3: dialogue_text.text += "\nAll three tools are upgraded."
 		column.add_child(make_button("Leave", close_dialogue))
 	else:
@@ -1750,8 +1757,10 @@ func purchase_ore_upgrade(kind: String) -> void:
 	elif kind == "pick": pick_level = 1
 	else: harvest_level = 1
 	close_dialogue()
-	open_service("Blacksmith")
-	dialogue_text.text += "\nUpgrade ready: watering %d, mining %d, harvesting %d Health." % [2 - tool_level, 4 - pick_level * 2, 3 - harvest_level * 2]
+	var result_column := make_modal("Gen’s forge · tool upgraded")
+	result_column.add_child(make_button("Close", close_dialogue))
+	dialogue_text.text = "Upgrade ready: watering %d, mining %d, harvesting %d Health." % [2 - tool_level, 4 - pick_level * 2, 3 - harvest_level * 2]
+	preload("res://ForgeMoment.gd").show_on(self)
 	save_game(false)
 	refresh_hud()
 
@@ -2510,12 +2519,18 @@ func start_scheduled_gathering() -> void:
 	column.add_child(make_button("Continue ▶", advance_dialogue))
 
 func open_calendar() -> void:
-	var column := make_modal("Farmhouse Calendar")
-	dialogue_panel.get_child(0).offset_top = -410
-	var year := int((day - 1) / 112) + 1
-	var next_year := year + 1 if (day - 1) % 112 > 13 or festival_years.has(year) else year
-	dialogue_text.text = "%s\nTomorrow: %s\n\nSpring Gathering · Spring 14, Year %d\nTown Plaza · 10 AM–6 PM\nWalk into the plaza to join. Finish the gathering for a welcome gift." % [calendar_text(), "Rain (crops watered)" if is_rainy_day(day + 1) else "Clear", next_year]
+	var column := make_modal("Festival calendar")
+	dialogue_panel.get_child(0).offset_top = -minf(430,get_viewport_rect().size.y-32)
 	dialogue_text.text = "%s\nTomorrow: %s\n\n" % [calendar_text(),WeatherLife.forecast(day+1)] + SeasonalFestivals.calendar(self)
+	column.remove_child(dialogue_text)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(0,120)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	column.add_child(scroll)
+	scroll.add_child(dialogue_text)
+	dialogue_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	dialogue_text.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	column.add_child(make_button("Close", close_dialogue))
 
 func storage_limit() -> int:

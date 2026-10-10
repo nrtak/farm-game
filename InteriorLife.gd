@@ -28,6 +28,7 @@ const PROJECTS := [
 static func add_plots(farm, level: int) -> void:
 	preload("res://FarmPlots.gd").fill(farm,level)
 static func open_room(farm, room: String) -> void:
+	farm.close_dialogue()
 	var info: Array = ACTIVITIES[room]
 	var column = farm.make_modal(info[0])
 	farm.dialogue_text.text = info[1]
@@ -56,6 +57,7 @@ static func participate(farm, room: String) -> void:
 	farm.dialogue_text.text = "Activity complete. +5 Health and a little friendship with %s. Your contribution is recorded at Town Hall." % person
 	farm.save_game(false)
 	farm.refresh_hud()
+	if room == "Blacksmith": preload("res://ForgeMoment.gd").show_on(farm)
 static func open_projects(farm) -> void:
 	farm.close_dialogue()
 	var column = farm.make_modal("Community projects")

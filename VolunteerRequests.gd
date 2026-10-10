@@ -51,18 +51,38 @@ static func deliver(farm) -> void:
 	farm.close_dialogue()
 	farm.say("Two vegetables delivered. Thank you! ¥40 and friendship with Seira.")
 static func journal(farm) -> void:
+	farm.close_dialogue()
 	var column = farm.make_modal("Requests & volunteering")
-	farm.dialogue_panel.get_child(0).offset_top = -380
-	var text := ""
+	farm.dialogue_panel.get_child(0).offset_top = -minf(430,farm.get_viewport_rect().size.y-32)
+	var text := "ACCEPTED REQUESTS\n"
+	if farm.tea_delivery_stage == 1: text += "Mika · deliver her tea parcel to Naomi at the café. No deadline.\n\n"
+	if farm.lost_item_stage == 1: text += "Taro · find the wallet beside the maps inside the town library.\n\n"
+	if farm.lost_item_stage == 2: text += "Taro · return the wallet to him at the police box or plaza.\n\n"
+	if farm.fishing_quest_stage == 1: text += "Ken · catch a fish at a marked harbor spot, then talk to Masao.\n\n"
+	if farm.fishing_quest_stage == 2: text += "Ken · report your first catch to Masao at the harbor/fishing shop.\n\n"
+	var lunch: Dictionary = farm.interior_progress.get("cafe_delivery",{})
+	if lunch.get("status","") == "accepted": text += "Naomi · take lunch to %s near %s. Talk to deliver; no deadline.\n\n" % [lunch.person,lunch.place]
+	var traveler: Dictionary = farm.interior_progress.get("traveler_request",{})
+	if traveler.get("status","") == "accepted": text += "%s · bring one packed tea to the inn counter. Choose Visit the traveler, then Give tea. No deadline.\n\n" % traveler.person
+	if farm.interior_progress.get("meal_request","") == "accepted": text += "Seira · keep two harvested vegetables in your bag for her next farm visit.\n\n"
 	var jobs: Dictionary = farm.interior_progress.get("volunteering",{})
 	for id in jobs:
 		var job: Dictionary = jobs[id]
-		if job.status == "declined": continue
-		var status: String = job.status
-		if status == "accepted" and int(job.day) < farm.day: status = "ended · no penalty"
-		text += job.name+" · "+status+"\n"
-	var meal: String = farm.interior_progress.get("meal_request","")
-	if meal in ["accepted","completed"]: text += "Seira's community meal · two vegetables · "+meal+"\n"
-	farm.dialogue_text.text = "No accepted requests yet. Residents may stop by the farmhouse with an offer." if text.is_empty() else text
+		if job.status != "accepted": continue
+		text += "%s · day %d · %s\n\n" % [job.name,job.day,"ended, no penalty" if int(job.day)<farm.day else "join the scheduled festival and help with its activity"]
+	if text == "ACCEPTED REQUESTS\n": text += "No active requests. Speak to residents or visit the café and inn for offers.\n"
+	farm.dialogue_text.text=text
 	preload("res://DailyErrands.gd").append_journal(farm,column)
+	# Keep long journals inside the phone viewport; buttons remain outside the scroll area.
+	var label = farm.dialogue_text
+	column.remove_child(label)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size=Vector2(0,120)
+	scroll.size_flags_vertical=Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED
+	column.add_child(scroll)
+	column.move_child(scroll,1)
+	scroll.add_child(label)
+	label.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	label.size_flags_vertical=Control.SIZE_SHRINK_BEGIN
 	column.add_child(farm.make_button("Close",farm.close_dialogue))
