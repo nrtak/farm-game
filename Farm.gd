@@ -650,7 +650,7 @@ func interaction_action() -> String:
 			for spot in MINE_SPOTS:
 				if (player.position - SHOP_ORIGIN).distance_to(spot) < 60: return "mine_ore"
 			return ""
-		if shop_name == "Archive" and lost_item_stage == 1 and player.position.distance_to(SHOP_ORIGIN + Vector2(230, 480)) < 85: return "collect_wallet"
+		if shop_name == "Archive" and lost_item_stage == 1 and player.position.distance_to(SHOP_ORIGIN + ShopScript.WALLET) < 85: return "collect_wallet"
 		if shops[shop_name].nearest_resident(player.position - SHOP_ORIGIN) != null: return "talk_shop"
 		if player.position.distance_to(SHOP_ORIGIN + ShopScript.COUNTER) < 110: return "counter"
 		if InteriorLife.ACTIVITIES.has(shop_name) and (player.position-SHOP_ORIGIN).distance_to(Vector2(410,470)) < 80: return "room_activity"

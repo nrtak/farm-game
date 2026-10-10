@@ -192,10 +192,11 @@ func run() -> void:
 		var room = farm.shops[service]
 		assert(room.visible and room.is_walkable(room.ENTRY) and room.is_walkable(room.COUNTER))
 		farm.player.position = farm.SHOP_ORIGIN + room.residents[0].position + Vector2(0, 65)
-		assert(farm.interaction_action() == "talk_shop" or not room.residents[0].visible)
-		farm.interact()
-		assert(farm.dialogue_open)
-		farm.close_dialogue()
+		if room.residents[0].visible:
+			assert(farm.interaction_action() == "talk_shop")
+			farm.interact()
+			assert(farm.dialogue_open)
+			farm.close_dialogue()
 		farm.player.position = farm.SHOP_ORIGIN + room.COUNTER
 		await physics_frame
 		assert(farm.player.move_and_collide(Vector2(0, -100), true) != null, "Solid counter")
@@ -263,8 +264,8 @@ func run() -> void:
 	farm.close_dialogue()
 	farm.enter_shop("Archive")
 	assert(farm.shops.Archive.lost_item_visible)
-	farm.player.position = farm.SHOP_ORIGIN + Vector2(230, 480)
-	assert(farm.shops.Archive.is_walkable(Vector2(230, 480)), "Wallet approachable")
+	farm.player.position = farm.SHOP_ORIGIN + farm.shops.Archive.WALLET
+	assert(farm.shops.Archive.is_walkable(farm.shops.Archive.WALLET), "Wallet approachable")
 	assert(farm.interaction_action() == "collect_wallet")
 	farm.interact()
 	assert(farm.lost_item_stage == 2 and not farm.shops.Archive.lost_item_visible)

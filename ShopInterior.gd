@@ -3,6 +3,7 @@ extends Node2D
 const SIZE := Vector2(1100, 850)
 const ENTRY := Vector2(550, 730)
 const COUNTER := Vector2(550, 360)
+const WALLET := Vector2(360,450)
 var kind := ""
 var depleted := [false, false, false, false]
 var solids: Array[Rect2] = []
@@ -39,6 +40,7 @@ func setup(service: String) -> void:
 		keeper.setup(person, preload("res://CharacterArt.gd").walk(person))
 		keeper.position = Vector2(550, 230) if i == 0 else Vector2(730, 540 + (i-1)*110)
 		if kind in preload("res://InteriorPlan.gd").ROOMS: keeper.position=Vector2(650,410+i*150)
+		if preload("res://TownInteriorLayout.gd").FURNITURE.has(kind): keeper.position=[Vector2(730,410),Vector2(375,480),Vector2(710,650)][i%3]
 		keeper.position=safe_point(keeper.position)
 		keeper.paused = i == 0
 		if i > 0: keeper.set_route([])
@@ -60,6 +62,7 @@ func obstacle(rect: Rect2) -> void:
 
 func is_walkable(point: Vector2) -> bool:
 	if not Rect2(125, 185, 850, 585).has_point(point): return false
+	if preload("res://TownInteriorLayout.gd").FURNITURE.has(kind) and point.y>710 and (point.x<480 or point.x>620): return false
 	for rect in solids:
 		if rect.grow(14).has_point(point): return false
 	return true
@@ -80,6 +83,7 @@ func _draw() -> void:
 	var artwork: Texture2D=preload("res://InteriorArtwork.gd").texture(kind)
 	if artwork != null:
 		draw_texture_rect(artwork,Rect2(Vector2.ZERO,SIZE),false)
+		draw_wallet()
 		return
 	draw_rect(Rect2(Vector2.ZERO, SIZE), Color("33473d"))
 	draw_rect(Rect2(90, 70, 920, 740), Color("72523d"))
@@ -159,10 +163,7 @@ func _draw() -> void:
 			draw_circle(point, 24, Color("e5d6b4"))
 			draw_circle(point + Vector2(12, -5), 8, Color("735d44"))
 			for dx in [-100, 100]: draw_rect(Rect2(point + Vector2(dx - 18, -20), Vector2(36, 40)), Color("7d927b"))
-	if lost_item_visible:
-		draw_rect(Rect2(210, 465, 40, 32), Color("b58654"))
-		draw_rect(Rect2(215, 470, 30, 22), Color("e4cf9c"))
-		draw_string(ThemeDB.fallback_font, Vector2(155, 520), "Lost wallet", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("493b2d"))
+	draw_wallet()
 
 	if preload("res://InteriorLife.gd").ACTIVITIES.has(kind):
 		draw_rect(Rect2(398,450,24,28),Color("f0dfb9"))
@@ -282,6 +283,13 @@ func draw_expanded_room() -> void:
 			room_label("Examination area",Vector2(790,490))
 			room_label("Waiting seats",Vector2(135,670))
 			room_label("Clean supplies",Vector2(790,690))
+
+func draw_wallet() -> void:
+	if not lost_item_visible: return
+	draw_circle(WALLET,28,Color(1,.9,.55,.35))
+	draw_rect(Rect2(WALLET-Vector2(20,16),Vector2(40,32)),Color("956f4a"))
+	draw_rect(Rect2(WALLET-Vector2(15,11),Vector2(30,22)),Color("d5b57e"))
+	draw_circle(WALLET+Vector2(10,0),3,Color("725332"))
 
 func safe_point(preferred: Vector2) -> Vector2:
 	if is_walkable(preferred): return preferred

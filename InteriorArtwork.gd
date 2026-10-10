@@ -5,9 +5,11 @@ static func texture(kind: String) -> Texture2D:
 	if not ROOMS.has(kind): return null
 	if not textures.has(kind):
 		textures.clear()
-		textures[kind]=load("res://assets/interior-"+ROOMS[kind]+"-v2.png")
+		var version:String="v3" if preload("res://TownInteriorLayout.gd").FURNITURE.has(kind) else "v2"
+		textures[kind]=load("res://assets/interior-"+ROOMS[kind]+"-"+version+".png")
 	return textures[kind]
 static func furnishings(kind: String) -> Array[Rect2]:
+	if preload("res://TownInteriorLayout.gd").FURNITURE.has(kind): return preload("res://TownInteriorLayout.gd").furnishings(kind)
 	# The artwork keeps service counter and lower central aisle aligned to game coordinates.
 	var result: Array[Rect2]=[Rect2(360,210,380,90)]
 	match kind:

@@ -14,6 +14,8 @@ func run() -> void:
 		assert(preload("res://CharacterArt.gd").portrait(name)!=null,"Portrait exported: "+name)
 	for room in preload("res://InteriorArtwork.gd").ROOMS:
 		assert(preload("res://InteriorArtwork.gd").texture(room)!=null,"Interior exported: "+room)
+	for room in preload("res://TownInteriorLayout.gd").FURNITURE:
+		assert(preload("res://InteriorArtwork.gd").texture(room).resource_path.ends_with("-v3.png"),"Latest town interior exported: "+room)
 	game.interior_progress.story={"intro":true}
 	game.enter_shop("Tea Processing Shed",true)
 	game.tea_leaves=1
