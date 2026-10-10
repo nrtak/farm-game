@@ -16,7 +16,7 @@ func run() -> void:
 	# Find Ken by name, independent of roster order.
 	farm.close_dialogue()
 	for npc in farm.regions.harbor.npcs:
-		if npc.first_name == "Ken": farm.start_conversation(npc); farm.close_dialogue()
+		if npc.first_name == "Ken": farm.start_conversation(npc); farm.accept_story_request(); farm.close_dialogue()
 	assert(farm.fishing_quest_stage == 1)
 	for spot in farm.FISHING_SPOTS: assert(farm.regions.harbor.is_walkable(spot))
 	farm.travel_to("harbor", farm.FISHING_SPOTS[0], false)

@@ -148,3 +148,18 @@ func constrain_motion(previous: Vector2) -> void:
 		var candidate: Vector2=farm.player.position+motion
 		if clear_position(candidate) and not farm.player.test_move(farm.player.global_transform,motion):
 			farm.player.position=candidate
+
+func yield_residents(direction: Vector2, delta: float) -> void:
+	if direction.length_squared()<0.1 or farm.dialogue_open or farm.festival_active: return
+	var area=area_node()
+	var origin:=area_origin()
+	for npc in area.get_children():
+		if npc.get_script()!=preload("res://Npc.gd") or not npc.visible or npc==farm.talking_npc: continue
+		var separation:Vector2=npc.global_position-farm.player.position
+		if separation.length()>92 or separation.dot(direction)<-15: continue
+		for side in [direction.orthogonal(),-direction.orthogonal()]:
+			var next:Vector2=npc.position+side.normalized()*minf(100*delta,18)
+			if clear_position(origin+next):
+				npc.position=next
+				npc.set_route([])
+				break

@@ -4,7 +4,7 @@ from PIL import Image
 root=Path(__file__).resolve().parents[1]; result={}
 lut=[struct.unpack('<f',struct.pack('<f',i/255.0))[0] for i in range(256)]
 for kind,path in [('farm','farm-environment-v10-wide.png')]+[(k,'map-'+k+'-approved-v1.png') for k in ['town','harbor','mountain','historic','tea']]:
- path={'map-town-approved-v1.png':'map-town-open-v2.png','map-mountain-approved-v1.png':'map-mountain-open-v2.png','map-harbor-approved-v1.png':'map-harbor-open-v2.png','map-tea-approved-v1.png':'map-tea-open-v2.png'}.get(path,path)
+ path={'map-town-approved-v1.png':'map-town-open-v3.png','map-mountain-approved-v1.png':'map-mountain-open-v2.png','map-harbor-approved-v1.png':'map-harbor-open-v2.png','map-tea-approved-v1.png':'map-tea-open-v2.png'}.get(path,path)
  im=Image.open(root/'assets'/path).convert('RGB');w,h=im.size
  bits={key:bytearray((w*h+7)//8) for key in ['path','grass','water']}
  for i,(red,green,blue) in enumerate(im.getdata()):

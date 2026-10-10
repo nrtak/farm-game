@@ -23,4 +23,8 @@ def configure(path, team, bundle, version, build):
 if __name__ == "__main__":
     configure(Path("export_presets.cfg"), os.environ.get("APPLE_TEAM_ID", ""), os.environ.get("IOS_BUNDLE_ID", ""),
               os.environ.get("APP_VERSION", "0.1.0"), os.environ.get("BUILD_NUMBER", "1"))
+    info=Path("data/build_info.json")
+    metadata=json.loads(info.read_text())
+    metadata["build"]=os.environ.get("BUILD_NUMBER","local")
+    info.write_text(json.dumps(metadata))
     print("Configured iOS identity and version")

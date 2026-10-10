@@ -30,10 +30,15 @@ static func walk(person: String) -> Texture2D:
 static func portrait(person: String) -> Texture2D:
 	person = canonical_name(person)
 	if portrait_cache.has(person): return portrait_cache[person]
+	if person in ["Mika","Seira"]:
+		var single:Texture2D=load("res://assets/characters/portrait-"+person.to_lower()+"-v3.png")
+		portrait_cache[person]=single
+		return single
 	if not PORTRAITS.has(person): return null
 	var info: Array = PORTRAITS[person]
-	var texture: Texture2D = load("res://assets/characters/portraits-%s-v2.png" % info[0])
-	var source := preload("res://RuntimeArt.gd").readable_image(texture)
+	var source := Image.new()
+	var bytes := FileAccess.get_file_as_bytes("res://data/portraits/"+str(info[0])+".bin")
+	if source.load_png_from_buffer(bytes)!=OK: return null
 	if source==null: return null
 	var cuts: Array = {
 		"wardrobe":[0.0,0.219,0.35,0.495,0.656,0.787,1.0],
@@ -46,7 +51,8 @@ static func portrait(person: String) -> Texture2D:
 	}[info[0]]
 	var left:=int(cuts[int(info[1])]*source.get_width())
 	var right:=int(cuts[int(info[1])+1]*source.get_width())
-	if person=="Mika": right=int(source.get_width()*0.463)
+	if person=="Mika": right=int(source.get_width()*0.478)
+	if person=="Seira": right=int(source.get_width()*0.366)
 	if person=="Yuta": left=int(source.get_width()*0.478)
 	if person=="Gen": left=int(source.get_width()*0.326)
 	# Upper-body framing uses the sheet dimensions, preserving heads and shoulders.
@@ -61,7 +67,11 @@ static func portrait(person: String) -> Texture2D:
 			for x in range(maxi(0,seam_x)): image.set_pixel(x,y,Color.TRANSPARENT)
 	keep_main_figure(image)
 	var bounds := image.get_used_rect()
-	if bounds.has_area(): image = image.get_region(bounds)
+	if bounds.has_area():
+		var framed := Image.create(bounds.size.x+24,bounds.size.y+24,false,Image.FORMAT_RGBA8)
+		framed.fill(Color.TRANSPARENT)
+		framed.blit_rect(image,bounds,Vector2i(12,12))
+		image = framed
 	var result := ImageTexture.create_from_image(image)
 	portrait_cache[person] = result
 	return result

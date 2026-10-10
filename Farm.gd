@@ -30,6 +30,7 @@ var polish: Node2D
 var shop_name := ""
 var lost_item_stage := 0
 var tea_delivery_stage := 0
+var pending_request := ""
 var mine_lesson_seen := false
 var ore_basket := {"Copper": 0, "Iron": 0}
 var ore_shipping := {"Copper": 0, "Iron": 0}
@@ -576,6 +577,7 @@ func _physics_process(delta: float) -> void:
 	var previous_position := player.position
 	player.move_and_slide()
 	polish.constrain_motion(previous_position)
+	polish.yield_residents(direction,delta)
 	if not polish.path.is_empty() and player.position.distance_to(previous_position)<0.01 and direction.length()>0.1:
 		polish.path.clear()
 	var travel := player.position.distance_to(previous_position)
@@ -1457,6 +1459,7 @@ func travel_to(area: String, point: Vector2, persist: bool = true) -> void:
 	if persist: save_game(false)
 
 func start_conversation(npc: Node2D) -> void:
+	pending_request = ""
 	talking_npc = npc
 	npc.paused = true
 	npc.face_player(player.position)
@@ -1480,7 +1483,7 @@ func start_conversation(npc: Node2D) -> void:
 			dialogue_lines = ["Taro. I'm the town police officer. Let me know if you need a hand finding your way.", "My younger brother Jiro runs the fire station. He's the loud one. You'll hear him before you meet him."] if first else ["Keeping well? Don't work yourself into the ground. Even an ambitious farmer needs sleep.", "I make a few rounds each day. If I'm not at the police box, try the main road or plaza."]
 	if person == "Taro":
 		if lost_item_stage == 0:
-			lost_item_stage = 1
+			pending_request = "wallet"
 			dialogue_lines = ["Someone lost a wallet near Haruka's archive. Could you look inside the library in town?", "Bring it back to me when you find it. I'll make sure it reaches its owner."]
 		elif lost_item_stage == 1:
 			dialogue_lines = ["Try Haruka's library in town. Look beside the old maps."]
@@ -1499,8 +1502,8 @@ func start_conversation(npc: Node2D) -> void:
 		dialogue_lines = ["Mika and I have set aside three small tea rows for you. Look for the leaf signs in our fields.", "Pick the tender leaves once each day. Two handfuls make one packet at the processing shed counter.", "Put the packets in your farm shipping box. Each sells for ¥45 the next morning. Leave the bushes to rest until tomorrow."]
 	if person == "Mika":
 		if tea_delivery_stage == 0:
-			tea_delivery_stage = 1
-			dialogue_lines = ["Could you take this small tea parcel to Naomi at the café? She wants to try our latest batch.", "I've packed it for you. Find Naomi and talk to her whenever you have time."]
+			pending_request = "tea"
+			dialogue_lines = ["Could you take this small tea parcel to Naomi at the café? She wants to try our latest batch.", "If you accept, I'll give you the parcel. Take it to Naomi at the café for ¥40. There is no deadline."]
 		elif tea_delivery_stage == 1:
 			dialogue_lines = ["The tea parcel is for Naomi at the café. Thank you for taking it over."]
 		else:
@@ -1512,7 +1515,7 @@ func start_conversation(npc: Node2D) -> void:
 		friendship.Naomi = mini(100, int(friendship.Naomi) + 3)
 		dialogue_lines = ["Tea from Mika? Lovely! I'll brew some for the café.", "Here's ¥40 for bringing it over. Tell Mika I'll put a pot on tomorrow."]
 	if person == "Ken" and fishing_quest_stage == 0:
-		fishing_quest_stage = 1
+		pending_request = "fishing"
 		dialogue_lines = ["Want to try fishing? Use either marked fishing spot at the harbor. I've left a spare rod there.", "Cast, wait until the float dips and Catch lights up, then press Catch. Catch one fish and tell Masao about it."]
 	if person == "Masao":
 		if fishing_quest_stage == 1:
@@ -1526,8 +1529,22 @@ func start_conversation(npc: Node2D) -> void:
 	dialogue_index = 0
 	make_modal(person, true)
 	dialogue_text.text = dialogue_lines[0]
-	dialogue_text.get_parent().add_child(make_button("Continue  ▶", advance_dialogue))
+	if pending_request != "":
+		dialogue_text.text = "Request · " + "\n".join(dialogue_lines)
+		dialogue_text.get_parent().add_child(make_button("Accept request", accept_story_request))
+		dialogue_text.get_parent().add_child(make_button("Not now", close_dialogue))
+	else: dialogue_text.get_parent().add_child(make_button("Continue", advance_dialogue))
 	save_game(false)
+
+func accept_story_request() -> void:
+	match pending_request:
+		"tea": tea_delivery_stage = 1
+		"wallet": lost_item_stage = 1
+		"fishing": fishing_quest_stage = 1
+		_: return
+	close_dialogue()
+	save_game(false)
+	say("Request accepted. Your objective is shown below the clock.")
 
 func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 	dialogue_open = true
@@ -1544,7 +1561,7 @@ func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 	panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	panel.offset_left = 24
 	panel.offset_right = -24
-	panel.offset_top = -255
+	panel.offset_top = -minf(350,get_viewport_rect().size.y-36)
 	panel.offset_bottom = -20
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 20)
@@ -1553,7 +1570,8 @@ func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 		var portrait_texture := preload("res://CharacterArt.gd").portrait(title)
 		var picture := TextureRect.new()
 		picture.texture = portrait_texture
-		picture.custom_minimum_size = Vector2(150, 215)
+		picture.custom_minimum_size = Vector2(180, 190)
+		picture.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		row.add_child(picture)
@@ -1589,6 +1607,7 @@ func advance_dialogue() -> void:
 	else: dialogue_text.text = dialogue_lines[dialogue_index]
 
 func close_dialogue() -> void:
+	pending_request = ""
 	if is_instance_valid(farm_visitor): farm_visitor.queue_free()
 	farm_visitor = null
 	for record in scene_actors:
@@ -2031,7 +2050,8 @@ func open_map() -> void:
 
 func open_guide() -> void:
 	if choosing_character or confirming_sleep or sleep_in_progress or dialogue_open: return
-	var column := make_modal("Welcome Home")
+	var revision: Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://data/build_info.json"))
+	var column := make_modal("Tea Blossom Hills · Build "+str(revision.build)+" · "+str(revision.content))
 	dialogue_panel.get_child(0).offset_top = -380
 	dialogue_text.text = "Move with arrows/WASD or the joystick. Hold Shift, or push the joystick farther, to run.\n\nChoose seeds → Plant → Water daily → Sleep → Harvest → Shipping box. Sleep in the house to recover Health.\n\nWalk onto the Town walkway on the farm to enter town directly. All marked region exits work by walking through them; Routes shows directions. Visit the store for seeds, the forge for an upgrade, and the café for meals.\n\nTown exits: north mountain/lake, east tea fields, west harbor, northwest shrine. The plaza Events board previews scenes and the festival."
 	dialogue_text.add_theme_font_size_override("font_size", 18)

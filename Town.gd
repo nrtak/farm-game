@@ -39,7 +39,7 @@ const TREE_CLUSTERS := []
 func _ready() -> void:
 	for point in preload("res://ApprovedMapLayout.gd").spec("town").land: land_outline.append(Vector2(point[0],point[1]))
 	var background := Sprite2D.new()
-	background.texture = preload("res://assets/map-town-open-v2.png")
+	background.texture = preload("res://assets/map-town-open-v3.png")
 	background.centered = false
 	background.scale = SIZE / Vector2(background.texture.get_size())
 	background.z_index = -10
@@ -357,6 +357,6 @@ func is_npc_walkable(point: Vector2) -> bool:
 		var door: Vector2 = building.door*ART_SCALE
 		if absf(point.x-door.x)<maxf(100,building.rect.size.x*ART_SCALE*0.5+30) and point.y>door.y-35 and point.y<door.y+170: return false
 	if not is_walkable(point): return false
-	return preload("res://ApprovedMapLayout.gd").is_path("town",point,SIZE)
+	return preload("res://ApprovedMapLayout.gd").is_path("town",point,SIZE) or preload("res://MapHabitat.gd").sample("town",point,SIZE,"grass")
 
 static func design(point: Vector2) -> Vector2: return point*Vector2(1.0,1600.0/2160.0)

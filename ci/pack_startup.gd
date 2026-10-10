@@ -7,6 +7,13 @@ func run() -> void:
 	for frame in range(90): await process_frame
 	assert(game.choosing_character,"Fresh exported launch reaches farmer selection")
 	game.choose_character("boy")
+	assert(game.regions.mountain.background.resource_path.ends_with("map-mountain-open-v2.png"))
+	assert(game.regions.harbor.background.resource_path.ends_with("map-harbor-open-v2.png"))
+	assert(game.regions.tea.background.resource_path.ends_with("map-tea-open-v2.png"))
+	for name in preload("res://CharacterArt.gd").PORTRAITS:
+		assert(preload("res://CharacterArt.gd").portrait(name)!=null,"Portrait exported: "+name)
+	for room in preload("res://InteriorArtwork.gd").ROOMS:
+		assert(preload("res://InteriorArtwork.gd").texture(room)!=null,"Interior exported: "+room)
 	game.interior_progress.story={"intro":true}
 	game.set_location(true,game.ROOM_ORIGIN+game.interior.BED_APPROACH)
 	game.offer_sleep()

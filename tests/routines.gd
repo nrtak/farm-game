@@ -29,6 +29,8 @@ func run() -> void:
 			if npc.visible and not npc.route.is_empty(): assert(farm.shops["Tea Farmhouse"].is_walkable(npc.position))
 	farm.tea_delivery_stage = 0
 	farm.start_conversation(farm.shops["Tea Farmhouse"].residents[1])
+	assert(farm.tea_delivery_stage == 0)
+	farm.accept_story_request()
 	assert(farm.tea_delivery_stage == 1)
 	farm.close_dialogue()
 	farm.save_game(false)

@@ -257,6 +257,8 @@ func run() -> void:
 	farm.enter_shop("Police Box")
 	var taro = farm.shops["Police Box"].residents[0]
 	farm.start_conversation(taro)
+	assert(farm.lost_item_stage == 0)
+	farm.accept_story_request()
 	assert(farm.lost_item_stage == 1)
 	farm.close_dialogue()
 	farm.enter_shop("Archive")
