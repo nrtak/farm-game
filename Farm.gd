@@ -1641,6 +1641,8 @@ func open_service(service: String) -> void:
 		if service == "Tea Processing Shed":
 			dialogue_text.text = "Fresh leaves: %d · Packed tea: %d\nTwo handfuls make one packet. Ship packets for ¥45 each." % [tea_leaves, packed_tea]
 			column.add_child(make_button("Pack tea · 2 leaves", process_tea))
+			column.add_child(make_button("Brew tea with today's guest", preload("res://TeaTasting.gd").open.bind(self)))
+			column.add_child(make_button("Tasting notebook", preload("res://TeaTasting.gd").notebook.bind(self)))
 		if service == "Mountain Lodge": column.add_child(make_button("Rest · ¥30", purchase_meal))
 		column.add_child(make_button("Close", close_dialogue))
 		return

@@ -159,6 +159,13 @@ func yield_residents(direction: Vector2, delta: float) -> void:
 		if separation.length()>92 or separation.dot(direction)<-15: continue
 		for side in [direction.orthogonal(),-direction.orthogonal()]:
 			var next:Vector2=npc.position+side.normalized()*minf(100*delta,18)
+			if area.has_method("is_npc_walkable") and area.is_npc_walkable(npc.position) and not area.is_npc_walkable(next): continue
+			var occupied:=false
+			for neighbor in area.get_children():
+				if neighbor!=npc and neighbor.get_script()==preload("res://Npc.gd") and neighbor.visible:
+					var distance:float=neighbor.position.distance_to(next)
+					if distance<48 and distance<=neighbor.position.distance_to(npc.position): occupied=true
+			if occupied: continue
 			if clear_position(origin+next):
 				npc.position=next
 				npc.set_route([])

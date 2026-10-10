@@ -15,6 +15,12 @@ func run() -> void:
 	for room in preload("res://InteriorArtwork.gd").ROOMS:
 		assert(preload("res://InteriorArtwork.gd").texture(room)!=null,"Interior exported: "+room)
 	game.interior_progress.story={"intro":true}
+	game.enter_shop("Tea Processing Shed",true)
+	game.tea_leaves=1
+	preload("res://TeaTasting.gd").open(game)
+	preload("res://TeaTasting.gd").serve(game,0,0)
+	assert(game.tea_leaves==0 and game.interior_progress.tasting_day==1)
+	game.close_dialogue()
 	game.set_location(true,game.ROOM_ORIGIN+game.interior.BED_APPROACH)
 	game.offer_sleep()
 	game.sleep_until_morning()
@@ -29,5 +35,6 @@ func run() -> void:
 	root.add_child(restored)
 	for frame in range(90): await process_frame
 	assert(restored.day==2 and restored.character_choice=="girl")
+	assert(restored.interior_progress.tasting_day==1 and restored.interior_progress.tasting_notes.Mika=="Fresh green")
 	print("PASS: isolated exported startup, farmer selection, house sleep and saved relaunch")
 	quit()

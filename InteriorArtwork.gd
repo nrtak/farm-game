@@ -1,5 +1,5 @@
 extends RefCounted
-const ROOMS := {"General Store":"store","Café":"cafe","Clinic":"hospital","Inn":"inn","Blacksmith":"blacksmith","Carpentry":"carpenter","Mountain Carpentry":"carpenter","Archive":"library","Town Hall":"townhall","Police Box":"police","Fire Station":"fire","Onsen Resort":"onsen","Tea Processing Shed":"tea","Fishing Shop":"fishing","Tea Farmhouse":"teahome","Harbor Homes":"homeguest","Mountain Lodge":"homeguest","Hiro Cabin":"homeguest","Shrine Residence":"shrine"}
+const ROOMS := {"General Store":"store","Café":"cafe","Clinic":"hospital","Inn":"inn","Blacksmith":"blacksmith","Carpentry":"carpenter","Mountain Carpentry":"carpenter","Archive":"library","Town Hall":"townhall","Police Box":"police","Fire Station":"fire","Onsen Resort":"onsen","Tea Processing Shed":"tea","Fishing Shop":"fishing","Tea Farmhouse":"teahome","Harbor Homes":"harborhome","Mountain Lodge":"mountainlodge","Hiro Cabin":"hirocabin","Shrine Residence":"shrine"}
 static var textures: Dictionary = {}
 static func texture(kind: String) -> Texture2D:
 	if not ROOMS.has(kind): return null

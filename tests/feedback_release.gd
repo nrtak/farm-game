@@ -20,6 +20,12 @@ func run():
 	for step in range(25): f.polish.yield_residents(Vector2.RIGHT,.016)
 	assert(npc.position.distance_to(before)>20,"Residents step aside")
 	assert(f.town.is_walkable(npc.position))
+	var neighbor=f.town.npcs[1]
+	neighbor.position=npc.position+Vector2(0,25);neighbor.visible=true
+	var separation:float=npc.position.distance_to(neighbor.position)
+	f.player.position=f.TOWN_ORIGIN+npc.position-Vector2(70,0)
+	for step in range(25): f.polish.yield_residents(Vector2.RIGHT,.016)
+	assert(npc.position.distance_to(neighbor.position)>separation,"Overlapping residents can separate")
 	var mika=f.shops["Tea Farmhouse"].residents[1]
 	f.tea_delivery_stage=0
 	f.start_conversation(mika)

@@ -1,0 +1,13 @@
+{
+  "mode": "Built-in image generation",
+  "prompts": {
+    "harborhome": "Edit the reference game interior. Preserve exact canvas and perspective, walls, south central doorway, center counter position, and broad EMPTY central walking floor. Keep furnishings entirely in existing four side alcoves and top wall. Same warm Japanese countryside illustrated style, clear neutral daylight, restrained detail readable on a phone. No people, no text, no interface. Make this the home of coastal fishing families: upper-left sleeping alcove with blue linens, upper-right net repair workbench and neatly hanging fishing coats, lower-left low family dining table, lower-right compact stove and kitchen with fish baskets. Ocean landscape above counter, rope coils and floats only on shelves. Distinct from a hotel.",
+    "mountainlodge": "Edit the reference game interior. Preserve exact canvas and perspective, walls, south central doorway, center counter position, and broad EMPTY central walking floor. Keep furnishings entirely in existing four side alcoves and top wall. Same warm Japanese countryside illustrated style, clear neutral daylight, restrained detail readable on a phone. No people, no text, no interface. Make this a hikers' mountain lodge: upper side alcoves have guest bunks with green blankets, lower-left trail-map desk with boots and walking sticks against wall, lower-right warm stone fireplace and two armchairs. Reception counter with trail journals and mountain artwork. Keep fireplace and chairs in side alcove, center floor empty.",
+    "hirocabin": "Edit the reference game interior. Preserve exact canvas and perspective, walls, south central doorway, center counter position, and broad EMPTY central walking floor. Keep furnishings entirely in existing four side alcoves and top wall. Same warm Japanese countryside illustrated style, clear neutral daylight, restrained detail readable on a phone. No people, no text, no interface. Make this a forest ranger's lived-in cabin: upper-left single bed with plaid blanket, upper-right naturalist desk with field notebook and plant specimens, lower-left map cabinet and shelves of binoculars and hiking equipment, lower-right compact rustic kitchen and wood stove. Botanical wall sketches and boots by side wall. Keep broad center floor empty."
+  },
+  "assets": [
+    "assets/interior-harborhome-v2.png",
+    "assets/interior-mountainlodge-v2.png",
+    "assets/interior-hirocabin-v2.png"
+  ]
+}
