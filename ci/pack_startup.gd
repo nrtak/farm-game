@@ -16,6 +16,8 @@ func run() -> void:
 		assert(preload("res://InteriorArtwork.gd").texture(room)!=null,"Interior exported: "+room)
 	for room in preload("res://TownInteriorLayout.gd").FURNITURE:
 		assert(preload("res://InteriorArtwork.gd").texture(room).resource_path.ends_with("-v3.png"),"Latest town interior exported: "+room)
+	assert(preload("res://RanchServices.gd").ART!=null,"Ranch and vet artwork exported")
+	assert(game.shops.has("Ranch") and game.shops.has("Veterinarian"))
 	assert(game.regions.waterfall.background!=null,"Waterfall art exported")
 	assert(game.regions.waterfall.is_walkable(Vector2(800,700)))
 	for theme in ["farm","town","nature","interior","night","rain","falls"]:

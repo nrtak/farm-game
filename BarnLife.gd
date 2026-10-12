@@ -30,21 +30,26 @@ static func open_care(farm) -> void:
 static func open_manager(farm) -> void:
 	farm.close_dialogue()
 	var data := state(farm)
-	var column = farm.make_modal("Barn animals & supplies")
+	var column = farm.make_modal("Town Ranch · Renji" if farm.shop_name=="Ranch" else "Barn care")
+	if farm.shop_name!="Ranch":
+		farm.dialogue_text.text="Visit Renji at the town ranch for livestock and feed. Approach your animals here to feed, pet and collect products."
+		column.add_child(farm.make_button("Back",farm.close_dialogue));return
 	farm.dialogue_panel.get_child(0).offset_top = -minf(440,farm.get_viewport_rect().size.y-32)
 	farm.dialogue_text.text = "Animals: %d / %d · Feed: %d\nFeed daily. Collect milk and eggs the next morning; wool after three fed nights." % [data.animals.size(),capacity(farm),data.feed]
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(0,150)
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	column.add_child(scroll)
-	var list := VBoxContainer.new()
+	var list := GridContainer.new()
+	list.columns=maxi(2,int((farm.get_viewport_rect().size.x-100)/155))
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(list)
 	for species in SPECIES: list.add_child(farm.make_button("Buy %s · ¥%d" % [species,SPECIES[species].price],purchase.bind(farm,species)))
 	list.add_child(farm.make_button("Buy 10 feed · ¥30",buy_feed.bind(farm)))
-	column.add_child(farm.make_button("Close",farm.close_dialogue))
+	for button in list.get_children(): preload("res://MenuTiles.gd").tile(button)
+	column.add_child(farm.make_button("Back",farm.close_dialogue))
 static func purchase(farm, species: String) -> void:
-	if farm.location != "shop" or farm.shop_name != "Barn" or not SPECIES.has(species): return
+	if farm.location != "shop" or farm.shop_name != "Ranch" or not SPECIES.has(species): return
 	var data := state(farm)
 	if data.animals.size() >= capacity(farm): farm.dialogue_text.text = "The barn is full. Visit Kenta for more stalls."; return
 	if farm.coins < SPECIES[species].price: farm.dialogue_text.text = "Not enough money for this animal."; return
@@ -55,6 +60,7 @@ static func purchase(farm, species: String) -> void:
 	farm.save_game(false)
 	open_manager(farm)
 static func buy_feed(farm) -> void:
+	if farm.location!="shop" or farm.shop_name!="Ranch": return
 	if farm.coins < 30: farm.dialogue_text.text = "Feed costs ¥30."; return
 	if state(farm).feed > 989: return
 	farm.coins -= 30
@@ -81,7 +87,7 @@ static func care(farm,index: int,kind: String) -> void:
 	var animal: Dictionary = data.animals[index]
 	if kind == "feed":
 		if animal.fed == farm.day: farm.dialogue_text.text = "Already fed today."; return
-		if data.feed <= 0: farm.dialogue_text.text = "Buy more feed at the barn supplies desk."; return
+		if data.feed <= 0: farm.dialogue_text.text = "Buy more feed at the town ranch."; return
 		data.feed -= 1
 		animal.fed = farm.day
 	elif kind == "pet":

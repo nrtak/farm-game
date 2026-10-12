@@ -28,11 +28,12 @@ func setup(service: String) -> void:
 	else:
 		solids.append_array([Rect2(170, 440, 150, 100), Rect2(780, 440, 150, 100), Rect2(170, 650, 150, 100), Rect2(780, 650, 150, 100)])
 	apply_expanded_layout()
+	if kind in ["Ranch","Veterinarian"]: solids=[Rect2(125,205,150,480),Rect2(820,205,150,480),Rect2(370,230,370,90)]
 	if preload("res://InteriorArtwork.gd").ROOMS.has(kind): solids=preload("res://InteriorArtwork.gd").furnishings(kind)
 	if kind in preload("res://InteriorPlan.gd").ROOMS and not preload("res://InteriorArtwork.gd").ROOMS.has(kind): solids=preload("res://InteriorPlan.gd").furnishings(kind)
 	for rect in [Rect2(90, 150, 920, 20), Rect2(90, 790, 920, 20), Rect2(90, 170, 20, 620), Rect2(990, 170, 20, 620)]: obstacle(rect)
 	for rect in solids: obstacle(rect)
-	var people: Array = {"General Store": ["Keiko", "Seira"], "Blacksmith": ["Gen", "Shohei"], "Café": ["Naomi", "Keiko", "Akira"], "Inn": ["Yumi", "Hana"], "Clinic": ["Kenji", "Aya"], "Town Hall": ["Akira"], "Police Box": ["Taro"], "Fire Station": ["Jiro", "Yuta"], "Archive": ["Haruka"], "Shrine Residence": ["Rei"], "Mountain Lodge": ["Emi", "Hiro"], "Tea Farmhouse": ["Sachiko", "Mika"], "Tea Processing Shed": ["Sachiko"], "Harbor Homes": ["Ken", "Masao"], "Fishing Shop": ["Masao"], "Hiro Cabin": ["Hiro"], "Mine": [], "Carpentry":["Kenta"], "Mountain Carpentry":["Kenta"], "Onsen Resort":[],"Barn":[],"Greenhouse":[],"Upper Floor":[]}[kind]
+	var people: Array = {"General Store": ["Keiko", "Seira"], "Blacksmith": ["Gen", "Shohei"], "Café": ["Naomi", "Keiko", "Akira"], "Inn": ["Yumi", "Hana"], "Clinic": ["Kenji", "Aya"], "Town Hall": ["Akira"], "Police Box": ["Taro"], "Fire Station": ["Jiro", "Yuta"], "Archive": ["Haruka"], "Shrine Residence": ["Rei"], "Mountain Lodge": ["Emi", "Hiro"], "Tea Farmhouse": ["Sachiko", "Mika"], "Tea Processing Shed": ["Sachiko"], "Harbor Homes": ["Ken", "Masao"], "Fishing Shop": ["Masao"], "Hiro Cabin": ["Hiro"], "Mine": [], "Carpentry":["Kenta"], "Mountain Carpentry":["Kenta"], "Onsen Resort":[],"Barn":[],"Greenhouse":[],"Upper Floor":[],"Ranch":[],"Veterinarian":[]}[kind]
 	for i in range(people.size()):
 		var person: String = people[i]
 		var keeper = preload("res://Npc.gd").new()
@@ -68,6 +69,8 @@ func is_walkable(point: Vector2) -> bool:
 	return true
 
 func _draw() -> void:
+	if kind in ["Ranch","Veterinarian"]:
+		preload("res://RanchServices.gd").draw_room(self);return
 	if kind in ["Greenhouse","Upper Floor"]:
 		preload("res://FarmBuildings.gd").draw_room(self)
 		return

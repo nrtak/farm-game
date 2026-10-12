@@ -7,6 +7,8 @@ const NpcScript = preload("res://Npc.gd")
 const Cast = preload("res://Cast.gd")
 const SpriteLibrary = preload("res://SpriteLibrary.gd")
 const BUILDINGS := [
+	{"name":"Ranch","rect":Rect2(360,1040,270,190),"door":Vector2(495,1260)},
+	{"name":"Veterinarian","rect":Rect2(1990,340,230,190),"door":Vector2(2105,560)},
 	{"name":"Town Hall","rect":Rect2(1055, 187.407, 344, 265.926),"door":Vector2(1225, 481.481)},
 	{"name":"Clinic","rect":Rect2(609, 257.778, 297, 190.555),"door":Vector2(762, 473.333)},
 	{"name":"General Store","rect":Rect2(481, 553.333, 286, 203.148),"door":Vector2(620, 781.481)},
@@ -27,8 +29,8 @@ const EXTRA_DIALOGUE := {
 	"Ren": ["I'm Ren. I prepare the mountain onsen baths and keep the resort running.", "The water is warmest when the morning air is cool. Come by for a soak."],
 	"Chanel": ["I am Chanel. I welcome guests at the mountain onsen.", "Stop by for a quiet soak after working on the farm."],
 	"David": ["David here. I carry deliveries between the general store and harbor.", "If you see a sleepy dog on the road, give it a little room."],
-	"Renji": ["I'm Renji. I help Kenta prepare timber and build at the workshops.", "We work near the mountains in the morning and in town after lunch."],
-	"Midori": ["I'm Midori. I tend the tea fields and the onsen gardens.", "I like giving each season a little corner of the garden."]
+	"Renji": ["I'm Renji. I run the town ranch and help farmers choose their livestock.", "Visit the ranch for animals and feed. Your new animals settle straight into your barn."],
+	"Midori": ["I'm Midori, the town veterinarian. I help keep your farm animals comfortable.", "Bring your questions to the veterinary clinic. I can arrange a wellness visit for your barn."]
 }
 const REST_BENCHES := [Rect2(1540, 562.963, 105, 23.7037), Rect2(1400, 590, 105, 23.7037)]
 var solids: Array[Rect2] = []
@@ -93,6 +95,7 @@ func _ready() -> void:
 		npc.setup(names[i], preload("res://CharacterArt.gd").walk(names[i]))
 		npc.z_index = 4
 		npcs.append(npc)
+	var ranch_art=preload("res://RanchServices.gd").new();add_child(ranch_art)
 	update_schedules(360.0)
 	add_ambient_life()
 
@@ -312,11 +315,11 @@ func tick_ambient(delta: float, minute: float, rainy: bool, rooms: Dictionary = 
 					"Ren":
 						destination = rooms["Onsen Resort"] if minute >= 720 or rainy else regions.mountain
 						point = Vector2(690, 377.778) if destination == rooms["Onsen Resort"] else Vector2(530, 432.593)
-					"Renji": destination = rooms["Mountain Carpentry" if minute < 720 else "Carpentry"]; point = Vector2(730, 385.185)
+					"Renji": destination = rooms["Ranch"]; point = Vector2(690,370)
 					"David":
 						destination = regions.harbor if minute < 720 and not rainy else rooms["General Store"]
 						point = Vector2(1020, 444.444) if destination == regions.harbor else Vector2(730, 444.444)
-					"Midori": destination = rooms["Tea Farmhouse"] if rainy else regions.tea; point = Vector2(730, 422.222) if rainy else Vector2(1060, 518.519)
+					"Midori": destination = rooms["Veterinarian"]; point = Vector2(690,370)
 				if minute >= 1260: destination = rooms["Inn"]; point = Vector2(450+(i%3)*110,510+(i/3)*90)
 			else: point = Vector2(1200,520+i*260)
 			if npc.get_parent() != destination: npc.reparent(destination,false)

@@ -39,6 +39,10 @@ SCORES={
  'rain':(96,'piano',[[72,76,74,67],[69,72,74,77],[76,72,69,64],[67,71,74,72]]),
  'falls':(84,'bell',[[84,79,76,79],[81,77,72,77],[81,76,72,76],[79,74,71,72]])}
 ROOT.mkdir(exist_ok=True,parents=True);records=[]
+def music_tone(midi,duration,voice='pluck'):
+ # A lower register and gentle low-pass keep the upbeat score comfortable.
+ sound=tone(midi-3,duration,voice)
+ return np.convolve(sound,np.ones(7)/7,mode='same')
 for track_index,(name,(bpm,voice,phrase)) in enumerate(SCORES.items()):
  beat=60/bpm;out=np.zeros(round(64*beat*SR))
  percussion_rng=np.random.default_rng(10411+track_index)
@@ -48,21 +52,21 @@ for track_index,(name,(bpm,voice,phrase)) in enumerate(SCORES.items()):
   chord=[root,root+third,root+7,root+12]
   # Alternating bass and short offbeat chords give the daytime themes a bounce.
   for offset,note in [(0,root-12),(2,root-5)]:
-   add(out,tone(note,beat*.85,'pluck'),(bar*4+offset)*beat,.20)
+   add(out,music_tone(note,beat*.85,'pluck'),(bar*4+offset)*beat,.20)
   for i,note in enumerate(chord):
-   add(out,tone(note,beat*.65,'pluck'),(bar*4+i+.5)*beat,.14)
+   add(out,music_tone(note,beat*.65,'pluck'),(bar*4+i+.5)*beat,.14)
   if not gentle:
    for offset in [1.5,3.5]:
     for note in chord[1:3]:
-     add(out,tone(note+12,beat*.35,'pluck'),(bar*4+offset)*beat,.065)
+     add(out,music_tone(note+12,beat*.35,'pluck'),(bar*4+offset)*beat,.065)
   for i,note in enumerate(phrase[bar%4]):
    if bar%4==3 and i==3: continue
    if gentle and i%2==1: continue
    if bar>=8 and i==2: note+=12 if name=='town' else -12
-   add(out,tone(note,beat*.68,voice),(bar*4+i+.08)*beat,.27)
+   add(out,music_tone(note,beat*.68,voice),(bar*4+i+.08)*beat,.27)
    # A light eighth-note answer adds movement without crowding the melody.
    if not gentle and bar%2==0 and i==2:
-    add(out,tone(phrase[bar%4][3],beat*.34,'pluck'),(bar*4+i+.65)*beat,.13)
+    add(out,music_tone(phrase[bar%4][3],beat*.34,'pluck'),(bar*4+i+.65)*beat,.13)
   for offset in ([1,3] if gentle else [0,.5,1,1.5,2,2.5,3,3.5]):
    t=np.arange(int(.055*SR))/SR
    noise=percussion_rng.normal(0,.10,len(t))

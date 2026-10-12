@@ -29,7 +29,7 @@ func setup(f) -> void:
 	for i in range(2):
 		var player:=AudioStreamPlayer.new();player.bus=MUSIC_BUS;add_child(player);players.append(player)
 	effects=AudioStreamPlayer.new();effects.bus=EFFECTS_BUS;effects.volume_db=-12;add_child(effects)
-	steps=AudioStreamPlayer.new();steps.bus=EFFECTS_BUS;steps.volume_db=-15;add_child(steps)
+	steps=AudioStreamPlayer.new();steps.bus=EFFECTS_BUS;steps.volume_db=-28;add_child(steps)
 	ambience=AudioStreamPlayer.new();ambience.bus=EFFECTS_BUS;ambience.volume_db=-18;add_child(ambience)
 	farm.resources.action_audio.bus=EFFECTS_BUS
 	farm.regions.waterfall.ambience.bus=EFFECTS_BUS
@@ -95,12 +95,15 @@ func walked(amount:float) -> void:
 	if distance<58: return
 	distance=fmod(distance,58)
 	if not sound_cache.has("step"): sound_cache.step=load("res://assets/audio/sfx-step.wav")
-	steps.stream=sound_cache.step;steps.pitch_scale=1.15 if farm.inside_house or farm.location=="shop" else .9;start_player(steps)
+	steps.stream=sound_cache.step;steps.pitch_scale=.72 if farm.inside_house or farm.location=="shop" else .68;start_player(steps)
 static func menu(f) -> void:
-	f.close_dialogue();var c=f.make_modal("Music & sound")
-	f.dialogue_text.text="Original gentle melodies and everyday sounds. Set either slider to zero to mute it."
+	f.close_dialogue();var c=f.make_modal("Music & sound");f.dialogue_panel.get_child(0).offset_top=-minf(460,f.get_viewport_rect().size.y-28)
+	f.dialogue_text.text="Turn music and sound effects on or off, or adjust their volume."
 	f.dialogue_text.size_flags_vertical=Control.SIZE_SHRINK_BEGIN
 	for entry in [["music_volume","Music",.45],["effects_volume","Sound effects",.65]]:
+		var switch:=CheckButton.new();switch.text=entry[1]+" on";switch.add_theme_color_override("font_color",Color("493b2d"));switch.button_pressed=volume(f,entry[0],entry[2])>0;c.add_child(switch)
+		var switch_key:String=entry[0];var default_volume:float=entry[2]
+		switch.toggled.connect(func(on): preferences(f)[switch_key]=default_volume if on else 0.0;f.sound.apply_volumes();f.save_game(false);menu(f))
 		var key:String=entry[0];var label:=Label.new();label.add_theme_color_override("font_color",Color("493b2d"));c.add_child(label)
 		var slider:=HSlider.new();slider.name=key;slider.min_value=0;slider.max_value=100;slider.step=5;slider.value=volume(f,key,entry[2])*100;slider.custom_minimum_size=Vector2(250,44);c.add_child(slider)
 		label.text="%s · %d%%" % [entry[1],slider.value]
@@ -108,7 +111,7 @@ static func menu(f) -> void:
 		slider.value_changed.connect(func(value):
 			preferences(f)[key]=value/100.0;label.text="%s · %d%%" % [title,value];f.sound.apply_volumes())
 		slider.drag_ended.connect(func(_changed): f.save_game(false))
-	c.add_child(f.make_button("Done",func(): f.save_game(false);f.close_dialogue()))
+	c.add_child(f.make_button("Back to Settings",func(): f.save_game(false);preload("res://PlayerComfort.gd").open_settings(f)))
 func _exit_tree() -> void:
 	for player in players+[effects,steps,ambience]:
 		if is_instance_valid(player): player.stop();player.stream=null

@@ -20,7 +20,7 @@ func run():
 	assert(f.location == "town","Town entrance changes screen automatically")
 	f.town.tick_ambient(0.1,600,false,f.shops,f.regions)
 	assert(f.town.visitors[1].get_parent() == f.shops["Onsen Resort"])
-	assert(f.town.visitors[3].get_parent() == f.shops["Mountain Carpentry"])
+	assert(f.town.visitors[3].get_parent() == f.shops["Ranch"])
 	f.clock_minutes = 600
 	f.refresh_hud()
 	assert(f.shops["Mountain Carpentry"].residents[0].visible)

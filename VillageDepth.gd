@@ -27,11 +27,22 @@ static func gifts(f,person:String) -> void:
 	var c=f.make_modal("A gift for "+person)
 	f.dialogue_text.text="Choose one item from your bag. One gift per person each day."
 	var scroll:=ScrollContainer.new();scroll.custom_minimum_size.y=100;scroll.size_flags_vertical=Control.SIZE_EXPAND_FILL;c.add_child(scroll)
-	var list:=VBoxContainer.new();list.size_flags_horizontal=Control.SIZE_EXPAND_FILL;scroll.add_child(list)
-	for item in LIKES.values():
+	var list:=GridContainer.new();list.columns=maxi(2,int((f.get_viewport_rect().size.x-100)/155));list.size_flags_horizontal=Control.SIZE_EXPAND_FILL;scroll.add_child(list)
+	var items:Array=[]
+	for inventory in [f.produce,f.fish_basket,f.ore_basket,f.BarnLife.state(f).products]:
+		items.append_array(inventory.keys())
+	items.append_array(["Tea leaves","Tea packets"])
+	for item in items:
 		if list.has_node(item.replace(" ","_")) or f.carried_count(item)<=0: continue
-		var b=f.make_button("Give "+item,give.bind(f,person,item));b.name=item.replace(" ","_");list.add_child(b)
-	c.add_child(f.make_button("Keep my items",f.close_dialogue))
+		var b=f.make_button("Give "+item,confirm_gift.bind(f,person,item));b.name=item.replace(" ","_");list.add_child(b);preload("res://MenuTiles.gd").tile(b)
+	if list.get_child_count()==0: f.dialogue_text.text="Your bag has no gifts yet. Bring produce, fish, tea or animal products."
+	c.add_child(f.make_button("Back",f.close_dialogue))
+static func confirm_gift(f,person:String,item:String) -> void:
+	var c=f.make_modal("Give to "+person+"?")
+	f.dialogue_text.text="Give one %s from your bag? You have %d. You can give one gift per person each day." % [item,f.carried_count(item)]
+	c.add_child(f.make_button("Give "+item,give.bind(f,person,item)))
+	c.add_child(f.make_button("Back to gifts",gifts.bind(f,person)))
+	c.add_child(f.make_button("Cancel",f.close_dialogue))
 static func give(f,person:String,item:String) -> void:
 	var s:=state(f)
 	if int(s.gifts.get(person,-1))==f.day: f.dialogue_text.text="Thank you! One gift is plenty for today.";return

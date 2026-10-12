@@ -211,7 +211,7 @@ func _ready() -> void:
 	road.visible = false
 	add_child(road)
 	town.add_supporting_cast()
-	for service in ["General Store", "Blacksmith", "Café", "Inn", "Clinic", "Town Hall", "Police Box", "Fire Station", "Archive", "Shrine Residence", "Mountain Lodge", "Tea Farmhouse", "Tea Processing Shed", "Harbor Homes", "Fishing Shop", "Hiro Cabin", "Mine", "Carpentry", "Mountain Carpentry", "Onsen Resort", "Barn", "Greenhouse", "Upper Floor"]:
+	for service in ["General Store", "Blacksmith", "Café", "Inn", "Clinic", "Town Hall", "Police Box", "Fire Station", "Archive", "Shrine Residence", "Mountain Lodge", "Tea Farmhouse", "Tea Processing Shed", "Harbor Homes", "Fishing Shop", "Hiro Cabin", "Mine", "Carpentry", "Mountain Carpentry", "Onsen Resort", "Barn", "Greenhouse", "Upper Floor", "Ranch", "Veterinarian"]:
 		var room := ShopScript.new()
 		room.position = Vector2(24000 + shops.size() * 2000, 0)
 		room.visible = false
@@ -436,7 +436,7 @@ func make_ui() -> void:
 	var character_button := make_button("Bag", open_backpack)
 	character_button.name = "CharacterButton"
 	hud.add_child(character_button)
-	var guide_button := make_button("Guide", open_guide)
+	var guide_button := make_button("Settings", preload("res://PlayerComfort.gd").open_settings.bind(self))
 	guide_button.name = "GuideButton"
 	hud.add_child(guide_button)
 	quest_label = Label.new()
@@ -1591,6 +1591,7 @@ func start_conversation(npc: Node2D) -> void:
 		dialogue_text.get_parent().add_child(make_button("Not now", close_dialogue))
 	else:
 		dialogue_text.get_parent().add_child(make_button("Continue", advance_dialogue))
+		dialogue_text.get_parent().add_child(make_button("Goodbye",close_dialogue))
 		dialogue_text.get_parent().add_child(make_button("Give gift",preload("res://VillageDepth.gd").gifts.bind(self,person)))
 	save_game(false)
 
@@ -1638,6 +1639,11 @@ func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 	name_label.add_theme_font_size_override("font_size", 27)
 	name_label.add_theme_color_override("font_color", Color("493b2d"))
 	column.add_child(name_label)
+	if portrait and Cast.is_love_interest(title,character_choice):
+		name_label.text=title+"       Love interest"
+		name_label.add_theme_color_override("font_color",Color("a34261"))
+		var heart=preload("res://RomanceHeart.gd").new();name_label.add_child(heart)
+		name_label.resized.connect(func(): heart.position=Vector2(name_label.get_theme_font("font").get_string_size(title,HORIZONTAL_ALIGNMENT_LEFT,-1,23).x+22,16))
 	dialogue_text = Label.new()
 	dialogue_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	dialogue_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -1649,6 +1655,7 @@ func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 		var compact=preload("res://CompactConversation.gd").new()
 		panel.add_child(compact)
 		compact.setup(panel,column,preload("res://CharacterArt.gd").portrait(title))
+	if not portrait: preload("res://MenuTiles.gd").arrange.call_deferred(self,column)
 	refresh_hud()
 	return column
 
@@ -1685,6 +1692,10 @@ func close_dialogue() -> void:
 	refresh_hud()
 
 func open_service(service: String) -> void:
+	if service=="Ranch":
+		BarnLife.open_manager(self);return
+	if service=="Veterinarian":
+		preload("res://RanchServices.gd").vet_menu(self);return
 	if service in ["Carpentry", "Mountain Carpentry"]:
 		InteriorLife.open_carpentry(self)
 		return
@@ -1826,7 +1837,7 @@ func service_door(service: String) -> Vector2:
 	return Vector2(-1000, -1000)
 
 func shop_opening_hours() -> Dictionary:
-	return {"General Store": Vector2(480, 1080), "Blacksmith": Vector2(420, 1020), "Café": Vector2(720, 1140), "Inn": Vector2(360, 1320), "Clinic": Vector2(540, 1020), "Town Hall": Vector2(540, 1020), "Police Box": Vector2(360, 1320), "Fire Station": Vector2(360, 1320), "Archive": Vector2(540, 1080), "Shrine Residence": Vector2(360, 1200), "Mountain Lodge": Vector2(360, 1200), "Tea Farmhouse": Vector2(360, 1200), "Tea Processing Shed": Vector2(360, 1080), "Harbor Homes": Vector2(360, 1200), "Fishing Shop": Vector2(360, 1080), "Hiro Cabin": Vector2(360, 1200), "Mine": Vector2(0, 1440), "Carpentry":Vector2(720,1080), "Mountain Carpentry":Vector2(480,720), "Onsen Resort":Vector2(480,1260), "Barn":Vector2(0,1440),"Greenhouse":Vector2(0,1440),"Upper Floor":Vector2(0,1440)}
+	return {"Ranch":Vector2(480,1080),"Veterinarian":Vector2(480,1080),"General Store": Vector2(480, 1080), "Blacksmith": Vector2(420, 1020), "Café": Vector2(720, 1140), "Inn": Vector2(360, 1320), "Clinic": Vector2(540, 1020), "Town Hall": Vector2(540, 1020), "Police Box": Vector2(360, 1320), "Fire Station": Vector2(360, 1320), "Archive": Vector2(540, 1080), "Shrine Residence": Vector2(360, 1200), "Mountain Lodge": Vector2(360, 1200), "Tea Farmhouse": Vector2(360, 1200), "Tea Processing Shed": Vector2(360, 1080), "Harbor Homes": Vector2(360, 1200), "Fishing Shop": Vector2(360, 1080), "Hiro Cabin": Vector2(360, 1200), "Mine": Vector2(0, 1440), "Carpentry":Vector2(720,1080), "Mountain Carpentry":Vector2(480,720), "Onsen Resort":Vector2(480,1260), "Barn":Vector2(0,1440),"Greenhouse":Vector2(0,1440),"Upper Floor":Vector2(0,1440)}
 
 func open_shop_hours() -> void:
 	var column := make_modal("Shop opening hours")
@@ -2415,7 +2426,7 @@ func open_backpack() -> void:
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	column.add_child(scroll)
 	var list := GridContainer.new()
-	list.columns=3 if get_viewport_rect().size.x>=960 else 2
+	list.columns=maxi(2,int((get_viewport_rect().size.x-100)/155))
 	list.add_theme_constant_override("h_separation",24)
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(list)
@@ -2426,21 +2437,9 @@ func open_backpack() -> void:
 	if tea_leaves > 0: contents["Tea leaves"] = tea_leaves
 	if packed_tea > 0: contents["Tea packets"] = packed_tea
 	for item in contents:
-		var row := HBoxContainer.new()
-		list.add_child(row)
-		var slot := Control.new()
-		slot.custom_minimum_size = Vector2(64, 64)
-		row.add_child(slot)
-		var icon := preload("res://ItemMoment.gd").new()
-		icon.show_caption = false
-		icon.position = Vector2(32, 32)
-		icon.scale = Vector2.ONE * 0.8
-		slot.add_child(icon)
-		icon.show_item(item)
-		var label := Label.new()
-		label.text = "%s ×%d" % [item, contents[item]]
-		label.add_theme_color_override("font_color", Color("493b2d"))
-		row.add_child(label)
+		var button=make_button("%s ×%d" % [item,contents[item]],func(): pass)
+		list.add_child(button)
+		preload("res://MenuTiles.gd").tile(button)
 	if contents.is_empty(): dialogue_text.text = "Your backpack is empty. Collect crops, fish, tea or ore."
 	dialogue_panel.get_child(0).offset_top = -380
 	column.add_child(make_button("Requests & volunteering",VolunteerRequests.journal.bind(self)))
@@ -2639,7 +2638,7 @@ func take_onsen() -> void:
 	coins -= 40
 	if is_instance_valid(sound): sound.play_effect("purchase")
 	health = minf(100,health+35)
-	clock_minutes = minf(LATE_MINUTE,clock_minutes+30)
-	dialogue_text.text = "Warm water, mountain air, and a quiet moment. You feel refreshed."
+	if not inside_house and location!="shop": clock_minutes = minf(LATE_MINUTE,clock_minutes+30)
 	save_game(false)
-	refresh_hud()
+	var sequence=preload("res://OnsenSequence.gd").new()
+	sequence.begin(self)

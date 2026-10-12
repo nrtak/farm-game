@@ -17,12 +17,14 @@ func run() -> void:
 	f.player.position=f.BARN_DOOR
 	f.check_walk_exits()
 	assert(f.shop_name=="Barn" and f.location=="shop","Walking into barn needs no button")
+	f.enter_shop("Ranch",true)
 	f.BarnLife.open_manager(f)
 	for species in ["Cow","Sheep","Goat","Chicken"]: f.BarnLife.purchase(f,species)
 	assert(f.BarnLife.state(f).animals.size()==4)
 	var money: int=f.coins
 	f.BarnLife.purchase(f,"Cow")
 	assert(f.coins==money,"Full barn cannot charge for another animal")
+	f.enter_shop("Barn",true)
 	for i in range(4):
 		f.BarnLife.care(f,i,"feed")
 		f.BarnLife.care(f,i,"pet")

@@ -51,6 +51,11 @@ func _draw() -> void:
 			var p:Vector2=origin+SeasonalFestivals.center(farm.location)+Vector2(0,-135)
 			draw_line(p-Vector2(90,0),p+Vector2(90,0),Color("765b3b"),3)
 			for i in range(7): draw_circle(p+Vector2(-75+i*25,10),8,Color("e6c374"))
+	if farm.location=="mountain":
+		var trail:Vector2=farm.REGION_ORIGINS.mountain+Vector2(1320,760)
+		draw_line(trail+Vector2(-10,-55),trail+Vector2(-10,-105),Color("775333"),9)
+		draw_style_box(farm.parchment(),Rect2(trail+Vector2(-145,-160),Vector2(285,55)))
+		draw_string(ThemeDB.fallback_font,trail+Vector2(-130,-125),"Moonveil Falls →",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("493b2d"))
 	if cue!="":
 		draw_circle(cue_point,22,Color("f4e3bb"));draw_arc(cue_point,22,0,TAU,24,Color("735536"),2)
 		draw_string(ThemeDB.fallback_font,cue_point+Vector2(-9,8),cue,HORIZONTAL_ALIGNMENT_LEFT,-1,27,Color("493b2d"))
@@ -71,7 +76,7 @@ static func scroll_text(f,c) -> void:
 	var scroll:=ScrollContainer.new();scroll.custom_minimum_size.y=90;scroll.size_flags_vertical=Control.SIZE_EXPAND_FILL;scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED
 	c.add_child(scroll);c.move_child(scroll,1);scroll.add_child(label);label.size_flags_horizontal=Control.SIZE_EXPAND_FILL;label.size_flags_vertical=Control.SIZE_SHRINK_BEGIN
 static func open_settings(f) -> void:
-	f.close_dialogue();var c=f.make_modal("Controls & readability")
+	f.close_dialogue();var c=f.make_modal("Settings")
 	f.dialogue_panel.get_child(0).offset_top=-minf(445,f.get_viewport_rect().size.y-32)
 	f.dialogue_text.size_flags_vertical=Control.SIZE_SHRINK_BEGIN
 	f.dialogue_text.text="These preferences are saved with your farm. Tap the ground or use the joystick to move."
@@ -82,7 +87,8 @@ static func open_settings(f) -> void:
 		var names={"large_stick":"Larger joystick","right_stick":"Joystick on right","gentle_stick":"Gentler joystick sensitivity","large_text":"Larger dialogue text"}
 		list.add_child(f.make_button(names[option]+(" · On" if s.get(option,false) else " · Off"),toggle.bind(f,option)))
 	list.add_child(f.make_button("Music & sound",preload("res://GameAudio.gd").menu.bind(f)))
-	c.add_child(f.make_button("Close",f.close_dialogue))
+	c.add_child(f.make_button("Guide",func(): f.close_dialogue();f.open_guide()))
+	c.add_child(f.make_button("Back",f.close_dialogue))
 static func toggle(f,key:String) -> void:
 	var s:=settings(f);s[key]=not s.get(key,false);f.layout_ui();f.save_game(false);open_settings(f)
 static func layout(f,margin:Vector2,right:float,bottom:float) -> void:

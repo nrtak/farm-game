@@ -19,7 +19,7 @@ func run():
 	f.packed_tea=2;Depth.finish_falls(f);Depth.finish_falls(f)
 	assert(f.packed_tea==1 and Depth.state(f).keepsakes.has("Spring keeper's charm"))
 	Comfort.set_pin(f,"Tea parcel → Naomi");assert(f.quest_label.visible)
-	f.enter_shop("Barn",true);f.BarnLife.purchase(f,"Cow")
+	f.enter_shop("Ranch",true);f.BarnLife.purchase(f,"Cow");f.enter_shop("Barn",true)
 	Comfort.rename_animal(f,0)
 	var field=find_type(f.dialogue_panel,"LineEdit");field.text="Mochi"
 	var buttons:Array=[];find_buttons(f.dialogue_panel,buttons)
