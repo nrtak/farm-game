@@ -5,38 +5,45 @@
   "tracks": [
     {
       "file": "music-farm.wav",
-      "seconds": 45.71,
-      "peak": 0.2277
+      "seconds": 34.29,
+      "peak": 0.2303,
+      "bpm": 112
     },
     {
       "file": "music-town.wav",
-      "seconds": 38.4,
-      "peak": 0.252
+      "seconds": 32.0,
+      "peak": 0.2253,
+      "bpm": 120
     },
     {
       "file": "music-nature.wav",
-      "seconds": 50.53,
-      "peak": 0.2255
+      "seconds": 36.92,
+      "peak": 0.2275,
+      "bpm": 104
     },
     {
       "file": "music-interior.wav",
-      "seconds": 53.33,
-      "peak": 0.2441
+      "seconds": 38.4,
+      "peak": 0.2243,
+      "bpm": 100
     },
     {
       "file": "music-night.wav",
-      "seconds": 60.0,
-      "peak": 0.2226
+      "seconds": 45.71,
+      "peak": 0.1995,
+      "bpm": 84
     },
     {
       "file": "music-rain.wav",
-      "seconds": 56.47,
-      "peak": 0.2362
+      "seconds": 40.0,
+      "peak": 0.219,
+      "bpm": 96
     },
     {
       "file": "music-falls.wav",
-      "seconds": 64.0,
-      "peak": 0.2217
+      "seconds": 45.71,
+      "peak": 0.2016,
+      "bpm": 84
     },
     {
       "file": "sfx-wake.wav",

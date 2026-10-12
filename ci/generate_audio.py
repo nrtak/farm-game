@@ -31,31 +31,46 @@ def write(name,out):
  return {'file':path.name,'seconds':round(len(out)/SR,2),'peak':round(float(np.max(np.abs(out))),4)}
 # Each four-bar original phrase is answered by a second phrase, then varied once.
 SCORES={
- 'farm':(84,'flute',[[72,76,79,76],[74,77,81,79],[76,79,81,76],[74,71,67,72]]),
- 'town':(100,'pluck',[[76,79,72,74],[77,81,79,77],[81,79,76,72],[74,79,71,72]]),
- 'nature':(76,'flute',[[79,76,74,72],[77,74,72,69],[76,72,69,72],[74,71,67,71]]),
- 'interior':(72,'piano',[[72,67,76,72],[69,72,77,74],[69,76,72,69],[71,74,67,72]]),
- 'night':(64,'bell',[[76,72,67,72],[77,72,69,72],[76,72,69,64],[74,71,67,72]]),
- 'rain':(68,'piano',[[72,76,74,67],[69,72,74,77],[76,72,69,64],[67,71,74,72]]),
- 'falls':(60,'bell',[[84,79,76,79],[81,77,72,77],[81,76,72,76],[79,74,71,72]])}
+ 'farm':(112,'flute',[[72,76,79,76],[74,77,81,79],[76,79,81,76],[74,71,67,72]]),
+ 'town':(120,'pluck',[[76,79,72,74],[77,81,79,77],[81,79,76,72],[74,79,71,72]]),
+ 'nature':(104,'flute',[[79,76,74,72],[77,74,72,69],[76,72,69,72],[74,71,67,71]]),
+ 'interior':(100,'piano',[[72,67,76,72],[69,72,77,74],[69,76,72,69],[71,74,67,72]]),
+ 'night':(84,'bell',[[76,72,67,72],[77,72,69,72],[76,72,69,64],[74,71,67,72]]),
+ 'rain':(96,'piano',[[72,76,74,67],[69,72,74,77],[76,72,69,64],[67,71,74,72]]),
+ 'falls':(84,'bell',[[84,79,76,79],[81,77,72,77],[81,76,72,76],[79,74,71,72]])}
 ROOT.mkdir(exist_ok=True,parents=True);records=[]
-for name,(bpm,voice,phrase) in SCORES.items():
+for track_index,(name,(bpm,voice,phrase)) in enumerate(SCORES.items()):
  beat=60/bpm;out=np.zeros(round(64*beat*SR))
+ percussion_rng=np.random.default_rng(10411+track_index)
+ gentle=name in ['night','falls']
  for bar in range(16):
   root=[48,53,57,55][bar%4];third=3 if bar%4==2 else 4
   chord=[root,root+third,root+7,root+12]
-  for i,note in enumerate(chord): add(out,tone(note,beat*1.6,'pluck'),(bar*4+i)*beat,.15)
-  add(out,tone(root-12,beat*2.8,'piano'),bar*4*beat,.20)
-  # Leave breathing room every fourth bar and in the waterfall/night themes.
+  # Alternating bass and short offbeat chords give the daytime themes a bounce.
+  for offset,note in [(0,root-12),(2,root-5)]:
+   add(out,tone(note,beat*.85,'pluck'),(bar*4+offset)*beat,.20)
+  for i,note in enumerate(chord):
+   add(out,tone(note,beat*.65,'pluck'),(bar*4+i+.5)*beat,.14)
+  if not gentle:
+   for offset in [1.5,3.5]:
+    for note in chord[1:3]:
+     add(out,tone(note+12,beat*.35,'pluck'),(bar*4+offset)*beat,.065)
   for i,note in enumerate(phrase[bar%4]):
-   if (bar%4==3 and i==3) or (name in ['night','falls'] and i%2==1): continue
+   if bar%4==3 and i==3: continue
+   if gentle and i%2==1: continue
    if bar>=8 and i==2: note+=12 if name=='town' else -12
-   add(out,tone(note,beat*.78,voice),(bar*4+i+.12)*beat,.27)
-  if name=='town':
-   for offset in [1,3]:
-    t=np.arange(int(.075*SR))/SR;brush=rng.normal(0,.10,len(t))*np.exp(-t*60)
-    add(out,brush,(bar*4+offset)*beat,.16)
- records.append(write('music-'+name,out))
+   add(out,tone(note,beat*.68,voice),(bar*4+i+.08)*beat,.27)
+   # A light eighth-note answer adds movement without crowding the melody.
+   if not gentle and bar%2==0 and i==2:
+    add(out,tone(phrase[bar%4][3],beat*.34,'pluck'),(bar*4+i+.65)*beat,.13)
+  for offset in ([1,3] if gentle else [0,.5,1,1.5,2,2.5,3,3.5]):
+   t=np.arange(int(.055*SR))/SR
+   noise=percussion_rng.normal(0,.10,len(t))
+   brush=(noise-np.roll(noise,1))*np.exp(-t*75)*(1-np.exp(-t*1200))
+   add(out,brush,(bar*4+offset)*beat,.035 if gentle else .075)
+ record=write('music-'+name,out);record['bpm']=bpm;records.append(record)
+# Preserve the original effects/ambience noise sequence independently of the score.
+rng.normal(0,.10,32*int(.075*SR))
 for name,notes in {'wake':[72,76,79,84],'sleep':[79,76,72],'purchase':[76,79],'save':[72,79],'door':[55,62]}.items():
  out=np.zeros(int(SR*(len(notes)*.17+.7)))
  for i,note in enumerate(notes): add(out,tone(note,.55,'bell' if name!='door' else 'pluck'),i*.17,.45)
