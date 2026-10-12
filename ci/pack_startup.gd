@@ -16,6 +16,8 @@ func run() -> void:
 		assert(preload("res://InteriorArtwork.gd").texture(room)!=null,"Interior exported: "+room)
 	for room in preload("res://TownInteriorLayout.gd").FURNITURE:
 		assert(preload("res://InteriorArtwork.gd").texture(room).resource_path.ends_with("-v3.png"),"Latest town interior exported: "+room)
+	assert(game.regions.waterfall.background!=null,"Waterfall art exported")
+	assert(game.regions.waterfall.is_walkable(Vector2(800,700)))
 	game.interior_progress.story={"intro":true}
 	game.enter_shop("Tea Processing Shed",true)
 	game.tea_leaves=1

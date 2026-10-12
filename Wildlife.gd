@@ -27,7 +27,7 @@ func populate(area: String) -> void:
 func _process(delta: float) -> void:
 	if farm==null: return
 	if farm.choosing_character or farm.sleep_in_progress or farm.paused_by_player or farm.dialogue_open or not farm.window_focused: return
-	if farm.inside_house or farm.location in ["shop","road"]: visible=false; return
+	if farm.inside_house or farm.location in ["shop","road","waterfall"]: visible=false; return
 	visible=true
 	elapsed+=delta
 	refresh-=delta

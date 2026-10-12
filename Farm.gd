@@ -21,7 +21,7 @@ const FARM_EXIT := Vector2(1485, 140)
 const RegionScript = preload("res://Region.gd")
 const Cast = preload("res://Cast.gd")
 const CharacterScenes = preload("res://CharacterScenes.gd")
-const REGION_ORIGINS := {"tea": Vector2(12000, 0), "harbor": Vector2(15000, 0), "mountain": Vector2(18000, 0), "historic": Vector2(21000, 0)}
+const REGION_ORIGINS := {"tea": Vector2(12000, 0), "harbor": Vector2(15000, 0), "mountain": Vector2(18000, 0), "historic": Vector2(21000, 0), "waterfall":Vector2(24000,0)}
 var regions: Dictionary = {}
 const ShopScript = preload("res://ShopInterior.gd")
 var SHOP_ORIGIN := Vector2(24000, 0)
@@ -163,6 +163,8 @@ var walk_frame := -2
 var facing_direction := 0
 var joystick: Control
 var hud: Control
+var weather_icon: TextureRect
+var pocket_label: Label
 var date_label: Label
 var message_label: Label
 var action_button: Button
@@ -215,7 +217,7 @@ func _ready() -> void:
 		room.setup(service)
 		shops[service] = room
 	for key in REGION_ORIGINS:
-		var area := RegionScript.new()
+		var area = preload("res://WaterfallClearing.gd").new() if key=="waterfall" else RegionScript.new()
 		area.position = REGION_ORIGINS[key]
 		area.visible = false
 		add_child(area)
@@ -369,6 +371,15 @@ func make_ui() -> void:
 	date_label.add_theme_color_override("font_color", Color("493b2d"))
 	date_label.add_theme_font_size_override("font_size", 20)
 	hud.add_child(date_label)
+	pocket_label=Label.new()
+	pocket_label.add_theme_stylebox_override("normal",parchment())
+	pocket_label.add_theme_color_override("font_color",Color("493b2d"))
+	pocket_label.add_theme_font_size_override("font_size",19)
+	hud.add_child(pocket_label)
+	weather_icon=TextureRect.new()
+	weather_icon.custom_minimum_size=Vector2(24,24)
+	weather_icon.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	hud.add_child(weather_icon)
 	health_bar = ProgressBar.new()
 	health_bar.max_value = MAX_HEALTH
 	health_bar.show_percentage = false
@@ -439,6 +450,8 @@ func make_ui() -> void:
 	var battery_button := make_button("Routes", open_map)
 	battery_button.name = "MapButton"
 	hud.add_child(battery_button)
+	for entry in [[save_button,"save"],[character_button,"bag"],[guide_button,"guide"],[pause_button,"pause"],[battery_button,"routes"]]:
+		entry[0].icon=load("res://assets/ui-%s.svg" % entry[1])
 	festival_button = make_button("End Festival", end_festival)
 	festival_button.visible = false
 	hud.add_child(festival_button)
@@ -457,10 +470,12 @@ func layout_ui() -> void:
 			margin = Vector2(safe.position) * ratio + Vector2(20, 20)
 			right = (screen.x - safe.end.x) * ratio.x + 20
 			bottom = (screen.y - safe.end.y) * ratio.y + 24
-	quest_label.position = margin + Vector2(0, 132)
-	date_label.position = margin
-	health_bar.position = margin + Vector2(0, 94)
-	health_bar.size = Vector2(240, 28)
+	quest_label.position = margin + Vector2(180,40)
+	date_label.position = margin + Vector2(150,0)
+	pocket_label.position=margin
+	weather_icon.position=margin+Vector2(110,7)
+	health_bar.position = Vector2(margin.x,view.y-bottom-195)
+	health_bar.size = Vector2(155,24)
 	joystick.position = Vector2(margin.x, view.y - bottom - 168)
 	action_button.position = Vector2(view.x - right - 138, view.y - bottom - 128)
 	action_button.size = Vector2(138, 72)
@@ -469,7 +484,7 @@ func layout_ui() -> void:
 	message_label.size = Vector2(view.x - margin.x - right, 26)
 	hud.get_node("SaveButton").position = Vector2(view.x - right - 95, margin.y)
 	hud.get_node("CharacterButton").position = Vector2(view.x - right - 200, margin.y)
-	hud.get_node("GuideButton").position = Vector2(view.x - right - 295, margin.y)
+	hud.get_node("GuideButton").position = Vector2(view.x - right - 315, margin.y)
 	hud.get_node("PauseButton").position = Vector2(view.x - right - 95, margin.y + 50)
 	hud.get_node("MapButton").position = Vector2(view.x - right - 265, margin.y + 50)
 	Engine.max_fps = 30 if battery_saver else 60
@@ -709,7 +724,12 @@ func refresh_hud() -> void:
 	if fishing_quest_stage in [1, 2]: quest_label.text += ("\nFishing: catch one fish." if fishing_quest_stage == 1 else "\nFishing: report to Masao.")
 	quest_label.text = quest_label.text.strip_edges()
 	quest_label.visible = not dialogue_open and not quest_label.text.is_empty()
-	date_label.text = "%s\n%s • ¥%d • %s\nSeeds %d · Harvested %d" % [calendar_text(), clock_text(), coins, WeatherLife.forecast(day), seed_count(selected_crop), harvests]
+	date_label.text = "%s %d · Y%d  |  %s" % [SEASONS[int((day-1)/28)%4],(day-1)%28+1,int((day-1)/112)+1,clock_text()]
+	if WeatherLife.forecast(day)!="Normal": date_label.text+=" · "+WeatherLife.forecast(day)
+	pocket_label.text="¥%d" % coins
+	weather_icon.texture=load("res://assets/ui-rain.svg" if is_rainy_day() else "res://assets/ui-sun.svg")
+	if not quest_label.text.is_empty(): quest_label.text="Requests · see Bag"
+	health_bar.visible=not dialogue_open
 	health_bar.value = health
 	health_label.text = "Health %d / 100" % int(ceil(health))
 	health_fill.bg_color = Color("a5be83") if health >= 50 else (Color("e7c786") if health >= 25 else Color("da927c"))
@@ -795,6 +815,7 @@ func refresh_hud() -> void:
 			elif location == "shop": hint = "Approach copper or iron rocks to mine. Walk south toward daylight to leave." if shop_name=="Mine" else "Talk to residents or use the counter. Walk through the south door to leave."
 			elif location == "road": hint = "Town to the north · Farm to the south. Push farther or hold Shift to run."
 			elif location == "town": hint = "Approach a resident to talk, or a shop door to visit."
+			elif location=="waterfall": hint="Moonveil Falls · A quiet clearing. Return south to the mountain trail."
 			elif regions.has(location): hint = "Meet the residents or approach a building doorway to visit."
 	if is_rainy_day() and not inside_house and location != "shop": hint = "Rain · " + hint
 	message_label.text = hint if fishing_active else (toast if toast_time > 0 else hint)
@@ -1332,6 +1353,7 @@ func show_character_picker() -> void:
 		option.add_child(button)
 
 func _draw() -> void:
+	if location=="farm" and not inside_house: preload("res://WideRoads.gd").draw(self,"farm")
 	if location != "farm": return
 	if interior_progress.get("greenhouse",false):
 		preload("res://EntrancePaths.gd").draw_path(self,PackedVector2Array([FarmBuildings.GREENHOUSE_DOOR,Vector2(780,1620),Vector2(920,1650)]),120)
@@ -1449,14 +1471,14 @@ func travel_to(area: String, point: Vector2, persist: bool = true) -> void:
 		camera.limit_top = 0
 		camera.limit_right = int(origin.x + dimensions.x)
 		camera.limit_bottom = int(dimensions.y)
-		camera.offset = Vector2.ZERO
+		camera.offset = Vector2(0,-150) if area=="waterfall" else Vector2.ZERO
 		fit_region_camera(dimensions)
 		camera.reset_smoothing()
 	player.velocity = Vector2.ZERO
 	joystick.reset_stick()
 	nearest = -1
 	update_walk(0.0, false, Vector2.UP)
-	say("Main Town. Visit the store or meet the residents." if area == "town" else ("South Road. Town north, family farm south." if area == "road" else "Welcome back to the farm."))
+	say("Moonveil Falls. Follow the dry clearing; return south to the mountain trail." if area=="waterfall" else "Main Town. Visit the store or meet the residents." if area == "town" else ("South Road. Town north, family farm south." if area == "road" else "Welcome back to the farm."))
 	refresh_hud()
 	queue_redraw()
 	if persist: save_game(false)
@@ -2047,15 +2069,21 @@ func check_walk_exits() -> void:
 		_:
 			if regions.has(location):
 				var point: Vector2 = player.position - REGION_ORIGINS[location]
+				if location=="mountain" and point.x>1480 and absf(point.y-760)<65:
+					travel_to("waterfall",Vector2(800,1040))
+					return
+				if location=="waterfall" and point.y>1120 and absf(point.x-800)<150:
+					travel_to("mountain",Vector2(1420,760))
+					return
 				if ((location=="harbor" and point.x>1520 and absf(point.y-585)<120) or (location=="tea" and point.x<75 and absf(point.y-665)<120) or (location=="historic" and point.x>1520 and point.y>1070) or (location=="mountain" and point.y>1120 and absf(point.x-800)<100)):
 					var arrivals := {"mountain": Vector2(1200, 180), "harbor": Vector2(420, 800), "tea": Vector2(2180, 1080), "historic": Vector2(180,300)}
-					travel_to("town", town.design(arrivals[location]))
+					travel_to("town", arrivals[location] if location=="harbor" else town.design(arrivals[location]))
 
 func open_map() -> void:
 	if choosing_character or confirming_sleep or sleep_in_progress or dialogue_open: return
 	var column := make_modal("Walking Routes")
 	dialogue_panel.get_child(0).offset_top = -340
-	dialogue_text.text = "Farm → Town walkway → Main Town.\n\nFrom town: north to Mountain & Onsen; east to Tea Country; west to the Harbor; northwest through the large torii to Shrine Grounds.\n\nHarbor: return east toward town. Tea Country: return west. Shrine Grounds: return southeast. Mountains: return south. Walk through doors and gateways to change areas automatically. The library is northeast of the town square."
+	dialogue_text.text = "Farm → Town walkway → Main Town.\n\nFrom town: north to Mountain & Onsen; east to Tea Country; west to the Harbor; northwest through the large torii to Shrine Grounds.\n\nHarbor: return east toward town. Tea Country: return west. Shrine Grounds: return southeast. Mountains: return south; follow the eastern trail to Moonveil Falls. Walk through doors and gateways to change areas automatically. The library is northeast of the town square."
 	column.add_child(make_button("Close", close_dialogue))
 
 func open_guide() -> void:
@@ -2168,6 +2196,9 @@ func settle_farm_day() -> void:
 	FarmBuildings.new_day(self)
 	queue_redraw()
 func resident_room(person: String) -> String:
+	if is_rainy_day():
+		var shelter={"Seira":"General Store","Keiko":"General Store","Shohei":"Blacksmith","Gen":"Blacksmith","Akira":"Town Hall","Kenji":"Clinic","Aya":"Clinic","Yumi":"Inn","Hana":"Inn","Naomi":"Café","Jiro":"Fire Station","Yuta":"Fire Station","Mika":"Tea Farmhouse","Sachiko":"Tea Processing Shed","Ken":"Harbor Homes","Masao":"Fishing Shop","Hiro":"Mountain Lodge","Emi":"Mountain Lodge","Haruka":"Archive","Rei":"Shrine Residence"}
+		if shelter.has(person): return shelter[person]
 	var morning := clock_minutes < 720
 	var evening := clock_minutes >= 1080
 	match person:
@@ -2549,7 +2580,7 @@ func refit_camera() -> void:
 		fit_region_camera(ShopScript.SIZE)
 	elif regions.has(location):
 		fit_region_camera(regions[location].SIZE)
-		camera.offset = Vector2.ZERO
+		camera.offset = Vector2(0,-150) if location=="waterfall" else Vector2.ZERO
 
 func open_onsen() -> void:
 	var column := make_modal("Mountain Onsen")

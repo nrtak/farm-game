@@ -30,7 +30,7 @@ const EXTRA_DIALOGUE := {
 	"Renji": ["I'm Renji. I help Kenta prepare timber and build at the workshops.", "We work near the mountains in the morning and in town after lunch."],
 	"Midori": ["I'm Midori. I tend the tea fields and the onsen gardens.", "I like giving each season a little corner of the garden."]
 }
-const REST_BENCHES := [Rect2(1540, 562.963, 105, 23.7037), Rect2(865, 800, 105, 23.7037)]
+const REST_BENCHES := [Rect2(1540, 562.963, 105, 23.7037), Rect2(1400, 590, 105, 23.7037)]
 var solids: Array[Rect2] = []
 var navigation := AStarGrid2D.new()
 var land_outline := PackedVector2Array()
@@ -248,6 +248,7 @@ func nearest_service(point: Vector2) -> String:
 	return ""
 
 func _draw() -> void:
+	preload("res://WideRoads.gd").draw(self,"town")
 	# Low roadside board beside the actual west transition, never in the walking lane.
 	draw_rect(Rect2(430,675,9,65),Color("785437"))
 	draw_style_box(panel(Color("e4c38b")),Rect2(320,635,235,58))

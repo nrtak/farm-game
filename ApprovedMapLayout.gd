@@ -38,7 +38,7 @@ static func scenery(kind: String) -> Array:
 			for piece in [Rect2(rect.position,Vector2(rect.size.x,cut.position.y-rect.position.y)), Rect2(Vector2(rect.position.x,cut.end.y),Vector2(rect.size.x,rect.end.y-cut.end.y)), Rect2(Vector2(rect.position.x,cut.position.y),Vector2(cut.position.x-rect.position.x,cut.size.y)), Rect2(Vector2(cut.end.x,cut.position.y),Vector2(rect.end.x-cut.end.x,cut.size.y))]:
 				if piece.size.x>0 and piece.size.y>0: clipped.append(piece)
 		result=clipped
-	return result
+	return preload("res://WideRoads.gd").clip(kind,result)
 static func buildings(kind: String) -> Array: return rects(kind,"buildings")
 static func is_path(kind: String, point: Vector2, size: Vector2) -> bool:
 	return preload("res://MapHabitat.gd").sample(kind,point,size,"path")

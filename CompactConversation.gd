@@ -10,7 +10,11 @@ func setup(box: PanelContainer, content: VBoxContainer, portrait: Texture2D) -> 
 	var anchor:=Node2D.new()
 	panel.add_child(anchor)
 	picture=TextureRect.new()
-	picture.texture=portrait
+	if portrait != null:
+		var bust:=AtlasTexture.new()
+		bust.atlas=portrait
+		bust.region=Rect2(0,0,portrait.get_width(),portrait.get_height()*0.55)
+		picture.texture=bust
 	picture.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
 	picture.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	picture.mouse_filter=Control.MOUSE_FILTER_IGNORE
@@ -38,7 +42,8 @@ func fit() -> void:
 	panel.offset_top=-height-18
 	panel.offset_bottom=-18
 	var available:=maxf(0,panel.get_global_rect().position.y-10)
-	var portrait_height:=minf(170,available)
+	var portrait_height:=minf(180,available)
+	if picture.texture!=null: portrait_height=minf(portrait_height,190.0*picture.texture.get_height()/picture.texture.get_width())
 	picture.position=Vector2(10,-portrait_height+4)
-	picture.size=Vector2(165,portrait_height)
+	picture.size=Vector2(190,portrait_height)
 

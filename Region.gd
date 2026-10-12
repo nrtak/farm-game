@@ -140,8 +140,10 @@ func safe_point(preferred: Vector2) -> Vector2:
 func _draw() -> void:
 	if background != null:
 		draw_texture_rect(background, Rect2(Vector2.ZERO, SIZE), false)
+		preload("res://WideRoads.gd").draw(self,kind)
 		if kind == "mountain":
-			pass # Onsen and workshop are included in the map artwork.
+			draw_rect(Rect2(1350,795,210,44),Color("e6c995"))
+			draw_string(ThemeDB.fallback_font,Vector2(1360,825),"Waterfall →",HORIZONTAL_ALIGNMENT_LEFT,-1,25,Color("493b2d"))
 			draw_string(ThemeDB.fallback_font, MINE_DOOR+Vector2(-40,45), "Mine", HORIZONTAL_ALIGNMENT_CENTER, 110, 24, Color("493b2d"))
 		if kind == "tea":
 			for spot in [Vector2(860,826),Vector2(860,996),Vector2(1333,844)]:
