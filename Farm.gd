@@ -518,7 +518,8 @@ func clock_text() -> String:
 	return "%d:%02d %s" % [12 if hour % 12 == 0 else hour % 12, minute % 60, "AM" if hour < 12 else "PM"]
 
 func advance_clock(seconds: float) -> void:
-	# One real second advances one game minute. Midnight rolls the calendar.
+	# Outdoor time advances one minute per second. Interior visits freeze the calendar.
+	if inside_house or location == "shop": return
 	if choosing_character or confirming_sleep or sleep_in_progress or dialogue_open or festival_active or paused_by_player or not window_focused: return
 	var remaining := maxf(0.0, seconds)
 	while remaining > 0.0:
