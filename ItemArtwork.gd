@@ -45,6 +45,9 @@ static func list_goods(farm,column) -> void:
 	goods["Tea packets"]=[farm.packed_tea,farm.tea_shipping];prices["Tea packets"]=45
 	for inventory in [farm.shipping_queue,farm.fish_shipping,farm.ore_shipping,farm.BarnLife.state(farm).shipping]:
 		for item in inventory: goods[item][1]=int(inventory[item])
+	var expected:=0
+	for item in goods: expected+=int(goods[item][0])*int(prices[item])
+	farm.dialogue_text.text+="\nValue of goods you are about to ship: ¥%d." % expected
 	for item in goods:
 		if goods[item][0]+goods[item][1]==0: continue
 		var row=farm.make_button("%s · Bag %d · Shipping %d · ¥%d each" % [item,goods[item][0],goods[item][1],prices[item]],func(): pass)

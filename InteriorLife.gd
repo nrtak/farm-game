@@ -125,6 +125,7 @@ static func preview_upgrade(farm, kind: String) -> void:
 	var column = farm.make_modal("Expansion preview")
 	farm.dialogue_panel.get_child(0).offset_top = -minf(400,farm.get_viewport_rect().size.y-32)
 	farm.dialogue_text.text = "%s\n¥%d + %d lumber · %d total harvests required\nReady tomorrow. Existing crops and animals are preserved." % [info.benefit,info.cost,info.wood,info.harvests]
+	preload("res://PlayerComfort.gd").preview(farm,column,kind)
 	column.add_child(farm.make_button("Order construction",order_upgrade.bind(farm,kind)))
 	column.add_child(farm.make_button("Back",open_carpentry.bind(farm)))
 static func order_upgrade(farm, kind: String) -> void:

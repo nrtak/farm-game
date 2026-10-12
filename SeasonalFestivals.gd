@@ -142,8 +142,9 @@ static func answer(farm,choice: int) -> void:
 	if farm.scheduled_gathering and not rewards.has(id):
 		rewards[id] = choice
 		farm.interior_progress["festival_activities"] = rewards
+		preload("res://VillageDepth.gd").festival_reward(farm)
 		farm.coins += 25
 		farm.health = minf(100,farm.health+5)
 		farm.save_game(false)
 	VolunteerRequests.complete(farm,farm.current_festival)
-	farm.dialogue_text.text = "Thank you for taking part! The neighbors enjoy your contribution. Your festival activity is recorded."
+	farm.dialogue_text.text = "Thank you for taking part! The neighbors enjoy your contribution. Your festival activity is recorded. Your keepsake ribbon and milk tea recipe are in Village life & keepsakes."

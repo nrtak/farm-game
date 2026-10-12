@@ -65,9 +65,10 @@ static func open_animal(farm, index: int) -> void:
 	if index<0 or index>=data.animals.size(): return
 	farm.close_dialogue()
 	var animal: Dictionary = data.animals[index]
-	var column = farm.make_modal("%s · Stall %d" % [animal.species,index+1])
+	var column = farm.make_modal("%s · Stall %d" % [animal.get("name",animal.species),index+1])
 	farm.dialogue_panel.get_child(0).offset_top = -minf(410,farm.get_viewport_rect().size.y-32)
 	farm.dialogue_text.text = "%s today · Affection %d · %s ready: %d" % ["Fed" if animal.fed == farm.day else "Needs feed",animal.affection,SPECIES[animal.species].product,animal.ready]
+	column.add_child(farm.make_button("Name animal",preload("res://PlayerComfort.gd").rename_animal.bind(farm,index)))
 	column.add_child(farm.make_button("Feed",care.bind(farm,index,"feed")))
 	column.add_child(farm.make_button("Pet",care.bind(farm,index,"pet")))
 	column.add_child(farm.make_button("Collect %s" % SPECIES[animal.species].product,care.bind(farm,index,"collect")))
@@ -163,7 +164,9 @@ static func draw_room(room) -> void:
 			var region := art_regions[species_index]
 			var size := region.size*(95.0/region.size.y)
 			room.draw_texture_rect_region(art,Rect2(p-Vector2(size.x/2,size.y-12),size),region)
-		room.draw_string(ThemeDB.fallback_font,p+Vector2(-45,35),animal.species,HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color("584631"))
+		room.draw_string(ThemeDB.fallback_font,p+Vector2(-45,35),animal.get("name",animal.species),HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color("584631"))
+		if animal.fed!=farm.day: room.draw_string(ThemeDB.fallback_font,p+Vector2(-70,-30),"Feed",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color("493b2d"))
+		if animal.petted!=farm.day: room.draw_string(ThemeDB.fallback_font,p+Vector2(35,-35),"♡",HORIZONTAL_ALIGNMENT_LEFT,-1,22,Color("493b2d"))
 		if animal.ready>0: room.draw_circle(p+Vector2(70,-20),7,Color("f3df9d"))
 	room.draw_rect(Rect2(420,185,260,75),Color("92714d"))
 	preload("res://InteriorDecor.gd").crate(room,Rect2(438,191,50,26))

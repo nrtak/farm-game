@@ -85,4 +85,6 @@ static func journal(farm) -> void:
 	scroll.add_child(label)
 	label.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	label.size_flags_vertical=Control.SIZE_SHRINK_BEGIN
+	column.add_child(farm.make_button("Pin a request",preload("res://PlayerComfort.gd").pin_menu.bind(farm)))
+	column.add_child(farm.make_button("Village life & keepsakes",preload("res://VillageDepth.gd").collection.bind(farm)))
 	column.add_child(farm.make_button("Close",farm.close_dialogue))

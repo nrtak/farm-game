@@ -114,6 +114,7 @@ const WAKE_MINUTE := 360.0
 const LATE_MINUTE := 1260.0
 const MAX_HEALTH := 100.0
 const WORK_COSTS := [2.0, 2.0, 3.0]
+var save_loaded := false
 var clock_minutes := WAKE_MINUTE
 var health := MAX_HEALTH
 var paused_by_player := false
@@ -287,8 +288,10 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(layout_ui)
 	layout_ui()
 	refresh_hud()
-	if not FileAccess.file_exists(SAVE_FILE): show_character_picker()
+	if not save_loaded: show_character_picker()
 	game_ready=true
+	var comfort=preload("res://PlayerComfort.gd").new()
+	add_child(comfort);comfort.setup(self)
 	queue_redraw()
 	call_deferred("finish_launch")
 
@@ -343,6 +346,7 @@ func make_button(text: String, callback: Callable) -> Button:
 	var button := Button.new()
 	button.text = text
 	button.focus_mode = Control.FOCUS_NONE
+	button.custom_minimum_size.y=44
 	button.add_theme_stylebox_override("normal", parchment())
 	var active := parchment()
 	active.bg_color = Color("e7c786")
@@ -490,6 +494,7 @@ func layout_ui() -> void:
 	Engine.max_fps = 30 if battery_saver else 60
 	Engine.physics_ticks_per_second = 30 if battery_saver else 60
 	festival_button.position = Vector2(view.x - right - 160, margin.y + 108)
+	preload("res://PlayerComfort.gd").layout(self,margin,right,bottom)
 
 func toggle_pause() -> void:
 	paused_by_player = not paused_by_player
@@ -638,6 +643,7 @@ func _physics_process(delta: float) -> void:
 		draw_elapsed = 0.0
 
 func interaction_action() -> String:
+	if location=="waterfall": return "falls"
 	if location=="farm" and not inside_house and player.position.distance_to(SHIPPING_BOX)<210: return "shipping"
 	if location == "farm" and interior_progress.get("greenhouse",false) and player.position.distance_to(FarmBuildings.GREENHOUSE_DOOR)<90: return "greenhouse_enter"
 	if inside_house and interior_progress.get("second_story",false) and (player.position-ROOM_ORIGIN).distance_to(FarmBuildings.STAIRS)<75: return "stairs"
@@ -725,7 +731,7 @@ func refresh_hud() -> void:
 	if fishing_quest_stage in [1, 2]: quest_label.text += ("\nFishing: catch one fish." if fishing_quest_stage == 1 else "\nFishing: report to Masao.")
 	quest_label.text = quest_label.text.strip_edges()
 	quest_label.visible = not dialogue_open and not quest_label.text.is_empty()
-	date_label.text = "%s %d · Y%d  |  %s" % [SEASONS[int((day-1)/28)%4],(day-1)%28+1,int((day-1)/112)+1,clock_text()]
+	date_label.text = ("Ⅱ " if inside_house or location=="shop" else "") + "%s %d · Y%d  |  %s" % [SEASONS[int((day-1)/28)%4],(day-1)%28+1,int((day-1)/112)+1,clock_text()]
 	if WeatherLife.forecast(day)!="Normal": date_label.text+=" · "+WeatherLife.forecast(day)
 	pocket_label.text="¥%d" % coins
 	weather_icon.texture=load("res://assets/ui-rain.svg" if is_rainy_day() else "res://assets/ui-sun.svg")
@@ -735,7 +741,8 @@ func refresh_hud() -> void:
 	health_label.text = "Health %d / 100" % int(ceil(health))
 	health_fill.bg_color = Color("a5be83") if health >= 50 else (Color("e7c786") if health >= 25 else Color("da927c"))
 	farmer.modulate = Color("d1c7bb") if health < 25 else Color.WHITE
-	tool_bar.visible = location == "farm" and not dialogue_open
+	tool_bar.visible = location == "farm" and not inside_house and not dialogue_open
+	tool_buttons[1].text="Water %d" % resources.state().water
 	joystick.visible = not dialogue_open
 	action_button.visible = not dialogue_open
 	hud.get_node("CharacterButton").visible = not dialogue_open
@@ -823,6 +830,11 @@ func refresh_hud() -> void:
 	if paused_by_player: message_label.text = "Paused. Press Resume to continue."
 	elif toast_time <= 0 and health < 25:
 		message_label.text = "Health is low. Rest in bed." if health >= WORK_COSTS[selected_tool] else "Too tired to work. Rest in bed."
+	var pinned:String=preload("res://PlayerComfort.gd").settings(self).get("pin","")
+	if not pinned.is_empty():
+		quest_label.text=pinned;quest_label.visible=not dialogue_open
+	if location=="waterfall" and not dialogue_open:
+		action_button.text="Listen";action_button.visible=true;action_button.disabled=false
 
 func set_location(indoors: bool, destination: Vector2) -> void:
 	if is_instance_valid(polish): polish.path.clear()
@@ -883,6 +895,7 @@ func offer_sleep() -> void:
 	sleep_prompt.add_child(center)
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var panel := PanelContainer.new()
+	panel.grow_vertical=Control.GROW_DIRECTION_BEGIN
 	panel.add_theme_stylebox_override("panel", parchment())
 	center.add_child(panel)
 	var column := VBoxContainer.new()
@@ -940,6 +953,8 @@ func say(text: String) -> void:
 	toast_time = 4.0
 
 func interact() -> void:
+	if location=="waterfall":
+		preload("res://VillageDepth.gd").waterfall(self);return
 	if is_physics_processing() and is_instance_valid(resources) and resources.action_time > 0: return
 	clear_item_moment()
 	if dialogue_open:
@@ -1122,6 +1137,8 @@ func save_game(show_message: bool = true, overnight_checkpoint: bool = false) ->
 	if FileAccess.file_exists(SAVE_FILE):
 		var previous = read_saved_json(SAVE_FILE)
 		if previous is Dictionary:
+			if int(previous.get("day",day)) != day:
+				DirAccess.copy_absolute(ProjectSettings.globalize_path(SAVE_FILE),ProjectSettings.globalize_path(SAVE_FILE+".daily"))
 			DirAccess.copy_absolute(ProjectSettings.globalize_path(SAVE_FILE), ProjectSettings.globalize_path(SAVE_FILE + ".bak"))
 	var crop_data: Array = []
 	for plot in plots:
@@ -1134,15 +1151,17 @@ func save_game(show_message: bool = true, overnight_checkpoint: bool = false) ->
 		if DirAccess.rename_absolute(ProjectSettings.globalize_path(SAVE_FILE+".pending"),ProjectSettings.globalize_path(SAVE_FILE))!=OK:
 			if show_message: say("Could not replace the save. Your previous save is preserved.")
 			return
-		if show_message: say("Farm saved.")
+		if show_message or overnight_checkpoint: say("✓ Farm saved.")
 	elif show_message: say("Could not save. Check storage permissions.")
 
 func load_game() -> void:
-	if not FileAccess.file_exists(SAVE_FILE): return
-	var parsed = read_saved_json(SAVE_FILE)
+	if not FileAccess.file_exists(SAVE_FILE) and not FileAccess.file_exists(SAVE_FILE+".bak") and not FileAccess.file_exists(SAVE_FILE+".daily"): return
+	var parsed = read_saved_json(SAVE_FILE) if FileAccess.file_exists(SAVE_FILE) else null
 	if not parsed is Dictionary and FileAccess.file_exists(SAVE_FILE + ".bak"):
 		parsed = read_saved_json(SAVE_FILE + ".bak")
+	if not parsed is Dictionary and FileAccess.file_exists(SAVE_FILE+".daily"): parsed=read_saved_json(SAVE_FILE+".daily")
 	if not parsed is Dictionary: return
+	save_loaded=true
 	for field in ["friendship", "talked_on_day"]:
 		var values = parsed.get(field, {})
 		if values is Dictionary and values.has("Yoshi"):
@@ -1321,6 +1340,7 @@ func show_character_picker() -> void:
 	character_picker.add_child(center)
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var panel := PanelContainer.new()
+	panel.grow_vertical=Control.GROW_DIRECTION_BEGIN
 	panel.add_theme_stylebox_override("panel", parchment())
 	center.add_child(panel)
 	var column := VBoxContainer.new()
@@ -1554,6 +1574,7 @@ func start_conversation(npc: Node2D) -> void:
 			dialogue_lines = ["Your first catch! Nicely done. Here's ¥50 to help you get started.", "Fish go into your basket. Put them in the farm shipping box to sell them next day."]
 	var delivery_message: String = preload("res://TownActivities.gd").deliver_to(self,person)
 	if not delivery_message.is_empty(): dialogue_lines.append(delivery_message)
+	if not first and pending_request.is_empty(): preload("res://VillageDepth.gd").conversation(self,person)
 	dialogue_index = 0
 	make_modal(person, true)
 	dialogue_text.text = dialogue_lines[0]
@@ -1561,7 +1582,9 @@ func start_conversation(npc: Node2D) -> void:
 		dialogue_text.text = "Request · " + "\n".join(dialogue_lines)
 		dialogue_text.get_parent().add_child(make_button("Accept request", accept_story_request))
 		dialogue_text.get_parent().add_child(make_button("Not now", close_dialogue))
-	else: dialogue_text.get_parent().add_child(make_button("Continue", advance_dialogue))
+	else:
+		dialogue_text.get_parent().add_child(make_button("Continue", advance_dialogue))
+		dialogue_text.get_parent().add_child(make_button("Give gift",preload("res://VillageDepth.gd").gifts.bind(self,person)))
 	save_game(false)
 
 func accept_story_request() -> void:
@@ -1588,6 +1611,7 @@ func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 	hud.add_child(dialogue_panel)
 	dialogue_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var panel := PanelContainer.new()
+	panel.grow_vertical=Control.GROW_DIRECTION_BEGIN
 	panel.add_theme_stylebox_override("panel", parchment())
 	dialogue_panel.add_child(panel)
 	panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
@@ -1610,7 +1634,7 @@ func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 	dialogue_text = Label.new()
 	dialogue_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	dialogue_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	dialogue_text.add_theme_font_size_override("font_size", 21)
+	dialogue_text.add_theme_font_size_override("font_size", 25 if portrait and preload("res://PlayerComfort.gd").settings(self).get("large_text",false) else 21)
 	dialogue_text.add_theme_color_override("font_color", Color("493b2d"))
 	column.add_child(dialogue_text)
 	if portrait:
@@ -2094,6 +2118,8 @@ func open_guide() -> void:
 	dialogue_panel.get_child(0).offset_top = -380
 	dialogue_text.text = "Move with arrows/WASD or the joystick. Hold Shift, or push the joystick farther, to run.\n\nChoose seeds → Plant → Water daily → Sleep → Harvest → Shipping box. Sleep in the house to recover Health.\n\nWalk onto the Town walkway on the farm to enter town directly. All marked region exits work by walking through them; Routes shows directions. Visit the store for seeds, the forge for an upgrade, and the café for meals.\n\nTown exits: north mountain/lake, east tea fields, west harbor, northwest shrine. The plaza Events board previews scenes and the festival."
 	dialogue_text.add_theme_font_size_override("font_size", 18)
+	column.add_child(make_button("Controls & readability",preload("res://PlayerComfort.gd").open_settings.bind(self)))
+	column.add_child(make_button("Village life & keepsakes",preload("res://VillageDepth.gd").collection.bind(self)))
 	column.add_child(make_button("Let's explore", close_dialogue))
 
 
@@ -2197,6 +2223,7 @@ func settle_farm_day() -> void:
 	FarmBuildings.new_day(self)
 	queue_redraw()
 func resident_room(person: String) -> String:
+	if person=="Kenta" and interior_progress.has("construction"): return "Farm construction"
 	if is_rainy_day():
 		var shelter={"Seira":"General Store","Keiko":"General Store","Shohei":"Blacksmith","Gen":"Blacksmith","Akira":"Town Hall","Kenji":"Clinic","Aya":"Clinic","Yumi":"Inn","Hana":"Inn","Naomi":"Café","Jiro":"Fire Station","Yuta":"Fire Station","Mika":"Tea Farmhouse","Sachiko":"Tea Processing Shed","Ken":"Harbor Homes","Masao":"Fishing Shop","Hiro":"Mountain Lodge","Emi":"Mountain Lodge","Haruka":"Archive","Rei":"Shrine Residence"}
 		if shelter.has(person): return shelter[person]
@@ -2373,7 +2400,9 @@ func open_backpack() -> void:
 	scroll.custom_minimum_size = Vector2(0, 160)
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	column.add_child(scroll)
-	var list := VBoxContainer.new()
+	var list := GridContainer.new()
+	list.columns=3 if get_viewport_rect().size.x>=960 else 2
+	list.add_theme_constant_override("h_separation",24)
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(list)
 	var contents: Dictionary = {}
@@ -2552,18 +2581,19 @@ func start_scheduled_gathering() -> void:
 
 func open_calendar() -> void:
 	var column := make_modal("Festival calendar")
-	dialogue_panel.get_child(0).offset_top = -minf(430,get_viewport_rect().size.y-32)
-	dialogue_text.text = "%s\nTomorrow: %s\n\n" % [calendar_text(),WeatherLife.forecast(day+1)] + SeasonalFestivals.calendar(self)
-	column.remove_child(dialogue_text)
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(0,120)
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	column.add_child(scroll)
-	scroll.add_child(dialogue_text)
-	dialogue_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	dialogue_text.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	column.add_child(make_button("Close", close_dialogue))
+	dialogue_panel.get_child(0).offset_top=-minf(440,get_viewport_rect().size.y-32)
+	dialogue_text.text="%s · Tomorrow: %s" % [calendar_text(),WeatherLife.forecast(day+1)]
+	dialogue_text.size_flags_vertical=Control.SIZE_SHRINK_BEGIN
+	var scroll:=ScrollContainer.new();scroll.custom_minimum_size.y=100;scroll.size_flags_vertical=Control.SIZE_EXPAND_FILL;column.add_child(scroll)
+	var list:=VBoxContainer.new();list.size_flags_horizontal=Control.SIZE_EXPAND_FILL;scroll.add_child(list)
+	for event in SeasonalFestivals.EVENTS:
+		if int((event.day-1)/28)!=int(((day-1)%112)/28): continue
+		var evening:bool=event.id in ["obon","lantern","onsen","newyear"]
+		var row=make_button("%d · %s · %s" % [(event.day-1)%28+1,event.name,"6–10 PM" if evening else "10 AM–6 PM"],func(): pass)
+		row.mouse_filter=Control.MOUSE_FILTER_IGNORE
+		if not row.has_meta("item_art"): preload("res://ItemArtwork.gd").attach(row,"Sardine" if event.area=="harbor" else "Tea packets" if event.area=="tea" else "Meal")
+		list.add_child(row)
+	column.add_child(make_button("Close",close_dialogue))
 
 func storage_limit() -> int:
 	return 999 * (1 + int(interior_progress.get("home",0)))

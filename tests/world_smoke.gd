@@ -50,8 +50,14 @@ func run() -> void:
 			assert(not farm.dialogue_open and not npc.paused, "Dialogue releases controls and NPC")
 		await process_frame
 		farm.player.position = farm.REGION_ORIGINS[area_name] + Vector2(800, 1100)
-		farm.interact()
-		assert(farm.location == "town", "All regions return to town")
+		if area_name=="waterfall":
+			farm.player.position=farm.REGION_ORIGINS.waterfall+Vector2(800,1140)
+			farm.check_walk_exits()
+			assert(farm.location=="mountain","Falls return to mountain trail")
+			farm.travel_to("town",Vector2(1100,940),false)
+		else:
+			farm.interact()
+			assert(farm.location == "town", "Town-connected regions return to town")
 	var npc = farm.town.npcs[0]
 	farm.start_conversation(npc)
 	var time: float = farm.clock_minutes

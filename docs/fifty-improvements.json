@@ -1,0 +1,306 @@
+{
+  "scope": "Local implementation and desktop validation; no TestFlight upload in this batch",
+  "device_limits": "Physical touch feel, heat, battery drain, and iOS memory remain unverified until a device build is tested.",
+  "items": [
+    {
+      "id": 1,
+      "suggestion": "Full walking audit",
+      "implementation": "existing foundation audited",
+      "evidence": "tests/door_routes.gd; tests/open_regions.gd; tests/world_comfort.gd"
+    },
+    {
+      "id": 2,
+      "suggestion": "NPC yielding",
+      "implementation": "existing foundation audited",
+      "evidence": "WorldPolish.gd: yield_residents"
+    },
+    {
+      "id": 3,
+      "suggestion": "Tap destination marker",
+      "implementation": "existing foundation audited",
+      "evidence": "WorldPolish.gd: marker"
+    },
+    {
+      "id": 4,
+      "suggestion": "Smarter tap routes",
+      "implementation": "existing foundation audited",
+      "evidence": "WorldPolish.gd: AStarGrid2D"
+    },
+    {
+      "id": 5,
+      "suggestion": "Adjustable controls",
+      "implementation": "new local implementation",
+      "evidence": "PlayerComfort.gd; Joystick.gd"
+    },
+    {
+      "id": 6,
+      "suggestion": "Comfortable camera tracking",
+      "implementation": "existing foundation audited",
+      "evidence": "Farm.gd: camera smoothing"
+    },
+    {
+      "id": 7,
+      "suggestion": "Clear doorway cues",
+      "implementation": "new local implementation",
+      "evidence": "PlayerComfort.gd: context cues"
+    },
+    {
+      "id": 8,
+      "suggestion": "Consistent return positions",
+      "implementation": "existing foundation audited",
+      "evidence": "tests/walk_feedback.gd; tests/region_layout.gd"
+    },
+    {
+      "id": 9,
+      "suggestion": "Larger touch targets",
+      "implementation": "new local implementation",
+      "evidence": "Farm.gd: make_button 44px"
+    },
+    {
+      "id": 10,
+      "suggestion": "Indoor clock indicator",
+      "implementation": "new local implementation",
+      "evidence": "Farm.gd: indoor pause indicator"
+    },
+    {
+      "id": 11,
+      "suggestion": "Visual shop catalogs",
+      "implementation": "existing foundation audited",
+      "evidence": "ItemArtwork.gd"
+    },
+    {
+      "id": 12,
+      "suggestion": "Backpack item grid",
+      "implementation": "new local implementation",
+      "evidence": "Farm.gd: open_backpack"
+    },
+    {
+      "id": 13,
+      "suggestion": "Shipping preview",
+      "implementation": "new local implementation",
+      "evidence": "ItemArtwork.gd: list_goods"
+    },
+    {
+      "id": 14,
+      "suggestion": "Tool action feedback",
+      "implementation": "existing foundation audited",
+      "evidence": "FarmResources.gd; ItemMoment.gd"
+    },
+    {
+      "id": 15,
+      "suggestion": "Interaction symbols",
+      "implementation": "new local implementation",
+      "evidence": "PlayerComfort.gd"
+    },
+    {
+      "id": 16,
+      "suggestion": "Compact request tracker",
+      "implementation": "new local implementation",
+      "evidence": "PlayerComfort.gd: pin_menu"
+    },
+    {
+      "id": 17,
+      "suggestion": "Visual festival calendar",
+      "implementation": "new local implementation",
+      "evidence": "Farm.gd: open_calendar"
+    },
+    {
+      "id": 18,
+      "suggestion": "Readable building signs",
+      "implementation": "existing foundation audited",
+      "evidence": "WorldSigns.gd"
+    },
+    {
+      "id": 19,
+      "suggestion": "Optional larger dialogue text",
+      "implementation": "new local implementation",
+      "evidence": "PlayerComfort.gd: large_text"
+    },
+    {
+      "id": 20,
+      "suggestion": "Quiet save confirmation",
+      "implementation": "new local implementation",
+      "evidence": "Farm.gd: save_game"
+    },
+    {
+      "id": 21,
+      "suggestion": "Clear crop stages",
+      "implementation": "existing foundation audited",
+      "evidence": "Farm.gd: crop"
+    },
+    {
+      "id": 22,
+      "suggestion": "Wet soil feedback",
+      "implementation": "existing foundation audited",
+      "evidence": "Farm.gd: plot rendering"
+    },
+    {
+      "id": 23,
+      "suggestion": "Seed selection tray",
+      "implementation": "existing foundation audited",
+      "evidence": "Farm.gd: open_seed_picker"
+    },
+    {
+      "id": 24,
+      "suggestion": "Crop information",
+      "implementation": "existing foundation audited",
+      "evidence": "Farm.gd: crop_hint"
+    },
+    {
+      "id": 25,
+      "suggestion": "Water supply indicator",
+      "implementation": "new local implementation",
+      "evidence": "Farm.gd: water tool count"
+    },
+    {
+      "id": 26,
+      "suggestion": "Construction previews",
+      "implementation": "new local implementation",
+      "evidence": "PlayerComfort.gd: preview"
+    },
+    {
+      "id": 27,
+      "suggestion": "Visible construction progress",
+      "implementation": "new local implementation",
+      "evidence": "PlayerComfort.gd: worker"
+    },
+    {
+      "id": 28,
+      "suggestion": "Animal care symbols",
+      "implementation": "new local implementation",
+      "evidence": "BarnLife.gd: draw_room"
+    },
+    {
+      "id": 29,
+      "suggestion": "Livestock naming",
+      "implementation": "new local implementation",
+      "evidence": "PlayerComfort.gd: rename_animal"
+    },
+    {
+      "id": 30,
+      "suggestion": "Useful storage organization",
+      "implementation": "existing foundation audited",
+      "evidence": "Farm.gd: open_storage"
+    },
+    {
+      "id": 31,
+      "suggestion": "Distinct daily routines",
+      "implementation": "existing foundation audited",
+      "evidence": "Farm.gd: resident_room; Town.gd"
+    },
+    {
+      "id": 32,
+      "suggestion": "Rainy-day conversations",
+      "implementation": "new local implementation",
+      "evidence": "VillageDepth.gd: conversation"
+    },
+    {
+      "id": 33,
+      "suggestion": "More paired conversations",
+      "implementation": "new local implementation",
+      "evidence": "VillageDepth.gd: nearby conversations; CharacterScenes.gd"
+    },
+    {
+      "id": 34,
+      "suggestion": "Personality-based gift reactions",
+      "implementation": "new local implementation",
+      "evidence": "VillageDepth.gd: gifts"
+    },
+    {
+      "id": 35,
+      "suggestion": "Clear relationship feedback",
+      "implementation": "new local implementation",
+      "evidence": "VillageDepth.gd: gift response"
+    },
+    {
+      "id": 36,
+      "suggestion": "Friendship scenes",
+      "implementation": "new local implementation",
+      "evidence": "VillageDepth.gd: friend_scenes"
+    },
+    {
+      "id": 37,
+      "suggestion": "Seasonal dialogue",
+      "implementation": "new local implementation",
+      "evidence": "VillageDepth.gd: seasonal lines"
+    },
+    {
+      "id": 38,
+      "suggestion": "Purposeful farm visits",
+      "implementation": "existing foundation audited",
+      "evidence": "Stewardship.gd; DailyErrands.gd"
+    },
+    {
+      "id": 39,
+      "suggestion": "Recognizable animal routines",
+      "implementation": "existing foundation audited",
+      "evidence": "AmbientPet.gd; Town.gd: pet routes"
+    },
+    {
+      "id": 40,
+      "suggestion": "Meaningful interior interactions",
+      "implementation": "existing foundation audited",
+      "evidence": "TownActivities.gd; InteriorLife.gd"
+    },
+    {
+      "id": 41,
+      "suggestion": "Waterfall discovery scene",
+      "implementation": "new local implementation",
+      "evidence": "VillageDepth.gd: waterfall; WaterfallClearing.gd"
+    },
+    {
+      "id": 42,
+      "suggestion": "Waterfall guardian storyline",
+      "implementation": "new local implementation",
+      "evidence": "VillageDepth.gd: tea offering stages"
+    },
+    {
+      "id": 43,
+      "suggestion": "Seasonal waterfall changes",
+      "implementation": "existing foundation audited",
+      "evidence": "SeasonScenery.gd applies to waterfall"
+    },
+    {
+      "id": 44,
+      "suggestion": "Festival-specific activities",
+      "implementation": "existing foundation audited",
+      "evidence": "SeasonalFestivals.gd"
+    },
+    {
+      "id": 45,
+      "suggestion": "Visible volunteering results",
+      "implementation": "new local implementation",
+      "evidence": "PlayerComfort.gd: completed volunteer decoration"
+    },
+    {
+      "id": 46,
+      "suggestion": "Festival participation rewards",
+      "implementation": "new local implementation",
+      "evidence": "VillageDepth.gd: keepsakes and milk tea"
+    },
+    {
+      "id": 47,
+      "suggestion": "Village contribution journal",
+      "implementation": "new local implementation",
+      "evidence": "VillageDepth.gd: collection; Stewardship.gd"
+    },
+    {
+      "id": 48,
+      "suggestion": "Post-vote goals",
+      "implementation": "new local implementation",
+      "evidence": "VillageDepth.gd: post-vote milestone"
+    },
+    {
+      "id": 49,
+      "suggestion": "Save-update protection",
+      "implementation": "new local implementation",
+      "evidence": "Farm.gd: backup and daily checkpoint"
+    },
+    {
+      "id": 50,
+      "suggestion": "iPhone performance pass",
+      "implementation": "device validation pending",
+      "evidence": "Requires physical iPhone 16 Pro test"
+    }
+  ]
+}
