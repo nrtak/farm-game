@@ -1561,7 +1561,7 @@ func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 	player.velocity = Vector2.ZERO
 	joystick.reset_stick()
 	dialogue_panel = ColorRect.new()
-	dialogue_panel.color = Color(0.06, 0.09, 0.06, 0.28)
+	dialogue_panel.color = Color.TRANSPARENT if portrait else Color(0.06, 0.09, 0.06, 0.28)
 	hud.add_child(dialogue_panel)
 	dialogue_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var panel := PanelContainer.new()
@@ -1570,20 +1570,11 @@ func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 	panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	panel.offset_left = 24
 	panel.offset_right = -24
-	panel.offset_top = -minf(350,get_viewport_rect().size.y-36)
+	panel.offset_top = -minf(205 if portrait else 350,get_viewport_rect().size.y-36)
 	panel.offset_bottom = -20
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 20)
 	panel.add_child(row)
-	if portrait:
-		var portrait_texture := preload("res://CharacterArt.gd").portrait(title)
-		var picture := TextureRect.new()
-		picture.texture = portrait_texture
-		picture.custom_minimum_size = Vector2(180, 190)
-		picture.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		row.add_child(picture)
 	var column := VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_theme_constant_override("separation", 8)
@@ -1599,6 +1590,11 @@ func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 	dialogue_text.add_theme_font_size_override("font_size", 21)
 	dialogue_text.add_theme_color_override("font_color", Color("493b2d"))
 	column.add_child(dialogue_text)
+	if portrait:
+		name_label.add_theme_font_size_override("font_size",23)
+		var compact=preload("res://CompactConversation.gd").new()
+		panel.add_child(compact)
+		compact.setup(panel,column,preload("res://CharacterArt.gd").portrait(title))
 	refresh_hud()
 	return column
 

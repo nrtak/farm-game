@@ -50,7 +50,6 @@ static func check_visit(farm) -> bool:
 	visitor.z_index = 5
 	visitor.face_player(farm.player.position)
 	var column = farm.make_modal(person,true)
-	farm.dialogue_panel.get_child(0).offset_top = -minf(380,farm.get_viewport_rect().size.y-32)
 	farm.dialogue_text.text = words
 	if key.begins_with("invite_"): VolunteerRequests.offer(farm,column,SeasonalFestivals.today(farm.day+1),farm.day+1)
 	if key == "seira_visit": VolunteerRequests.offer_delivery(farm,column)
