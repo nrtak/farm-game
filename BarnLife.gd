@@ -49,6 +49,7 @@ static func purchase(farm, species: String) -> void:
 	if data.animals.size() >= capacity(farm): farm.dialogue_text.text = "The barn is full. Visit Kenta for more stalls."; return
 	if farm.coins < SPECIES[species].price: farm.dialogue_text.text = "Not enough money for this animal."; return
 	farm.coins -= SPECIES[species].price
+	if is_instance_valid(farm.sound): farm.sound.play_effect("purchase")
 	data.animals.append({"species":species,"fed":-1,"petted":-1,"affection":0,"nights":0,"ready":0,"settled":farm.day})
 	farm.shops.Barn.queue_redraw()
 	farm.save_game(false)
@@ -57,6 +58,7 @@ static func buy_feed(farm) -> void:
 	if farm.coins < 30: farm.dialogue_text.text = "Feed costs ¥30."; return
 	if state(farm).feed > 989: return
 	farm.coins -= 30
+	if is_instance_valid(farm.sound): farm.sound.play_effect("purchase")
 	state(farm).feed += 10
 	farm.save_game(false)
 	open_manager(farm)

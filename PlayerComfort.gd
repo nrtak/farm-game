@@ -81,6 +81,7 @@ static func open_settings(f) -> void:
 	for option in ["large_stick","right_stick","gentle_stick","large_text"]:
 		var names={"large_stick":"Larger joystick","right_stick":"Joystick on right","gentle_stick":"Gentler joystick sensitivity","large_text":"Larger dialogue text"}
 		list.add_child(f.make_button(names[option]+(" · On" if s.get(option,false) else " · Off"),toggle.bind(f,option)))
+	list.add_child(f.make_button("Music & sound",preload("res://GameAudio.gd").menu.bind(f)))
 	c.add_child(f.make_button("Close",f.close_dialogue))
 static func toggle(f,key:String) -> void:
 	var s:=settings(f);s[key]=not s.get(key,false);f.layout_ui();f.save_game(false);open_settings(f)

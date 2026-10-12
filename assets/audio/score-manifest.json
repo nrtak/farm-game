@@ -1,0 +1,87 @@
+{
+  "author": "Original procedural composition created for Tea Blossom Hills",
+  "sample_rate": 22050,
+  "channels": 1,
+  "tracks": [
+    {
+      "file": "music-farm.wav",
+      "seconds": 45.71,
+      "peak": 0.2277
+    },
+    {
+      "file": "music-town.wav",
+      "seconds": 38.4,
+      "peak": 0.252
+    },
+    {
+      "file": "music-nature.wav",
+      "seconds": 50.53,
+      "peak": 0.2255
+    },
+    {
+      "file": "music-interior.wav",
+      "seconds": 53.33,
+      "peak": 0.2441
+    },
+    {
+      "file": "music-night.wav",
+      "seconds": 60.0,
+      "peak": 0.2226
+    },
+    {
+      "file": "music-rain.wav",
+      "seconds": 56.47,
+      "peak": 0.2362
+    },
+    {
+      "file": "music-falls.wav",
+      "seconds": 64.0,
+      "peak": 0.2217
+    },
+    {
+      "file": "sfx-wake.wav",
+      "seconds": 1.38,
+      "peak": 0.3703
+    },
+    {
+      "file": "sfx-sleep.wav",
+      "seconds": 1.21,
+      "peak": 0.385
+    },
+    {
+      "file": "sfx-purchase.wav",
+      "seconds": 1.04,
+      "peak": 0.3132
+    },
+    {
+      "file": "sfx-save.wav",
+      "seconds": 1.04,
+      "peak": 0.3123
+    },
+    {
+      "file": "sfx-door.wav",
+      "seconds": 1.04,
+      "peak": 0.3124
+    },
+    {
+      "file": "sfx-step.wav",
+      "seconds": 0.1,
+      "peak": 0.2064
+    },
+    {
+      "file": "ambience-rain.wav",
+      "seconds": 8.0,
+      "peak": 0.2861
+    },
+    {
+      "file": "ambience-nature.wav",
+      "seconds": 8.0,
+      "peak": 0.0574
+    },
+    {
+      "file": "ambience-night.wav",
+      "seconds": 8.0,
+      "peak": 0.015
+    }
+  ]
+}

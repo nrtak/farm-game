@@ -139,6 +139,7 @@ static func order_upgrade(farm, kind: String) -> void:
 		farm.dialogue_text.text = "Not enough money, lumber or harvest experience. Nothing was charged."
 		return
 	farm.coins -= info.cost
+	if is_instance_valid(farm.sound): farm.sound.play_effect("purchase")
 	farm.resources.state().lumber -= info.wood
 	farm.interior_progress.construction = {"kind":kind,"day":farm.day,"level":info.level+1}
 	farm.save_game(false)

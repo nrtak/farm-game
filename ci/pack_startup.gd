@@ -18,6 +18,8 @@ func run() -> void:
 		assert(preload("res://InteriorArtwork.gd").texture(room).resource_path.ends_with("-v3.png"),"Latest town interior exported: "+room)
 	assert(game.regions.waterfall.background!=null,"Waterfall art exported")
 	assert(game.regions.waterfall.is_walkable(Vector2(800,700)))
+	for theme in ["farm","town","nature","interior","night","rain","falls"]:
+		assert(game.sound.loop_stream("res://assets/audio/music-"+theme+".wav")!=null,"Music exported: "+theme)
 	game.interior_progress.story={"intro":true}
 	game.enter_shop("Tea Processing Shed",true)
 	game.tea_leaves=1

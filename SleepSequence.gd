@@ -11,6 +11,7 @@ var overlay: CanvasLayer
 const DURATIONS := [0.65,0.45,0.6,0.6,0.6,0.65]
 func begin(game) -> void:
 	farm=game
+	if is_instance_valid(farm.sound): farm.sound.play_effect("sleep")
 	z_index=200
 	phase=0
 	elapsed=0
@@ -72,6 +73,7 @@ func step(delta: float) -> void:
 		farm.farmer.visible=false
 	if phase==3:
 		farm.finish_sleep_day()
+		if is_instance_valid(farm.sound): farm.sound.play_effect("wake")
 		title.text="A new day!\n"+farm.calendar_text()+"\n"+farm.clock_text()
 		farm.player.position=pillow
 	phase+=1

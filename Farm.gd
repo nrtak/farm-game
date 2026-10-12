@@ -114,6 +114,7 @@ const WAKE_MINUTE := 360.0
 const LATE_MINUTE := 1260.0
 const MAX_HEALTH := 100.0
 const WORK_COSTS := [2.0, 2.0, 3.0]
+var sound
 var save_loaded := false
 var clock_minutes := WAKE_MINUTE
 var health := MAX_HEALTH
@@ -292,6 +293,7 @@ func _ready() -> void:
 	game_ready=true
 	var comfort=preload("res://PlayerComfort.gd").new()
 	add_child(comfort);comfort.setup(self)
+	sound=preload("res://GameAudio.gd").new();add_child(sound);sound.setup(self)
 	queue_redraw()
 	call_deferred("finish_launch")
 
@@ -604,6 +606,7 @@ func _physics_process(delta: float) -> void:
 		polish.path.clear()
 	var travel := player.position.distance_to(previous_position)
 	update_walk(delta, travel > 0.01, direction, travel)
+	if is_instance_valid(sound): sound.walked(travel)
 	if festival_active:
 		festival_elapsed += delta
 		animate_festival()
@@ -837,7 +840,9 @@ func refresh_hud() -> void:
 		action_button.text="Listen";action_button.visible=true;action_button.disabled=false
 
 func set_location(indoors: bool, destination: Vector2) -> void:
+	if is_instance_valid(sound) and inside_house!=indoors: sound.play_effect("door")
 	if is_instance_valid(polish): polish.path.clear()
+	if is_instance_valid(sound): sound.play_effect("door")
 	for room in shops.values():
 		room.visible = false
 		RenderingServer.canvas_item_clear(room.get_canvas_item())
@@ -1152,6 +1157,7 @@ func save_game(show_message: bool = true, overnight_checkpoint: bool = false) ->
 			if show_message: say("Could not replace the save. Your previous save is preserved.")
 			return
 		if show_message or overnight_checkpoint: say("✓ Farm saved.")
+		if show_message and is_instance_valid(sound): sound.play_effect("save")
 	elif show_message: say("Could not save. Check storage permissions.")
 
 func load_game() -> void:
@@ -1466,6 +1472,7 @@ func travel_to(area: String, point: Vector2, persist: bool = true) -> void:
 	if area == "road":
 		travel_to("town", town.design(Vector2(1200,2000)), persist)
 		return
+	if is_instance_valid(sound) and location=="shop": sound.play_effect("door")
 	for room in shops.values():
 		room.visible = false
 		RenderingServer.canvas_item_clear(room.get_canvas_item())
@@ -1764,6 +1771,7 @@ func purchase_crop_seeds(crop_name: String) -> void:
 		dialogue_text.text = "Your seed bag is full."
 		return
 	coins -= CROPS[crop_name].pack
+	if is_instance_valid(sound): sound.play_effect("purchase")
 	if crop_name == "Turnip": seeds += 5
 	else: extra_seeds[crop_name] += 5
 	dialogue_text.text = "%s seeds: %d · Money ¥%d" % [crop_name, seed_count(crop_name), coins]
@@ -1778,6 +1786,7 @@ func purchase_meal() -> void:
 		dialogue_text.text = "A meal costs ¥30. You're welcome to rest here a little."
 		return
 	coins -= 30
+	if is_instance_valid(sound): sound.play_effect("purchase")
 	health = minf(MAX_HEALTH, health + 30)
 	dialogue_text.text = "Enjoy! Health: %d / 100   ·   Money: ¥%d" % [int(health), coins]
 	save_game(false)
@@ -1798,6 +1807,7 @@ func purchase_ore_upgrade(kind: String) -> void:
 		dialogue_text.text = "This upgrade needs ¥%d and 2 %s in your backpack. Chest ore must be collected first." % [price, mineral]
 		return
 	coins -= price
+	if is_instance_valid(sound): sound.play_effect("purchase")
 	ore_basket[mineral] -= 2
 	if kind == "water": tool_level = 1
 	elif kind == "pick": pick_level = 1
@@ -1984,6 +1994,7 @@ func enter_shop(service: String, restoring: bool = false) -> void:
 		if clock_minutes < hours[service].x or clock_minutes >= hours[service].y:
 			say("%s is closed. Please return during opening hours." % service)
 			return
+	if is_instance_valid(sound): sound.play_effect("door")
 	for room in shops.values():
 		room.visible = false
 		RenderingServer.canvas_item_clear(room.get_canvas_item())
@@ -2118,6 +2129,8 @@ func open_guide() -> void:
 	dialogue_panel.get_child(0).offset_top = -380
 	dialogue_text.text = "Move with arrows/WASD or the joystick. Hold Shift, or push the joystick farther, to run.\n\nChoose seeds → Plant → Water daily → Sleep → Harvest → Shipping box. Sleep in the house to recover Health.\n\nWalk onto the Town walkway on the farm to enter town directly. All marked region exits work by walking through them; Routes shows directions. Visit the store for seeds, the forge for an upgrade, and the café for meals.\n\nTown exits: north mountain/lake, east tea fields, west harbor, northwest shrine. The plaza Events board previews scenes and the festival."
 	dialogue_text.add_theme_font_size_override("font_size", 18)
+	preload("res://PlayerComfort.gd").scroll_text(self,column)
+	column.add_child(make_button("Music & sound",preload("res://GameAudio.gd").menu.bind(self)))
 	column.add_child(make_button("Controls & readability",preload("res://PlayerComfort.gd").open_settings.bind(self)))
 	column.add_child(make_button("Village life & keepsakes",preload("res://VillageDepth.gd").collection.bind(self)))
 	column.add_child(make_button("Let's explore", close_dialogue))
@@ -2132,6 +2145,7 @@ func clinic_treatment() -> void:
 		dialogue_text.text = "Treatment costs ¥50. Resting at home can also restore Health."
 		return
 	coins -= 50
+	if is_instance_valid(sound): sound.play_effect("purchase")
 	health = MAX_HEALTH
 	dialogue_text.text = "All better. Take care out there!"
 	save_game(false)
@@ -2461,6 +2475,7 @@ func purchase_backpack() -> void:
 		dialogue_text.text = "You need ¥%d for the next backpack. You have ¥%d." % [price, coins]
 		return
 	coins -= price
+	if is_instance_valid(sound): sound.play_effect("purchase")
 	backpack_level += 1
 	save_game(false)
 	open_backpack_shop()
@@ -2622,6 +2637,7 @@ func take_onsen() -> void:
 	if health >= 100: dialogue_text.text = "You are already refreshed. Enjoy the view!"; return
 	if coins < 40: dialogue_text.text = "A bath costs ¥40. Come back when you can spare it."; return
 	coins -= 40
+	if is_instance_valid(sound): sound.play_effect("purchase")
 	health = minf(100,health+35)
 	clock_minutes = minf(LATE_MINUTE,clock_minutes+30)
 	dialogue_text.text = "Warm water, mountain air, and a quiet moment. You feel refreshed."
