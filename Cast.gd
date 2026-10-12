@@ -46,3 +46,8 @@ static func index_of(person: String) -> Vector2i:
 		var row: int = GROUPS[group].find(person)
 		if row >= 0: return Vector2i(group + 2, row)
 	return Vector2i(-1, -1)
+
+# Original romance group plus the two initial young villagers.
+const LOVE_INTERESTS := {"boy":["Seira","Aya","Hana","Mika"],"girl":["Shohei","Yuta","Ken","Hiro"]}
+static func is_love_interest(person: String, farmer: String) -> bool:
+	return person in LOVE_INTERESTS.get(farmer,[])

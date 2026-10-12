@@ -351,6 +351,7 @@ func make_button(text: String, callback: Callable) -> Button:
 	button.add_theme_color_override("font_pressed_color", Color("493b2d"))
 	button.add_theme_font_size_override("font_size", 18)
 	button.pressed.connect(callback)
+	preload("res://ItemArtwork.gd").attach(button,preload("res://ItemArtwork.gd").identify(text))
 	return button
 
 func make_ui() -> void:
@@ -880,6 +881,7 @@ func cancel_sleep() -> void:
 func sleep_until_morning() -> void:
 	if not inside_house or not confirming_sleep or sleep_in_progress: return
 	cancel_sleep()
+	save_game(false) # Preserve the evening if the app closes during the lead-in.
 	if not is_instance_valid(sleep_sequence):
 		sleep_sequence=preload("res://SleepSequence.gd").new()
 		add_child(sleep_sequence)
@@ -894,7 +896,7 @@ func finish_sleep_day() -> void:
 	set_location(true, ROOM_ORIGIN + interior.BED_APPROACH)
 	say(("Good morning! Rain is watering your crops today. " if is_rainy_day() else "Good morning! Check your crops and water them. ") + calendar_text())
 	save_time = 0.0
-	save_game(false)
+	save_game(false,true)
 
 func crop_hint() -> String:
 	if nearest < 0 or nearest >= plots.size():
@@ -1093,8 +1095,8 @@ func interact() -> void:
 			else: say("Harvest crops with golden leaves when ready.")
 	save_game(false)
 
-func save_game(show_message: bool = true) -> void:
-	if choosing_character or not game_ready or sleep_in_progress: return
+func save_game(show_message: bool = true, overnight_checkpoint: bool = false) -> void:
+	if choosing_character or not game_ready or (sleep_in_progress and not overnight_checkpoint): return
 	if FileAccess.file_exists(SAVE_FILE):
 		var previous = read_saved_json(SAVE_FILE)
 		if previous is Dictionary:
@@ -1126,8 +1128,9 @@ func load_game() -> void:
 			values.erase("Yoshi")
 	var saved_progress = parsed.get("interior_progress",{})
 	interior_progress = saved_progress if saved_progress is Dictionary else {}
-	for section in ["resources","construction","story","activities"]:
+	for section in ["resources","construction","story"]:
 		if interior_progress.has(section) and not interior_progress[section] is Dictionary: interior_progress.erase(section)
+	if interior_progress.has("activities") and not interior_progress.activities is Array: interior_progress.erase("activities")
 	interior_progress.home=clampi(int(interior_progress.get("home",0)),0,2)
 	InteriorLife.add_plots(self,int(interior_progress.get("restoration",0)))
 	coins = maxi(0, int(parsed.get("coins", 500)))
@@ -1586,7 +1589,7 @@ func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 	column.add_theme_constant_override("separation", 8)
 	row.add_child(column)
 	var name_label := Label.new()
-	name_label.text = title
+	name_label.text = title + ("  ♥" if portrait and Cast.is_love_interest(title,character_choice) else "")
 	name_label.add_theme_font_size_override("font_size", 27)
 	name_label.add_theme_color_override("font_color", Color("493b2d"))
 	column.add_child(name_label)
@@ -2049,7 +2052,7 @@ func check_walk_exits() -> void:
 			if regions.has(location):
 				var point: Vector2 = player.position - REGION_ORIGINS[location]
 				if ((location=="harbor" and point.x>1520 and absf(point.y-585)<120) or (location=="tea" and point.x<75 and absf(point.y-665)<120) or (location=="historic" and point.x>1520 and point.y>1070) or (location=="mountain" and point.y>1120 and absf(point.x-800)<100)):
-					var arrivals := {"mountain": Vector2(1200, 180), "harbor": Vector2(350, 1080), "tea": Vector2(2180, 1080), "historic": Vector2(180,300)}
+					var arrivals := {"mountain": Vector2(1200, 180), "harbor": Vector2(420, 800), "tea": Vector2(2180, 1080), "historic": Vector2(180,300)}
 					travel_to("town", town.design(arrivals[location]))
 
 func open_map() -> void:
@@ -2116,6 +2119,7 @@ func open_shipping() -> void:
 		value += int(fish_shipping[fish_name]) * FISH[fish_name]
 		basket += int(fish_basket[fish_name])
 	dialogue_text.text = "Carrying: %d goods. Queued payment: ¥%d.\nShipped crops, fish, ore, tea packets and animal products are paid for next morning." % [basket, value]
+	preload("res://ItemArtwork.gd").list_goods(self,column)
 	var ship_button := make_button("Ship all carried goods" if basket>0 else "Nothing to ship — harvest or gather first",ship_produce)
 	ship_button.disabled=basket==0
 	column.add_child(ship_button)

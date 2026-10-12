@@ -56,7 +56,7 @@ func _ready() -> void:
 	for rect in [Rect2(-24, -17.7778, 2448, 17.7778), Rect2(-24, 1600, 2448, 17.7778), Rect2(-24, 0, 24, 1600), Rect2(2400, 0, 24, 1600)]: add_obstacle(rect)
 	add_label("South · Farm", Vector2(1020, 1511.11), Vector2(360, 29.6296))
 	add_label("North · Mountain & Lake", Vector2(980, 37.037), Vector2(440, 29.6296))
-	add_label("West · Harbor", Vector2(260, 750), Vector2(290, 29.6296))
+
 	add_label("East · Tea Country", Vector2(2030, 648.148), Vector2(340, 29.6296))
 	add_label("Northwest · Shrine", Vector2(350, 300), Vector2(340, 40))
 	add_label("Events", Vector2(1260, 511.111), Vector2(180, 23.7037))
@@ -248,6 +248,12 @@ func nearest_service(point: Vector2) -> String:
 	return ""
 
 func _draw() -> void:
+	# Low roadside board beside the actual west transition, never in the walking lane.
+	draw_rect(Rect2(430,675,9,65),Color("785437"))
+	draw_style_box(panel(Color("e4c38b")),Rect2(320,635,235,58))
+	draw_string(ThemeDB.fallback_font,Vector2(335,674),"← WEST HARBOR",HORIZONTAL_ALIGNMENT_LEFT,-1,23,Color("493b2d"))
+	for x in [335,385,435]:
+		draw_polyline(PackedVector2Array([Vector2(x+12,787),Vector2(x,800),Vector2(x+12,813)]),Color("b18c53"),4,true)
 	for bench in REST_BENCHES:
 		for dx in [8,87]: draw_rect(Rect2(bench.position+Vector2(dx,8),Vector2(9,22)),Color("624830"))
 		draw_rect(bench,Color("aa7849"))
@@ -360,3 +366,11 @@ func is_npc_walkable(point: Vector2) -> bool:
 	return preload("res://ApprovedMapLayout.gd").is_path("town",point,SIZE) or preload("res://MapHabitat.gd").sample("town",point,SIZE,"grass")
 
 static func design(point: Vector2) -> Vector2: return point*Vector2(1.0,1600.0/2160.0)
+
+func panel(color: Color) -> StyleBoxFlat:
+	var style:=StyleBoxFlat.new()
+	style.bg_color=color
+	style.border_color=Color("785437")
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(5)
+	return style
