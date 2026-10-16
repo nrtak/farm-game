@@ -114,8 +114,7 @@ static func journal(f) -> void:
   list.add_child(f.make_button(entry[0],entry[1]))
  c.add_child(f.make_button("Back",f.close_dialogue))
 static func forecast(f) -> void:
- var c=panel(f,"Weather television","Tomorrow: "+preload("res://WeatherLife.gd").forecast(f.day+1)+".\nRain waters outdoor crops. Hurricanes mean staying home. Heatwaves slow crop growth.")
- c.add_child(f.make_button("Back",journal.bind(f)))
+ preload("res://HomeWeather.gd").show_forecast(f,true)
 static func receipt(f) -> void:
  var lines:Array=[];var total:=0
  var queues:Array=[f.shipping_queue,f.fish_shipping,f.ore_shipping,f.BarnLife.state(f).shipping,{"Tea packets":f.tea_shipping}]

@@ -110,6 +110,7 @@ func _draw() -> void:
 	preload("res://InteriorDecor.gd").draw_home(self)
 	# Keep the original room fixed; expansion rooms retain their own furnishings.
 	draw_texture_rect(preload("res://assets/interior-farmhouse-v2.png"),Rect2(0,0,1000,800),false)
+	preload("res://HomeWeather.gd").draw_tv(self)
 	var life:Dictionary=preload("res://EverydayLife.gd").state(get_parent())
 	if life.has("home_color"):
 		draw_style_box(panel(Color(life.home_color)),Rect2(650,480,205,95))

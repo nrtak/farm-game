@@ -711,6 +711,7 @@ func interaction_action() -> String:
 	if location == "farm" and player.position.distance_to(FARM_EXIT) < 110: return "town"
 	if inside_house:
 		var local_position := player.position - ROOM_ORIGIN
+		if local_position.distance_to(preload("res://HomeWeather.gd").APPROACH) < 65: return "weather_tv"
 		if local_position.distance_to(interior.CALENDAR_APPROACH) < 75: return "calendar"
 		if local_position.distance_to(interior.CHEST_APPROACH) < 80 or (int(interior_progress.get("home",0)) > 0 and local_position.distance_to(Vector2(1010,340)) < 80): return "storage"
 		if local_position.distance_to(interior.BED_APPROACH) < 100.0: return "sleep"
@@ -799,6 +800,7 @@ func refresh_hud() -> void:
 		"enter": action_button.text = "Enter"
 		"leave": action_button.text = "Leave"
 		"calendar": action_button.text = "Calendar"
+		"weather_tv": action_button.text = "Weather"
 		"storage": action_button.text = "Storage"
 		"sleep": action_button.text = "Sleep"
 		_:
@@ -830,6 +832,7 @@ func refresh_hud() -> void:
 		"enter": hint = "Welcome home. Enter the farmhouse."
 		"leave": hint = "Leave the house to return to your farm."
 		"calendar": hint = "Check upcoming festivals and tomorrow’s weather."
+		"weather_tv": hint = "Watch today's weather and tomorrow's forecast."
 		"storage": hint = "Store items or take them back into your backpack."
 		"sleep": hint = "Rest in bed to start the next day."
 		_:
@@ -1094,6 +1097,8 @@ func interact() -> void:
 			return
 		"calendar":
 			open_calendar()
+		"weather_tv":
+			preload("res://HomeWeather.gd").show_forecast(self)
 			return
 		"storage":
 			open_storage()

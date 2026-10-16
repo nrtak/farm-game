@@ -1,10 +1,10 @@
 {
-  "updated": "2026-10-16T07:33:24.5641922Z",
+  "updated": "2026-10-16T08:00:59.2771004Z",
   "deadline": "2026-10-16T12:00:00Z",
   "user_direction": "Complete a playable game through Year 2 village vote; keep farming available afterward. Add optional adoptable and raisable farm dog. Make original scenes and routines inspired by cozy farming references. Keep work local until reviewed.",
   "automation_id": "continue-tea-blossom-hills-development",
   "next": [
-    "Continue partial everyday-fifty items: physical weather TV interaction, clearer numeric chapter progress, illustrated cooking recipes, additional home decoration and construction stages.",
+    "Continue partial everyday-fifty items: illustrated cooking recipes, additional home decoration and construction stages.",
     "Implement seasonal forage and rare fish with saved daily limits and suitable artwork.",
     "Continue occupation scenes for remaining cast; portrait expression artwork is still pending.",
     "Before the overnight deadline, preserve a checkpoint and report actual checks and remaining work. No uploads."
@@ -27,5 +27,6 @@
     "No GitHub/TestFlight upload in scheduled follow-ups."
   ],
   "farm_dog": "Implemented optional Ranch adoption and morning invitation, naming, daily feed/pet/play, food shop, affection, growth, safe following, house shelter and persistence. Dedicated isolated regression and native puppy/menu/adult screenshots passed; all 39 isolated regression checks passed. Native screenshots visually inspected; no physical iPhone validation.",
-  "story_chapters": "Eight optional chronological chapters with explicit acceptance, morning visitors, journal and resident conversation access, location/objective guards, resumable three-beat scenes and one-time friendship rewards. Three-beat Year 2 success epilogue remains accessible from journal. Existing vote extension unchanged. Dedicated story and stewardship checks passed; four native screens visually inspected. All 40 isolated regression checks passed, including actual save reloads during all eight chapters. Local exported startup, sleep and saved relaunch passed. No physical iPhone or full manual playthrough validation."
+  "story_chapters": "Eight optional chronological chapters with explicit acceptance, morning visitors, journal and resident conversation access, location/objective guards, resumable three-beat scenes and one-time friendship rewards. Three-beat Year 2 success epilogue remains accessible from journal. Existing vote extension unchanged. Dedicated story and stewardship checks passed; four native screens visually inspected. All 40 isolated regression checks passed, including actual save reloads during all eight chapters. Local exported startup, sleep and saved relaunch passed. No physical iPhone or full manual playthrough validation.",
+  "home_weather": "Physical farmhouse TV, illustrated forecasts and accurate numeric story-goal progress implemented. Dedicated weather test plus story_arc, indoor_clock and everyday_life passed. Native TV, forecast and story journal visually inspected. Suite now includes 41 checks; last full run was 40 before this focused update. No physical iPhone validation."
 }

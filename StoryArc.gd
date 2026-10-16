@@ -34,6 +34,19 @@ static func ready(f,i:int) -> bool:
   7: return f.harvests>=30 and int(f.interior_progress.get("restoration",0))>=2 and acts.size()>=5
  return false
 static func in_room(f,i:int) -> bool: return f.location=="shop" and f.shop_name==CHAPTERS[i].room
+static func progress_text(f,i:int) -> String:
+ var acts:Array=f.interior_progress.get("activities",[])
+ var land:int=int(f.interior_progress.get("restoration",0))
+ match i:
+  0: return "Ready to read the letter"
+  1: return "Restored patches: %d / 1" % mini(land,1)
+  2: return "Fish caught: %d / 3" % mini(f.fish_catches,3)
+  3: return "Tea lesson: "+("complete" if f.tea_lesson_seen else "visit the Tea Farmhouse counter")
+  4: return "Guest sketchbook: "+("complete" if acts.has("Inn") else "join the Inn room activity")
+  5: return "Harvests: %d / 20 · Recipe book: %s" % [mini(f.harvests,20),"complete" if acts.has("Café") else "join the Café room activity"]
+  6: return "Different room activities: %d / 5" % mini(acts.size(),5)
+  7: return "Harvests %d / 30 · Land %d / 2 · Activities %d / 5" % [mini(f.harvests,30),mini(land,2),mini(acts.size(),5)]
+ return ""
 static func conversation_button(f,person:String,column) -> void:
  var i:=current(f)
  if not eligible(f,i) or CHAPTERS[i].person!=person: return
@@ -47,7 +60,7 @@ static func journal(f) -> void:
  if i<0: f.dialogue_text.text="All eight optional chapters are complete. Your farm's future is decided by the village vote, and life continues afterward."
  else:
   var ch:Dictionary=CHAPTERS[i]
-  f.dialogue_text.text="Chapter %d of 8 · %s\n%s\n%s\nEarlier progress counts. Nothing is consumed; completing this chapter earns friendship +2 with %s." % [i+1,ch.title,ch.goal,"Accepted" if s.accepted.get(str(i),false) else "Available from day %d" % ch.day,ch.person]
+  f.dialogue_text.text="Chapter %d of 8 · %s\n%s\n%s\n%s\nNo item cost · Friendship +2 with %s." % [i+1,ch.title,ch.goal,progress_text(f,i),"Accepted" if s.accepted.get(str(i),false) else "Available from day %d" % ch.day,ch.person]
   if eligible(f,i):
    if not s.accepted.get(str(i),false): c.add_child(f.make_button("Read invitation",offer.bind(f,i)))
    elif ready(f,i) and in_room(f,i): c.add_child(f.make_button("Continue chapter",scene.bind(f,i)))

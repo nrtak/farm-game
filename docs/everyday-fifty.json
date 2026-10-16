@@ -89,8 +89,8 @@
     {
       "id": 17,
       "title": "Tomorrow weather television",
-      "status": "partial",
-      "notes": "Forecast available in farm journal and calendar; a physical TV interaction remains."
+      "status": "implemented-desktop-checked",
+      "notes": "Physical farmhouse TV with clear approach and illustrated today/tomorrow forecasts, weather-specific advice, and journal access. All four weather types tested; native desktop views inspected."
     },
     {
       "id": 18,
