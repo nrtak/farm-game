@@ -46,6 +46,7 @@ static func open_manager(farm) -> void:
 	for species in SPECIES: list.add_child(farm.make_button("Buy %s · ¥%d" % [species,SPECIES[species].price],preload("res://EverydayLife.gd").preview_animal.bind(farm,species)))
 	list.add_child(farm.make_button("Buy 10 feed · ¥30",preload("res://EverydayLife.gd").feed_order.bind(farm)))
 	for button in list.get_children(): preload("res://MenuTiles.gd").tile(button)
+	column.add_child(farm.make_button("Farm dog",preload("res://FarmDog.gd").menu.bind(farm)))
 	column.add_child(farm.make_button("Back",farm.close_dialogue))
 static func purchase(farm, species: String) -> void:
 	if farm.location != "shop" or farm.shop_name != "Ranch" or not SPECIES.has(species): return

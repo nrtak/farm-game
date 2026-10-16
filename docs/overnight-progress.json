@@ -1,10 +1,9 @@
 {
-  "updated": "2026-10-16T06:30:00Z",
+  "updated": "2026-10-16T07:10:00.8082537Z",
   "deadline": "2026-10-16T12:00:00Z",
   "user_direction": "Complete a playable game through Year 2 village vote; keep farming available afterward. Add optional adoptable and raisable farm dog. Make original scenes and routines inspired by cozy farming references. Keep work local until reviewed.",
   "automation_id": "continue-tea-blossom-hills-development",
   "next": [
-    "Implement FarmDog.gd: optional free puppy adoption at Ranch, name, daily feed/pet/play, affection, growth, safe farm/house presence, no path blocking; reuse assets/shiba-walk-rest-v1.png via AmbientPet.gd. Add saved state and isolated regression/visual checks.",
     "Implement StoryArc.gd: optional chronological story chapters with explicit acceptance, clear objectives, progress journal and resumable dialogue; integrate morning farm visits after existing Stewardship events. Preserve the Year 2 vote and extension behavior.",
     "Add ending/epilogue scene and test both successful vote and extension; existing tests/stewardship.gd covers the old contract.",
     "Continue remaining partial/pending items in docs/everyday-fifty.json, avoiding feature claims without implementation."
@@ -25,5 +24,6 @@
     "Keep old unrelated untracked images, shaders and tests out of commits.",
     "All Python text file I/O must use UTF-8.",
     "No GitHub/TestFlight upload in scheduled follow-ups."
-  ]
+  ],
+  "farm_dog": "Implemented optional Ranch adoption and morning invitation, naming, daily feed/pet/play, food shop, affection, growth, safe following, house shelter and persistence. Dedicated isolated regression and native puppy/menu/adult screenshots passed; all 39 isolated regression checks passed. Native screenshots visually inspected; no physical iPhone validation."
 }

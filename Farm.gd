@@ -298,6 +298,7 @@ func _ready() -> void:
 	call_deferred("finish_launch")
 
 	var pasture=preload("res://AnimalPasture.gd").new();add_child(pasture);pasture.setup(self)
+	var dog=preload("res://FarmDog.gd").new();add_child(dog);dog.setup(self)
 
 func finish_launch() -> void:
 	# A failed launch retries at the farmhouse entrance without deleting progress.
@@ -716,6 +717,7 @@ func interaction_action() -> String:
 		if local_position.distance_to(interior.EXIT) < 90.0: return "leave"
 	elif player.position.distance_to(farmhouse.DOOR_POSITION) < 90.0:
 		return "enter"
+	if preload("res://FarmDog.gd").nearby(self): return "farm_dog"
 	return ""
 
 func calendar_text() -> String:
@@ -767,6 +769,7 @@ func refresh_hud() -> void:
 		"refill_water": action_button.text = "Refill"
 		"chop_wood": action_button.text = "Chop"
 		"barn_enter": action_button.text = "Enter"
+		"farm_dog": action_button.text = "Dog"
 		"pasture_board": action_button.text = "Animals"
 		"pasture_care": action_button.text = "Care"
 		"barn_care": action_button.text = "Animals"
@@ -995,6 +998,9 @@ func interact() -> void:
 			return
 		"barn_enter":
 			enter_shop("Barn")
+			return
+		"farm_dog":
+			preload("res://FarmDog.gd").menu(self)
 			return
 		"pasture_board":
 			preload("res://EverydayLife.gd").care_board(self)

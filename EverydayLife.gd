@@ -110,7 +110,7 @@ static func journal(f) -> void:
  var c=panel(f,"Farm journal","Your animals, neighbors and farm memories.")
  var scroll:=ScrollContainer.new();scroll.custom_minimum_size.y=160;scroll.size_flags_vertical=Control.SIZE_EXPAND_FILL;c.add_child(scroll)
  var list:=VBoxContainer.new();list.size_flags_horizontal=Control.SIZE_EXPAND_FILL;scroll.add_child(list)
- for entry in [["Daily animal care",care_board.bind(f)],["Neighbors & gifts",neighbors.bind(f)],["Morning report",morning.bind(f)],["Weather television",forecast.bind(f)],["Farm memories",album.bind(f)],["Seed calendar",seed_calendar.bind(f)],["Town map",town_map.bind(f)],["Home decoration",decorate.bind(f)]]:
+ for entry in [["Farm dog",preload("res://FarmDog.gd").menu.bind(f)],["Daily animal care",care_board.bind(f)],["Neighbors & gifts",neighbors.bind(f)],["Morning report",morning.bind(f)],["Weather television",forecast.bind(f)],["Farm memories",album.bind(f)],["Seed calendar",seed_calendar.bind(f)],["Town map",town_map.bind(f)],["Home decoration",decorate.bind(f)]]:
   list.add_child(f.make_button(entry[0],entry[1]))
  c.add_child(f.make_button("Back",f.close_dialogue))
 static func forecast(f) -> void:

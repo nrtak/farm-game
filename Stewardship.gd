@@ -39,7 +39,7 @@ static func check_visit(farm) -> bool:
 		key = "kenta_visit"
 		person = "Kenta"
 		words = "That reclaimed patch is looking good. I'll be at the carpentry workshop on the southwest edge of town. We can expand the house next—first a storage room, then a kitchen wing."
-	if key.is_empty(): return false
+	if key.is_empty(): return preload("res://FarmDog.gd").maybe_visit(farm)
 	state[key] = true
 	farm.interior_progress["story"] = state
 	var visitor = preload("res://Npc.gd").new()
