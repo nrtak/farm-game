@@ -88,6 +88,12 @@ static func care_board(f) -> void:
   var a:Dictionary=data.animals[i]
   var b=f.make_button("%s · %s\n%s · %s\nReady: %d" % [a.get("name",a.species),a.species,"Fed" if a.fed==f.day else "Needs feed","Petted" if a.petted==f.day else "Needs petting",a.ready],animal_record.bind(f,i))
   grid.add_child(b);preload("res://MenuTiles.gd").tile(b)
+  b.text="%s\n%s" % [a.get("name",a.species),a.species];b.custom_minimum_size.y=200
+  for theme in ["normal","hover","pressed","disabled","focus"]:
+   var style=b.get_theme_stylebox(theme).duplicate();style.content_margin_bottom=62;b.add_theme_stylebox_override(theme,style)
+  var status=preload("res://CareStatus.gd").new();status.fed=a.fed==f.day;status.petted=a.petted==f.day;status.product_count=a.ready;status.mouse_filter=Control.MOUSE_FILTER_IGNORE;b.add_child(status)
+  status.size=Vector2(140,60);b.resized.connect(func(): status.size.x=b.size.x;status.position=Vector2(0,b.size.y-62))
+  b.tooltip_text="Fed: %s · Petted: %s · Products ready: %d" % [status.fed,status.petted,status.product_count]
  c.add_child(f.make_button("Pasture · "+("Enabled" if data.get("pasture",false) else "Disabled"),preload("res://AnimalPasture.gd").toggle.bind(f)))
  c.add_child(f.make_button("Back",f.close_dialogue))
 static func animal_record(f,index:int) -> void:
@@ -220,13 +226,14 @@ static func town_map(f) -> void:
   map.draw_texture_rect(preload("res://assets/map-town-open-v3.png"),rect,false)
   if f.location=="town": map.draw_circle(rect.position+(f.player.position-f.TOWN_ORIGIN)/f.town.SIZE*rect.size,7,Color("ffe497")))
  for building in f.town.BUILDINGS:
-  var b=f.make_button(str(f.town.BUILDINGS.find(building)+1),func():
+  var b=f.make_button("",func():
    var hours:Vector2=f.shop_opening_hours().get(building.name,Vector2(0,1440))
    f.dialogue_text.text="%s · %d:00–%d:00" % [building.name,int(hours.x/60),int(hours.y/60)])
-  b.custom_minimum_size=Vector2(36,36);b.size=Vector2(36,36);map.add_child(b)
+  b.custom_minimum_size=Vector2(40,40);b.size=Vector2(40,40);b.tooltip_text=building.name;map.add_child(b)
+  var symbol=preload("res://ShopSymbol.gd").new();symbol.shop=building.name;symbol.size=Vector2(40,40);symbol.mouse_filter=Control.MOUSE_FILTER_IGNORE;b.add_child(symbol)
   map.resized.connect(func():
    var width:float=minf(map.size.x,map.size.y*1.5)
-   b.position=Vector2((map.size.x-width)/2,0)+building.door/f.town.SIZE*Vector2(width,width/1.5)-Vector2(18,18))
+   b.position=Vector2((map.size.x-width)/2,0)+building.door/f.town.SIZE*Vector2(width,width/1.5)-Vector2(20,20))
  c.add_child(f.make_button("Shop directory",shops.bind(f)));c.add_child(f.make_button("Back",f.close_dialogue))
 
 static func seed_order(f,crop:String) -> void:

@@ -21,8 +21,8 @@
     {
       "id": 4,
       "title": "Daily animal care board",
-      "status": "partial",
-      "notes": "Animal icons and readable care status; dedicated feed/pet/product status symbols still pending."
+      "status": "implemented-desktop-checked",
+      "notes": "Animal artwork with feed, petting and ready-product symbols. Daily status and uncollected counts regression checked; native desktop care screen inspected."
     },
     {
       "id": 5,
@@ -32,8 +32,8 @@
     {
       "id": 6,
       "title": "Town map with shops and hours",
-      "status": "partial",
-      "notes": "Numbered tappable building markers and hours; shop-specific symbols still pending."
+      "status": "implemented-desktop-checked",
+      "notes": "Twelve shop-specific tappable symbols with building name/opening hours and gold player marker. Each marker callback regression checked; native map screen inspected."
     },
     {
       "id": 7,
