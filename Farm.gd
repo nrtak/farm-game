@@ -297,6 +297,8 @@ func _ready() -> void:
 	queue_redraw()
 	call_deferred("finish_launch")
 
+	var pasture=preload("res://AnimalPasture.gd").new();add_child(pasture);pasture.setup(self)
+
 func finish_launch() -> void:
 	# A failed launch retries at the farmhouse entrance without deleting progress.
 	await get_tree().process_frame
@@ -319,6 +321,8 @@ func world_outline(outline: Array) -> PackedVector2Array:
 	return points
 
 func is_walkable(position: Vector2) -> bool:
+	for fence in preload("res://AnimalPasture.gd").FENCES:
+		if fence.grow(PLAYER_RADIUS).has_point(position): return false
 	if interior_progress.get("greenhouse",false) and Rect2(400,1310,500,250).grow(PLAYER_RADIUS).has_point(position): return false
 	if not Rect2(Vector2.ONE * PLAYER_RADIUS, WORLD - Vector2.ONE * PLAYER_RADIUS * 2.0).has_point(position):
 		return false
@@ -646,6 +650,8 @@ func _physics_process(delta: float) -> void:
 		draw_elapsed = 0.0
 
 func interaction_action() -> String:
+	if preload("res://AnimalPasture.gd").nearest(self)>=0: return "pasture_care"
+	if location=="farm" and not inside_house and preload("res://AnimalPasture.gd").BOUNDS.has_point(player.position): return "pasture_board"
 	if location=="waterfall": return "falls"
 	if location=="farm" and not inside_house and player.position.distance_to(SHIPPING_BOX)<210: return "shipping"
 	if location == "farm" and interior_progress.get("greenhouse",false) and player.position.distance_to(FarmBuildings.GREENHOUSE_DOOR)<90: return "greenhouse_enter"
@@ -744,7 +750,7 @@ func refresh_hud() -> void:
 	health_label.text = "Health %d / 100" % int(ceil(health))
 	health_fill.bg_color = Color("a5be83") if health >= 50 else (Color("e7c786") if health >= 25 else Color("da927c"))
 	farmer.modulate = Color("d1c7bb") if health < 25 else Color.WHITE
-	tool_bar.visible = location == "farm" and not inside_house and not dialogue_open
+	tool_bar.visible = location == "farm" and not inside_house and not dialogue_open and not preload("res://AnimalPasture.gd").BOUNDS.grow(80).has_point(player.position)
 	tool_buttons[1].text="Water %d" % resources.state().water
 	joystick.visible = not dialogue_open
 	action_button.visible = not dialogue_open
@@ -761,6 +767,8 @@ func refresh_hud() -> void:
 		"refill_water": action_button.text = "Refill"
 		"chop_wood": action_button.text = "Chop"
 		"barn_enter": action_button.text = "Enter"
+		"pasture_board": action_button.text = "Animals"
+		"pasture_care": action_button.text = "Care"
 		"barn_care": action_button.text = "Animals"
 		"greenhouse_enter": action_button.text = "Enter"
 		"greenhouse_bed": action_button.text = "Tend"
@@ -987,6 +995,12 @@ func interact() -> void:
 			return
 		"barn_enter":
 			enter_shop("Barn")
+			return
+		"pasture_board":
+			preload("res://EverydayLife.gd").care_board(self)
+			return
+		"pasture_care":
+			BarnLife.open_animal(self,preload("res://AnimalPasture.gd").nearest(self))
 			return
 		"barn_care":
 			BarnLife.open_care(self)
@@ -1418,7 +1432,7 @@ func _draw() -> void:
 			var y := -15 + row * 15
 			draw_line(pos + Vector2(-22, y), pos + Vector2(22, y + 1), Color(0.28, 0.18, 0.10, 0.3), 2)
 		if i == nearest:
-			draw_rect(Rect2(pos - Vector2(29, 29), Vector2(58, 58)), Color(1.0, 0.89, 0.55, 0.8), false, 2)
+			draw_rect(Rect2(pos - Vector2(29, 29), Vector2(58, 58)), Color("8ec9de") if selected_tool==1 else Color(1.0, 0.89, 0.55, 0.8), false, 3)
 		if plot.stage > 0: crop(pos + Vector2(0, -2), plot.stage, plot.crop, plot.growth)
 		if i == nearest and plot.stage > 0:
 			var nights: int = CROPS[plot.crop].days
@@ -1591,6 +1605,7 @@ func start_conversation(npc: Node2D) -> void:
 		dialogue_text.get_parent().add_child(make_button("Not now", close_dialogue))
 	else:
 		dialogue_text.get_parent().add_child(make_button("Continue", advance_dialogue))
+		if Cast.is_love_interest(person,character_choice) and int(friendship.get(person,0))>=20: dialogue_text.get_parent().add_child(make_button("Invite",preload("res://EverydayLife.gd").invite.bind(self,person)))
 		dialogue_text.get_parent().add_child(make_button("Goodbye",close_dialogue))
 		dialogue_text.get_parent().add_child(make_button("Give gift",preload("res://VillageDepth.gd").gifts.bind(self,person)))
 	save_game(false)
@@ -1744,7 +1759,7 @@ func open_service(service: String) -> void:
 		dialogue_panel.get_child(0).offset_top = -410
 		dialogue_text.text = "Choose seeds. Each pack has five; crops need daily watering and grow overnight."
 		for crop_name in CROPS:
-			column.add_child(make_button("%s · %d nights · 5 seeds ¥%d" % [crop_name, CROPS[crop_name].days, CROPS[crop_name].pack], purchase_crop_seeds.bind(crop_name)))
+			column.add_child(make_button("%s · %d nights · 5 seeds ¥%d" % [crop_name, CROPS[crop_name].days, CROPS[crop_name].pack], preload("res://EverydayLife.gd").seed_order.bind(self,crop_name)))
 		column.add_child(make_button("Backpacks", open_backpack_shop))
 		column.add_child(make_button("Close", close_dialogue))
 	elif service == "Café":
@@ -1759,9 +1774,9 @@ func open_service(service: String) -> void:
 		var column := make_modal("Blacksmith · Gen")
 		dialogue_panel.get_child(0).offset_top = -380
 		dialogue_text.text = "Bring ore in your backpack. Money ¥%d\nCopper %d · Iron %d. Upgrades reduce work Health." % [coins, ore_basket.Copper, ore_basket.Iron]
-		if tool_level == 0: column.add_child(make_button("Light watering can · ¥100 + 2 Copper", purchase_upgrade))
-		if pick_level == 0: column.add_child(make_button("Copper pick · ¥150 + 2 Copper", purchase_ore_upgrade.bind("pick")))
-		if harvest_level == 0: column.add_child(make_button("Harvest tools · ¥250 + 2 Iron", purchase_ore_upgrade.bind("harvest")))
+		if tool_level == 0: column.add_child(make_button("Light watering can · ¥100 + 2 Copper", preload("res://EverydayLife.gd").confirm_purchase.bind(self,"Light watering can","¥100 and 2 Copper. Reduces watering effort.",purchase_upgrade)))
+		if pick_level == 0: column.add_child(make_button("Copper pick · ¥150 + 2 Copper", preload("res://EverydayLife.gd").confirm_purchase.bind(self,"Copper pick","¥150 and 2 Copper. Reduces mining effort.",purchase_ore_upgrade.bind("pick"))))
+		if harvest_level == 0: column.add_child(make_button("Harvest tools · ¥250 + 2 Iron", preload("res://EverydayLife.gd").confirm_purchase.bind(self,"Harvest tools","¥250 and 2 Iron. Reduces harvesting effort.",purchase_ore_upgrade.bind("harvest"))))
 		column.add_child(make_button("Tool care workshop",InteriorLife.open_room.bind(self,"Blacksmith")))
 		if tool_level + pick_level + harvest_level == 3: dialogue_text.text += "\nAll three tools are upgraded."
 		column.add_child(make_button("Leave", close_dialogue))
@@ -1774,17 +1789,18 @@ func open_service(service: String) -> void:
 func purchase_seeds() -> void:
 	purchase_crop_seeds("Turnip")
 
-func purchase_crop_seeds(crop_name: String) -> void:
-	if coins < CROPS[crop_name].pack:
+func purchase_crop_seeds(crop_name: String, packs:int=1) -> void:
+	if packs<1 or packs>20 or not CROPS.has(crop_name): return
+	if coins < CROPS[crop_name].pack*packs:
 		dialogue_text.text = "Not enough money for that pack."
 		return
-	if seed_count(crop_name) > 994:
+	if seed_count(crop_name)+5*packs > 999:
 		dialogue_text.text = "Your seed bag is full."
 		return
-	coins -= CROPS[crop_name].pack
+	coins -= CROPS[crop_name].pack*packs
 	if is_instance_valid(sound): sound.play_effect("purchase")
-	if crop_name == "Turnip": seeds += 5
-	else: extra_seeds[crop_name] += 5
+	if crop_name == "Turnip": seeds += 5*packs
+	else: extra_seeds[crop_name] += 5*packs
 	dialogue_text.text = "%s seeds: %d · Money ¥%d" % [crop_name, seed_count(crop_name), coins]
 	save_game(false)
 	refresh_hud()
@@ -2202,6 +2218,10 @@ func open_shipping() -> void:
 	column.add_child(make_button("Close", close_dialogue))
 
 func ship_produce() -> void:
+	var kept:Dictionary={}
+	for item in preload("res://EverydayLife.gd").state(self).protected:
+		if preload("res://EverydayLife.gd").state(self).protected[item]:
+			kept[item]=carried_count(item);change_carried(item,-int(kept[item]))
 	var shipped_count := backpack_count()
 	BarnLife.ship(self)
 	for mineral in ORE:
@@ -2215,11 +2235,13 @@ func ship_produce() -> void:
 	for fish_name in FISH:
 		fish_shipping[fish_name] += fish_basket[fish_name]
 		fish_basket[fish_name] = 0
+	for item in kept: change_carried(item,int(kept[item]))
 	save_game(false)
 	open_shipping()
-	dialogue_text.text = "Shipped %d goods.\n" % (shipped_count-backpack_count()) + dialogue_text.text
+	dialogue_text.text = "Shipped %d goods.\n" % (shipped_count-backpack_count()+kept.values().reduce(func(a,b):return a+b,0)) + dialogue_text.text
 
 func settle_farm_day() -> void:
+	preload("res://EverydayLife.gd").receipt(self)
 	for mineral in ORE:
 		coins += int(ore_shipping[mineral]) * ORE[mineral]
 		ore_shipping[mineral] = 0
@@ -2417,34 +2439,7 @@ func backpack_has_room() -> bool:
 	return backpack_count() < BACKPACK_SIZES[backpack_level]
 
 func open_backpack() -> void:
-	clear_item_moment()
-	var column := make_modal("Backpack · %d / %d" % [backpack_count(), BACKPACK_SIZES[backpack_level]])
-	dialogue_text.text = "Seeds and tools use separate pouches. Lumber: %d · Water: %d / 24. Ship items to free space." % [resources.state().lumber,resources.state().water]
-	dialogue_text.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(0, 160)
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	column.add_child(scroll)
-	var list := GridContainer.new()
-	list.columns=maxi(2,int((get_viewport_rect().size.x-100)/155))
-	list.add_theme_constant_override("h_separation",24)
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(list)
-	var contents: Dictionary = {}
-	for inventory in [produce, fish_basket, ore_basket, BarnLife.state(self).products]:
-		for item in inventory:
-			if int(inventory[item]) > 0: contents[item] = int(inventory[item])
-	if tea_leaves > 0: contents["Tea leaves"] = tea_leaves
-	if packed_tea > 0: contents["Tea packets"] = packed_tea
-	for item in contents:
-		var button=make_button("%s ×%d" % [item,contents[item]],func(): pass)
-		list.add_child(button)
-		preload("res://MenuTiles.gd").tile(button)
-	if contents.is_empty(): dialogue_text.text = "Your backpack is empty. Collect crops, fish, tea or ore."
-	dialogue_panel.get_child(0).offset_top = -380
-	column.add_child(make_button("Requests & volunteering",VolunteerRequests.journal.bind(self)))
-	column.add_child(make_button("Change farmer", backpack_change_farmer))
-	column.add_child(make_button("Close", close_dialogue))
+	preload("res://EverydayLife.gd").bag(self)
 
 func backpack_change_farmer() -> void:
 	close_dialogue()
@@ -2455,7 +2450,7 @@ func open_backpack_shop() -> void:
 	var column := make_modal("General Store · Backpacks")
 	dialogue_text.text = "Current bag: %d items. Money: ¥%d. Seeds and tools stay separate." % [BACKPACK_SIZES[backpack_level], coins]
 	if backpack_level < 2:
-		column.add_child(make_button("%d-item backpack · ¥%d" % [BACKPACK_SIZES[backpack_level + 1], BACKPACK_PRICES[backpack_level]], purchase_backpack))
+		column.add_child(make_button("%d-item backpack · ¥%d" % [BACKPACK_SIZES[backpack_level + 1], BACKPACK_PRICES[backpack_level]], preload("res://EverydayLife.gd").confirm_purchase.bind(self,"Larger backpack","¥%d for %d item capacity." % [BACKPACK_PRICES[backpack_level],BACKPACK_SIZES[backpack_level+1]],purchase_backpack)))
 	else: dialogue_text.text += "\nYou have the largest backpack."
 	column.add_child(make_button("Back to seeds", backpack_back_to_store))
 	column.add_child(make_button("Close", close_dialogue))
@@ -2607,6 +2602,10 @@ func open_calendar() -> void:
 		row.mouse_filter=Control.MOUSE_FILTER_IGNORE
 		if not row.has_meta("item_art"): preload("res://ItemArtwork.gd").attach(row,"Sardine" if event.area=="harbor" else "Tea packets" if event.area=="tea" else "Meal")
 		list.add_child(row)
+	for person in friendship:
+		var birthday:int=preload("res://EverydayLife.gd").birthday(self,person)
+		if int((birthday-1)/28)!=int(((day-1)%112)/28): continue
+		list.add_child(make_button("%d · %s birthday" % [(birthday-1)%28+1,person],preload("res://EverydayLife.gd").relationship.bind(self,person)))
 	column.add_child(make_button("Close",close_dialogue))
 
 func storage_limit() -> int:

@@ -5,13 +5,20 @@ var check_time:=0.0
 var worker
 var cue:=""
 var cue_point:=Vector2.ZERO
+var held:=-1.0
 static func settings(f) -> Dictionary:
 	if not f.interior_progress.get("comfort") is Dictionary: f.interior_progress.comfort={}
 	return f.interior_progress.comfort
 func setup(f) -> void:
 	farm=f;z_index=220
+	f.action_button.button_down.connect(func(): held=0.0)
+	f.action_button.button_up.connect(func(): held=-1.0)
 func _process(delta:float) -> void:
 	if farm==null or not farm.window_focused: return
+	if held>=0:
+		held+=delta
+		if held>.75:
+			held=0.0;preload("res://EverydayLife.gd").repeat_work(farm)
 	check_time-=delta
 	if check_time>0: return
 	check_time=0.2;pulse+=0.2
@@ -44,6 +51,16 @@ func _process(delta:float) -> void:
 	queue_redraw()
 func _draw() -> void:
 	if farm==null: return
+	if not farm.festival_active and not farm.inside_house:
+		for event in SeasonalFestivals.EVENTS:
+			var until:int=posmod(int(event.day)-(farm.day-1)%112-1,112)
+			if until<1 or until>2 or farm.location!=event.area: continue
+			var origin:Vector2=farm.TOWN_ORIGIN if event.area=="town" else farm.REGION_ORIGINS[event.area]
+			var center:Vector2=origin+SeasonalFestivals.center(event.area)
+			for side in [-1,1]:
+				var point:Vector2=center+Vector2(side*235,-100)
+				draw_line(point,point+Vector2(0,-100),Color("765b3b"),5)
+				draw_colored_polygon(PackedVector2Array([point+Vector2(0,-100),point+Vector2(46,-90),point+Vector2(0,-65)]),Color("d4b875"))
 	if farm.festival_active and not farm.current_festival.is_empty():
 		var key:String=VolunteerRequests.festival_key(farm.day,farm.current_festival)
 		if farm.interior_progress.get("volunteering",{}).get(key,{}).get("status","")=="completed":
@@ -86,6 +103,8 @@ static func open_settings(f) -> void:
 	for option in ["large_stick","right_stick","gentle_stick","large_text"]:
 		var names={"large_stick":"Larger joystick","right_stick":"Joystick on right","gentle_stick":"Gentler joystick sensitivity","large_text":"Larger dialogue text"}
 		list.add_child(f.make_button(names[option]+(" · On" if s.get(option,false) else " · Off"),toggle.bind(f,option)))
+	list.add_child(f.make_button("Farm journal",preload("res://EverydayLife.gd").journal.bind(f)))
+	list.add_child(f.make_button("Move me to clear ground",preload("res://EverydayLife.gd").unstuck.bind(f)))
 	list.add_child(f.make_button("Music & sound",preload("res://GameAudio.gd").menu.bind(f)))
 	c.add_child(f.make_button("Guide",func(): f.close_dialogue();f.open_guide()))
 	c.add_child(f.make_button("Back",f.close_dialogue))

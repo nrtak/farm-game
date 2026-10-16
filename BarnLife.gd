@@ -32,8 +32,7 @@ static func open_manager(farm) -> void:
 	var data := state(farm)
 	var column = farm.make_modal("Town Ranch · Renji" if farm.shop_name=="Ranch" else "Barn care")
 	if farm.shop_name!="Ranch":
-		farm.dialogue_text.text="Visit Renji at the town ranch for livestock and feed. Approach your animals here to feed, pet and collect products."
-		column.add_child(farm.make_button("Back",farm.close_dialogue));return
+		preload("res://EverydayLife.gd").care_board(farm);return
 	farm.dialogue_panel.get_child(0).offset_top = -minf(440,farm.get_viewport_rect().size.y-32)
 	farm.dialogue_text.text = "Animals: %d / %d · Feed: %d\nFeed daily. Collect milk and eggs the next morning; wool after three fed nights." % [data.animals.size(),capacity(farm),data.feed]
 	var scroll := ScrollContainer.new()
@@ -44,8 +43,8 @@ static func open_manager(farm) -> void:
 	list.columns=maxi(2,int((farm.get_viewport_rect().size.x-100)/155))
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(list)
-	for species in SPECIES: list.add_child(farm.make_button("Buy %s · ¥%d" % [species,SPECIES[species].price],purchase.bind(farm,species)))
-	list.add_child(farm.make_button("Buy 10 feed · ¥30",buy_feed.bind(farm)))
+	for species in SPECIES: list.add_child(farm.make_button("Buy %s · ¥%d" % [species,SPECIES[species].price],preload("res://EverydayLife.gd").preview_animal.bind(farm,species)))
+	list.add_child(farm.make_button("Buy 10 feed · ¥30",preload("res://EverydayLife.gd").feed_order.bind(farm)))
 	for button in list.get_children(): preload("res://MenuTiles.gd").tile(button)
 	column.add_child(farm.make_button("Back",farm.close_dialogue))
 static func purchase(farm, species: String) -> void:
@@ -59,13 +58,14 @@ static func purchase(farm, species: String) -> void:
 	farm.shops.Barn.queue_redraw()
 	farm.save_game(false)
 	open_manager(farm)
-static func buy_feed(farm) -> void:
+static func buy_feed(farm,packs:int=1) -> void:
+	if packs<1 or packs>20: return
 	if farm.location!="shop" or farm.shop_name!="Ranch": return
-	if farm.coins < 30: farm.dialogue_text.text = "Feed costs ¥30."; return
-	if state(farm).feed > 989: return
-	farm.coins -= 30
+	if farm.coins < 30*packs: farm.dialogue_text.text = "Feed costs ¥30."; return
+	if state(farm).feed+10*packs > 999: return
+	farm.coins -= 30*packs
 	if is_instance_valid(farm.sound): farm.sound.play_effect("purchase")
-	state(farm).feed += 10
+	state(farm).feed += 10*packs
 	farm.save_game(false)
 	open_manager(farm)
 static func open_animal(farm, index: int) -> void:
@@ -95,7 +95,7 @@ static func care(farm,index: int,kind: String) -> void:
 		animal.petted = farm.day
 		animal.affection = mini(100,int(animal.affection)+1)
 		farm.close_dialogue()
-		farm.resources.play("pet",farm.SHOP_ORIGIN+animal_point(index))
+		farm.resources.play("pet",preload("res://AnimalPasture.gd").point(index) if farm.location=="farm" else farm.SHOP_ORIGIN+animal_point(index))
 		farm.say("Your %s enjoys the attention." % animal.species.to_lower())
 		farm.save_game(false)
 		return
@@ -159,14 +159,8 @@ static func draw_room(room) -> void:
 		if i >= capacity(farm): room.draw_string(ThemeDB.fallback_font,p-Vector2(40,0),"Expand",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color("76583d")); continue
 		if i>=data.animals.size(): continue
 		var animal: Dictionary = data.animals[i]
-		if art == null and ResourceLoader.exists("res://assets/characters/barn-animals-v1.png"):
-			art=load("res://assets/characters/barn-animals-v1.png")
-			var image := preload("res://RuntimeArt.gd").readable_image(art)
-			var cell_size := Vector2(art.get_size())/Vector2(4,1) if art!=null else Vector2.ONE
-			for column in range(4):
-				var bounds := Rect2i(Vector2i.ZERO,Vector2i(cell_size))
-				if image!=null: bounds=image.get_region(Rect2i(Vector2i(column*cell_size.x,0),Vector2i(cell_size))).get_used_rect()
-				art_regions.append(Rect2(bounds.position+Vector2i(column*cell_size.x,0),bounds.size))
+		if preload("res://AnimalPasture.gd").outside(farm): continue
+		prepare_art()
 		if art != null:
 			var species_index: int = SPECIES.keys().find(animal.species)
 			var region := art_regions[species_index]
@@ -181,3 +175,13 @@ static func draw_room(room) -> void:
 	room.draw_rect(Rect2(612,192,45,24),Color("e6d5ad"))
 	room.draw_string(ThemeDB.fallback_font,Vector2(438,230),"Animals & feed",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("f4e3bb"))
 	room.draw_string(ThemeDB.fallback_font,Vector2(460,780),"Exit ↓",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("584631"))
+
+static func prepare_art() -> void:
+	if art == null and ResourceLoader.exists("res://assets/characters/barn-animals-v1.png"):
+		art=load("res://assets/characters/barn-animals-v1.png")
+		var image := preload("res://RuntimeArt.gd").readable_image(art)
+		var cell_size := Vector2(art.get_size())/Vector2(4,1) if art!=null else Vector2.ONE
+		for column in range(4):
+			var bounds := Rect2i(Vector2i.ZERO,Vector2i(cell_size))
+			if image!=null: bounds=image.get_region(Rect2i(Vector2i(column*cell_size.x,0),Vector2i(cell_size))).get_used_rect()
+			art_regions.append(Rect2(bounds.position+Vector2i(column*cell_size.x,0),bounds.size))

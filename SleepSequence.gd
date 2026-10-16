@@ -88,6 +88,7 @@ func step(delta: float) -> void:
 	farm.hud.show()
 	farm.refresh_hud()
 	farm.save_game(false)
+	preload("res://EverydayLife.gd").morning_hint(farm)
 	queue_redraw()
 func _draw() -> void:
 	if phase not in [1,2,3,4]: return

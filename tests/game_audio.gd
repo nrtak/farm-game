@@ -20,7 +20,7 @@ func run():
 	f.window_focused=true;f.sound._process(.1);assert(not f.sound.suspended)
 	Audio.menu(f)
 	var sliders:Array=[];collect(f.dialogue_panel,sliders)
-	assert(sliders.size()==2)
+	assert(sliders.size()==4)
 	for slider in sliders:
 		if slider.name=="music_volume": slider.value=0
 	assert(Audio.volume(f,"music_volume",.45)==0 and Audio.volume(f,"effects_volume",.65)==.65)
@@ -29,10 +29,15 @@ func run():
 	for slider in sliders:
 		if slider.name=="effects_volume": slider.value=25
 	assert(Audio.volume(f,"effects_volume",.65)==.25)
+	for slider in sliders:
+		if slider.name=="footstep_volume": slider.value=0
+		if slider.name=="ambience_volume": slider.value=60
+	assert(AudioServer.is_bus_mute(AudioServer.get_bus_index(Audio.STEPS_BUS)))
+	assert(not AudioServer.is_bus_mute(AudioServer.get_bus_index(Audio.AMBIENCE_BUS)))
 	f.save_game(false);f.load_game();assert(Audio.volume(f,"music_volume",.45)==0 and Audio.volume(f,"effects_volume",.65)==.25)
 	for effect in ["step","door","purchase","save","sleep","wake"]:
 		f.sound.play_effect(effect);assert(f.sound.effects.stream!=null)
-	assert(f.resources.action_audio.bus==Audio.EFFECTS_BUS and f.regions.waterfall.ambience.bus==Audio.EFFECTS_BUS)
+	assert(f.resources.action_audio.bus==Audio.EFFECTS_BUS and f.regions.waterfall.ambience.bus==Audio.AMBIENCE_BUS and f.sound.steps.bus==Audio.STEPS_BUS)
 	print("PASS: regional/day/weather music, bounded fades, focus pause, independent volume/mute persistence and sound routing")
 	f.queue_free();await create_timer(.2).timeout;quit()
 func collect(node,result:Array):

@@ -55,6 +55,7 @@ static func finish(farm) -> void:
 	if not attendance.has(id):
 		attendance[id] = true
 		farm.interior_progress["festival_attendance"] = attendance
+		preload("res://EverydayLife.gd").remember(farm,farm.current_festival.name,"A day spent celebrating with our neighbors.")
 		farm.coins += 50
 		for record in farm.festival_people:
 			var person: String = record.npc.first_name

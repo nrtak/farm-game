@@ -23,7 +23,7 @@ func _process(delta: float) -> void:
 		light_time = 0.5
 		light.color = daylight(farm.clock_minutes) if farm.location != "shop" and not farm.inside_house else Color.WHITE
 	var marker_was_visible := marker_time > 0
-	marker_time = maxf(0,marker_time-delta)
+	marker_time = 1.0 if not path.is_empty() else maxf(0,marker_time-delta)
 	if marker_was_visible: queue_redraw()
 static func daylight(minute: float) -> Color:
 	var times := [0.0,300.0,420.0,600.0,900.0,1050.0,1140.0,1260.0,1440.0]

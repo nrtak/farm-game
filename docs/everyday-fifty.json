@@ -1,0 +1,286 @@
+{
+  "scope": "Second requested 50-item everyday-life expansion, October 11, 2026",
+  "note": "Partial means a foundation exists, not that the suggestion is complete. Desktop checks do not establish iPhone battery performance.",
+  "items": [
+    {
+      "id": 1,
+      "title": "Animal purchase previews",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 2,
+      "title": "Name animals at purchase",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 3,
+      "title": "Barn arrival scenes",
+      "status": "implemented-desktop-checked",
+      "notes": "Animated arrival card after confirmed purchase; no forced travel."
+    },
+    {
+      "id": 4,
+      "title": "Daily animal care board",
+      "status": "partial",
+      "notes": "Animal icons and readable care status; dedicated feed/pet/product status symbols still pending."
+    },
+    {
+      "id": 5,
+      "title": "Remember learned favorite gifts",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 6,
+      "title": "Town map with shops and hours",
+      "status": "partial",
+      "notes": "Numbered tappable building markers and hours; shop-specific symbols still pending."
+    },
+    {
+      "id": 7,
+      "title": "Move to nearby clear ground",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 8,
+      "title": "Persistent tap destination marker",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 9,
+      "title": "NPC yielding",
+      "status": "existing-behavior-regression-checked"
+    },
+    {
+      "id": 10,
+      "title": "Expensive purchase confirmations",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 11,
+      "title": "Inventory categories",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 12,
+      "title": "Item detail cards",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 13,
+      "title": "Quantity selectors",
+      "status": "partial",
+      "notes": "Seed/feed pack quantities, selected shipping and storage deposit; withdrawal selector still pending."
+    },
+    {
+      "id": 14,
+      "title": "Shipping protection",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 15,
+      "title": "Morning shipping receipt",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 16,
+      "title": "Morning summary",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 17,
+      "title": "Tomorrow weather television",
+      "status": "partial",
+      "notes": "Forecast available in farm journal and calendar; a physical TV interaction remains."
+    },
+    {
+      "id": 18,
+      "title": "Crop readiness indicators",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 19,
+      "title": "Watering area preview",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 20,
+      "title": "Tool targeting",
+      "status": "partial",
+      "notes": "Held work selects eligible nearby plots; normal targeting still uses nearest plot."
+    },
+    {
+      "id": 21,
+      "title": "Hold to repeat farm work",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 22,
+      "title": "Seed growth and season previews",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 23,
+      "title": "Greenhouse calendar",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 24,
+      "title": "Visible construction stages",
+      "status": "partial",
+      "notes": "Worker and construction fencing exist; distinct construction stages remain."
+    },
+    {
+      "id": 25,
+      "title": "Carpenter project preview",
+      "status": "partial",
+      "notes": "Placement and cost preview exists; finished-project visual preview remains."
+    },
+    {
+      "id": 26,
+      "title": "Outdoor fenced pasture",
+      "status": "implemented-desktop-checked",
+      "notes": "Fenced pasture south of the fields with open north gate and direct care."
+    },
+    {
+      "id": 27,
+      "title": "Animals return at night and in bad weather",
+      "status": "implemented-desktop-checked",
+      "notes": "Pasture available 9 AM\u20135 PM in normal weather; otherwise animals are in barn."
+    },
+    {
+      "id": 28,
+      "title": "Animal personality behaviors",
+      "status": "implemented-desktop-checked",
+      "notes": "Curious and playful idle movements; calm resting behavior."
+    },
+    {
+      "id": 29,
+      "title": "Veterinary care journal",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 30,
+      "title": "Feed reminder",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 31,
+      "title": "Friendship and romance cards",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 32,
+      "title": "Portrait expressions",
+      "status": "pending",
+      "notes": "New expression artwork has not been generated or integrated."
+    },
+    {
+      "id": 33,
+      "title": "Occupation friendship scenes",
+      "status": "partial",
+      "notes": "Some occupation friendship vignettes exist; remaining cast needs authored scenes."
+    },
+    {
+      "id": 34,
+      "title": "Optional date invitations",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 35,
+      "title": "Birthdays and calendar",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 36,
+      "title": "Visitors react to achievements",
+      "status": "existing-behavior-regression-checked"
+    },
+    {
+      "id": 37,
+      "title": "Request requirement and reward previews",
+      "status": "existing-behavior-regression-checked"
+    },
+    {
+      "id": 38,
+      "title": "Quest completion scenes",
+      "status": "partial",
+      "notes": "Existing reward messages; fuller completion scenes remain."
+    },
+    {
+      "id": 39,
+      "title": "Festival preparation decorations",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 40,
+      "title": "Distinct festival touch activities",
+      "status": "existing-behavior-regression-checked"
+    },
+    {
+      "id": 41,
+      "title": "Home keepsake display",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 42,
+      "title": "Photo album",
+      "status": "implemented-desktop-checked",
+      "notes": "Native milestone screenshots saved locally and opened one at a time; headless tests use text memories."
+    },
+    {
+      "id": 43,
+      "title": "Waterfall story expansion",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 44,
+      "title": "Seasonal forage and rare fish",
+      "status": "pending",
+      "notes": "Not yet implemented."
+    },
+    {
+      "id": 45,
+      "title": "Home decoration",
+      "status": "partial",
+      "notes": "Four bedside-rug colors; furniture and wall choices remain."
+    },
+    {
+      "id": 46,
+      "title": "Cooking animation and illustrated recipes",
+      "status": "partial",
+      "notes": "Visible cooking preparation; illustrated recipe browser remains."
+    },
+    {
+      "id": 47,
+      "title": "Longer varied music",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 48,
+      "title": "Separate ambience and footstep controls",
+      "status": "implemented-desktop-checked"
+    },
+    {
+      "id": 49,
+      "title": "Physical iPhone performance session",
+      "status": "requires-physical-device",
+      "notes": "Requires a real iPhone session; no device performance claims."
+    },
+    {
+      "id": 50,
+      "title": "Complete first-year playthrough",
+      "status": "pending-full-playthrough",
+      "notes": "112 overnight/save cycles tested; complete manual gameplay run still required."
+    }
+  ],
+  "validation": {
+    "regression_checks": 38,
+    "year_cycle": "112 overnight settlements with weekly save/reloads",
+    "visual": "960x540 native rendering: inventory, care, pasture, map, photo album, purchases, home, sound and onsen",
+    "package": "Local exported startup, farmer selection, sleep and save relaunch passed",
+    "not_validated": [
+      "Physical iPhone battery/heat",
+      "Full manual first-year playthrough"
+    ]
+  }
+}

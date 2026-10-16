@@ -180,7 +180,7 @@ static func cook(farm) -> void:
 		farm.produce[item] -= take
 		left -= take
 	farm.health = minf(100,farm.health+25)
-	farm.say("A warm vegetable meal! +25 Health.")
+	preload("res://EverydayLife.gd").cooking_moment(farm,"Vegetable supper","Two fresh vegetables become a warm meal. Health +25.")
 	farm.save_game(false)
 
 static func festival_game(farm, round_index: int = 0) -> void:

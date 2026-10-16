@@ -10,7 +10,9 @@ static func conversation(f,person:String) -> void:
 	var season:int=int((f.day-1)/28)%4
 	f.dialogue_lines.append(["The spring fields are waking up. I like seeing what everyone decides to grow.","On warm summer days I take my breaks in the shade. Remember to rest, too.","The autumn colors make the walk home feel different every week.","A warm room and a cup of tea are especially welcome this winter."][season])
 	if f.is_rainy_day(): f.dialogue_lines.append("I'm keeping dry today. Try the library, a warm meal, or a visit to your neighbors indoors.")
-	if LIKES.has(person): f.dialogue_lines.append("A little %s always makes my day." % LIKES[person].to_lower())
+	if LIKES.has(person):
+		preload("res://EverydayLife.gd").state(f).learned_gifts[person]=LIKES[person]
+		f.dialogue_lines.append("A little %s always makes my day." % LIKES[person].to_lower())
 	var s:=state(f)
 	if int(f.friendship.get(person,0))>=8 and not s.friend_scenes.has(person):
 		s.friend_scenes[person]=true
@@ -50,8 +52,10 @@ static func give(f,person:String,item:String) -> void:
 	f.change_carried(item,-1);s.gifts[person]=f.day
 	var favorite:bool=LIKES[person]==item
 	f.friendship[person]=mini(100,int(f.friendship.get(person,0))+(3 if favorite else 1))
+	var birthday_bonus:bool=preload("res://EverydayLife.gd").birthday(f,person)==1+posmod(f.day-1,112)
+	if birthday_bonus: f.friendship[person]=mini(100,int(f.friendship[person])+2)
 	f.save_game(false)
-	f.dialogue_text.text=("My favorite! You remembered. Friendship +3." if favorite else "Thank you for thinking of me. Friendship +1.")
+	f.dialogue_text.text=("My favorite! You remembered. Friendship +3." if favorite else "Thank you for thinking of me. Friendship +1.")+(" Birthday bonus +2!" if birthday_bonus else "")
 static func waterfall(f) -> void:
 	var s:=state(f)
 	var stage:int=int(s.get("falls",0))
@@ -72,6 +76,7 @@ static func waterfall(f) -> void:
 	else:
 		var c=f.make_modal("The spring keeper")
 		f.dialogue_text.text="The spring remembers your kindness. Its glow is a little warmer when you visit."
+		c.add_child(f.make_button("Listen to the seasons",preload("res://EverydayLife.gd").falls_seasons.bind(f)))
 		c.add_child(f.make_button("Rest beside the falls",f.close_dialogue))
 static func accept_falls(f) -> void:
 	state(f).falls=2;f.save_game(false);f.close_dialogue();f.say("Request accepted: bring one packet of tea to Moonveil Falls.")
@@ -106,4 +111,4 @@ static func cook_recipe(f) -> void:
 	if not f.inside_house or int(f.interior_progress.get("home",0))<2: return
 	if not state(f).get("festival_recipe",false) or f.packed_tea<1 or f.carried_count("Milk")<1: f.dialogue_text.text="Festival milk tea needs one tea packet and one milk.";return
 	if f.health>=100: f.dialogue_text.text="You're already rested. Save your ingredients for later.";return
-	f.packed_tea-=1;f.change_carried("Milk",-1);f.health=minf(100,f.health+30);f.save_game(false);f.dialogue_text.text="You enjoy festival milk tea. Health +30."
+	f.packed_tea-=1;f.change_carried("Milk",-1);f.health=minf(100,f.health+30);f.save_game(false);preload("res://EverydayLife.gd").cooking_moment(f,"Festival milk tea","One tea packet and one milk. Health +30.")

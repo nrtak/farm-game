@@ -1,6 +1,8 @@
 extends Node
 const MUSIC_BUS:="TeaBlossomMusic"
 const EFFECTS_BUS:="TeaBlossomEffects"
+const AMBIENCE_BUS:="TeaBlossomAmbience"
+const STEPS_BUS:="TeaBlossomSteps"
 var farm
 var players:Array[AudioStreamPlayer]=[]
 var effects:AudioStreamPlayer
@@ -23,16 +25,17 @@ static func volume(f,key:String,default:float) -> float:
 	return clampf(float(preferences(f).get(key,default)),0,1)
 func setup(f) -> void:
 	farm=f
-	for title in [MUSIC_BUS,EFFECTS_BUS]:
+	for title in [MUSIC_BUS,EFFECTS_BUS,AMBIENCE_BUS,STEPS_BUS]:
 		if AudioServer.get_bus_index(title)<0:
 			AudioServer.add_bus();AudioServer.set_bus_name(AudioServer.bus_count-1,title)
+	for bus in [AMBIENCE_BUS,STEPS_BUS]: AudioServer.set_bus_send(AudioServer.get_bus_index(bus),EFFECTS_BUS)
 	for i in range(2):
 		var player:=AudioStreamPlayer.new();player.bus=MUSIC_BUS;add_child(player);players.append(player)
 	effects=AudioStreamPlayer.new();effects.bus=EFFECTS_BUS;effects.volume_db=-12;add_child(effects)
-	steps=AudioStreamPlayer.new();steps.bus=EFFECTS_BUS;steps.volume_db=-28;add_child(steps)
-	ambience=AudioStreamPlayer.new();ambience.bus=EFFECTS_BUS;ambience.volume_db=-18;add_child(ambience)
+	steps=AudioStreamPlayer.new();steps.bus=STEPS_BUS;steps.volume_db=-28;add_child(steps)
+	ambience=AudioStreamPlayer.new();ambience.bus=AMBIENCE_BUS;ambience.volume_db=-18;add_child(ambience)
 	farm.resources.action_audio.bus=EFFECTS_BUS
-	farm.regions.waterfall.ambience.bus=EFFECTS_BUS
+	farm.regions.waterfall.ambience.bus=AMBIENCE_BUS
 	apply_volumes()
 static func theme(f) -> String:
 	if f.inside_house or f.location=="shop": return "interior"
@@ -43,6 +46,9 @@ static func theme(f) -> String:
 	if f.location=="town": return "town"
 	return "nature"
 func apply_volumes() -> void:
+	for pair in [[AMBIENCE_BUS,"ambience_volume"],[STEPS_BUS,"footstep_volume"]]:
+		AudioServer.set_bus_volume_db(AudioServer.get_bus_index(pair[0]),linear_to_db(maxf(.00001,volume(farm,pair[1],1.0))))
+		AudioServer.set_bus_mute(AudioServer.get_bus_index(pair[0]),volume(farm,pair[1],1.0)==0)
 	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(MUSIC_BUS),linear_to_db(maxf(.00001,volume(farm,"music_volume",.45))))
 	AudioServer.set_bus_mute(AudioServer.get_bus_index(MUSIC_BUS),volume(farm,"music_volume",.45)==0)
 	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(EFFECTS_BUS),linear_to_db(maxf(.00001,volume(farm,"effects_volume",.65))))
@@ -100,12 +106,15 @@ static func menu(f) -> void:
 	f.close_dialogue();var c=f.make_modal("Music & sound");f.dialogue_panel.get_child(0).offset_top=-minf(460,f.get_viewport_rect().size.y-28)
 	f.dialogue_text.text="Turn music and sound effects on or off, or adjust their volume."
 	f.dialogue_text.size_flags_vertical=Control.SIZE_SHRINK_BEGIN
-	for entry in [["music_volume","Music",.45],["effects_volume","Sound effects",.65]]:
-		var switch:=CheckButton.new();switch.text=entry[1]+" on";switch.add_theme_color_override("font_color",Color("493b2d"));switch.button_pressed=volume(f,entry[0],entry[2])>0;c.add_child(switch)
+	var scroll:=ScrollContainer.new();scroll.custom_minimum_size.y=180;scroll.size_flags_vertical=Control.SIZE_EXPAND_FILL;c.add_child(scroll)
+	var list:=VBoxContainer.new();list.size_flags_horizontal=Control.SIZE_EXPAND_FILL;scroll.add_child(list)
+	for entry in [["music_volume","Music",.45],["effects_volume","All effects",.65],["ambience_volume","Nature ambience",1.0],["footstep_volume","Footsteps",1.0]]:
+		var switch:=CheckButton.new();switch.text=entry[1]+" on";switch.add_theme_color_override("font_color",Color("493b2d"));switch.button_pressed=volume(f,entry[0],entry[2])>0;list.add_child(switch)
+		for color_key in ["font_pressed_color","font_hover_color","font_hover_pressed_color"]: switch.add_theme_color_override(color_key,Color("493b2d"))
 		var switch_key:String=entry[0];var default_volume:float=entry[2]
 		switch.toggled.connect(func(on): preferences(f)[switch_key]=default_volume if on else 0.0;f.sound.apply_volumes();f.save_game(false);menu(f))
-		var key:String=entry[0];var label:=Label.new();label.add_theme_color_override("font_color",Color("493b2d"));c.add_child(label)
-		var slider:=HSlider.new();slider.name=key;slider.min_value=0;slider.max_value=100;slider.step=5;slider.value=volume(f,key,entry[2])*100;slider.custom_minimum_size=Vector2(250,44);c.add_child(slider)
+		var key:String=entry[0];var label:=Label.new();label.add_theme_color_override("font_color",Color("493b2d"));list.add_child(label)
+		var slider:=HSlider.new();slider.name=key;slider.min_value=0;slider.max_value=100;slider.step=5;slider.value=volume(f,key,entry[2])*100;slider.custom_minimum_size=Vector2(250,44);list.add_child(slider)
 		label.text="%s · %d%%" % [entry[1],slider.value]
 		var title:String=entry[1]
 		slider.value_changed.connect(func(value):

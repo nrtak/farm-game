@@ -44,10 +44,10 @@ def music_tone(midi,duration,voice='pluck'):
  sound=tone(midi-3,duration,voice)
  return np.convolve(sound,np.ones(7)/7,mode='same')
 for track_index,(name,(bpm,voice,phrase)) in enumerate(SCORES.items()):
- beat=60/bpm;out=np.zeros(round(64*beat*SR))
+ beat=60/bpm;out=np.zeros(round(128*beat*SR))
  percussion_rng=np.random.default_rng(10411+track_index)
  gentle=name in ['night','falls']
- for bar in range(16):
+ for bar in range(32):
   root=[48,53,57,55][bar%4];third=3 if bar%4==2 else 4
   chord=[root,root+third,root+7,root+12]
   # Alternating bass and short offbeat chords give the daytime themes a bounce.
@@ -62,7 +62,8 @@ for track_index,(name,(bpm,voice,phrase)) in enumerate(SCORES.items()):
   for i,note in enumerate(phrase[bar%4]):
    if bar%4==3 and i==3: continue
    if gentle and i%2==1: continue
-   if bar>=8 and i==2: note+=12 if name=='town' else -12
+   if (bar//8)%2==1 and i==2: note-=12
+   if bar>=16 and i in [0,3]: note=phrase[(bar+1)%4][i]
    add(out,music_tone(note,beat*.68,voice),(bar*4+i+.08)*beat,.27)
    # A light eighth-note answer adds movement without crowding the melody.
    if not gentle and bar%2==0 and i==2:

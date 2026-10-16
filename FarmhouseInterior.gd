@@ -73,7 +73,7 @@ func _draw() -> void:
 	draw_rect(BED.grow(6), Color("634632"))
 	draw_rect(BED, Color("e7d9b5"))
 	draw_style_box(panel(Color("fff0cb")), Rect2(747, 243, 116, 45))
-	draw_style_box(panel(Color("7d9b83")), Rect2(736, 305, 138, 145))
+	draw_style_box(panel(Color(preload("res://EverydayLife.gd").state(get_parent()).get("home_color","7d9b83"))), Rect2(736, 305, 138, 145))
 	draw_line(Vector2(744, 327), Vector2(866, 327), Color("d8d5ad"), 6)
 	for rect in [Rect2(110, 200, 140, 85), Rect2(500, 200, 140, 65)]:
 		draw_rect(rect, Color("78563b"))
@@ -110,6 +110,17 @@ func _draw() -> void:
 	preload("res://InteriorDecor.gd").draw_home(self)
 	# Keep the original room fixed; expansion rooms retain their own furnishings.
 	draw_texture_rect(preload("res://assets/interior-farmhouse-v2.png"),Rect2(0,0,1000,800),false)
+	var life:Dictionary=preload("res://EverydayLife.gd").state(get_parent())
+	if life.has("home_color"):
+		draw_style_box(panel(Color(life.home_color)),Rect2(650,480,205,95))
+		draw_rect(Rect2(663,491,179,73),Color("e8dbba"),false,3)
+	var keepsakes:Dictionary=preload("res://VillageDepth.gd").state(get_parent()).keepsakes
+	if not keepsakes.is_empty():
+		draw_rect(Rect2(325,135,170,12),Color("6d5037"))
+		for index in range(mini(6,keepsakes.size())):
+			var point:=Vector2(340+index*25,117)
+			draw_colored_polygon(PackedVector2Array([point+Vector2(-6,0),point+Vector2(-7,22),point+Vector2(0,17),point+Vector2(7,22),point+Vector2(6,0)]),Color("b787ac"))
+			draw_circle(point,8,Color("e4c86d"))
 	if home_level>0:
 		draw_rect(Rect2(900,530,90,100),Color("bc9563"))
 		for y in range(535,630,35): draw_line(Vector2(900,y),Vector2(990,y),Color("9a754e"),2)

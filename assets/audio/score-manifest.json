@@ -5,43 +5,43 @@
   "tracks": [
     {
       "file": "music-farm.wav",
-      "seconds": 34.29,
+      "seconds": 68.57,
       "peak": 0.2251,
       "bpm": 112
     },
     {
       "file": "music-town.wav",
-      "seconds": 32.0,
-      "peak": 0.2103,
+      "seconds": 64.0,
+      "peak": 0.2136,
       "bpm": 120
     },
     {
       "file": "music-nature.wav",
-      "seconds": 36.92,
-      "peak": 0.233,
+      "seconds": 73.85,
+      "peak": 0.2334,
       "bpm": 104
     },
     {
       "file": "music-interior.wav",
-      "seconds": 38.4,
-      "peak": 0.2159,
+      "seconds": 76.8,
+      "peak": 0.2163,
       "bpm": 100
     },
     {
       "file": "music-night.wav",
-      "seconds": 45.71,
+      "seconds": 91.43,
       "peak": 0.1987,
       "bpm": 84
     },
     {
       "file": "music-rain.wav",
-      "seconds": 40.0,
+      "seconds": 80.0,
       "peak": 0.2172,
       "bpm": 96
     },
     {
       "file": "music-falls.wav",
-      "seconds": 45.71,
+      "seconds": 91.43,
       "peak": 0.1989,
       "bpm": 84
     },
