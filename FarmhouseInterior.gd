@@ -16,6 +16,7 @@ func _ready() -> void:
 	for rect in [Rect2(70,210,FLOOR.size.x+40,20),Rect2(70,720,FLOOR.size.x+40,20),Rect2(70,230,20,490),Rect2(FLOOR.end.x,230,20,490)]:
 		obstacle(rect)
 	for rect in SOLIDS: obstacle(rect)
+	for rect in preload("res://HomeExpansion.gd").solids(home_level): obstacle(rect)
 	for level in range(home_level):
 		var x:=910+level*220
 		obstacle(Rect2(x,190,10,340))
@@ -39,6 +40,8 @@ func is_walkable(point: Vector2, radius: float = 12.0) -> bool:
 		var x:=910+level*220
 		if Rect2(x,190,10,340).grow(radius).has_point(point) or Rect2(x,630,10,90).grow(radius).has_point(point): return false
 	for rect in SOLIDS:
+		if rect.grow(radius).has_point(point): return false
+	for rect in preload("res://HomeExpansion.gd").solids(home_level):
 		if rect.grow(radius).has_point(point): return false
 	return true
 
@@ -130,6 +133,7 @@ func _draw() -> void:
 		draw_string(ThemeDB.fallback_font,Vector2(555,635),"Upstairs",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color("493b2d"))
 	draw_rect(Rect2(435, 680, 130, 40), Color("70523a"))
 	draw_rect(Rect2(449, 691, 102, 21), Color("d2b880"))
+	preload("res://HomeExpansion.gd").draw_rooms(self)
 
 func panel(color: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
