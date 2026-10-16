@@ -68,8 +68,8 @@
     {
       "id": 13,
       "title": "Quantity selectors",
-      "status": "partial",
-      "notes": "Seed/feed pack quantities, selected shipping and storage deposit; withdrawal selector still pending."
+      "status": "implemented-desktop-checked",
+      "notes": "Selected quantities available for seed/feed packs, shipping, storage deposits and withdrawals. Storage clamps to available stock and backpack/chest capacity."
     },
     {
       "id": 14,
@@ -105,8 +105,8 @@
     {
       "id": 20,
       "title": "Tool targeting",
-      "status": "partial",
-      "notes": "Held work selects eligible nearby plots; normal targeting still uses nearest plot."
+      "status": "implemented-desktop-checked",
+      "notes": "Normal tool selection and movement favor nearby eligible crop stages; held actions already use eligible nearby beds. Range remains 78 world units; fallback retains helpful no-work feedback."
     },
     {
       "id": 21,

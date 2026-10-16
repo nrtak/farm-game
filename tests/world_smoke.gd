@@ -99,7 +99,7 @@ func run() -> void:
 	assert(farm.coins == 370, "Cannot buy same upgrade twice")
 	farm.close_dialogue()
 	await process_frame
-	farm.travel_to("farm", Vector2(450, 1120), false)
+	farm.travel_to("farm", farm.plots[0].position, false)
 	farm.nearest = 0
 	farm.plots[0].stage = 1
 	farm.select_tool(1)

@@ -550,6 +550,8 @@ func advance_clock(seconds: float) -> void:
 
 func select_tool(index: int) -> void:
 	selected_tool = index
+	nearest = preload("res://CropTarget.gd").find(self)
+	queue_redraw()
 	for i in range(tool_buttons.size()):
 		tool_buttons[i].modulate = Color("ffdb89") if i == index else Color.WHITE
 	action_button.text = ["Plant", "Water", "Harvest"][index]
@@ -627,14 +629,8 @@ func _physics_process(delta: float) -> void:
 	check_walk_exits()
 	check_scheduled_gathering()
 	var previous_nearest := nearest
-	nearest = -1
+	nearest = preload("res://CropTarget.gd").find(self)
 	var growing := false
-	var distance := 78.0
-	for i in range(plots.size()):
-		var candidate: float = player.position.distance_to(plots[i].position)
-		if location == "farm" and candidate < distance:
-			distance = candidate
-			nearest = i
 	if location == "farm" and nearest != previous_nearest: queue_redraw()
 	toast_time -= delta
 	save_time += delta
@@ -2531,14 +2527,17 @@ func open_storage_item(item: String) -> void:
 	if dialogue_open: close_dialogue()
 	var column := make_modal(item)
 	dialogue_panel.get_child(0).offset_top = -370
-	dialogue_text.text = "Bag: %d · Chest: %d\nBackpack space: %d / %d" % [carried_count(item), stored_items[item], backpack_count(), BACKPACK_SIZES[backpack_level]]
+	dialogue_text.text = "Bag: %d · Chest: %d\nBackpack used: %d / %d" % [carried_count(item), stored_items[item], backpack_count(), BACKPACK_SIZES[backpack_level]]
 	for depositing in [true, false]:
 		var row := HBoxContainer.new()
 		column.add_child(row)
-		for amount in [1, 999]:
-			var button := make_button(("Store " if depositing else "Take ") + ("1" if amount == 1 else "all"), transfer_storage.bind(item, amount, depositing))
-			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			row.add_child(button)
+		var quantity := SpinBox.new()
+		quantity.min_value=1;quantity.max_value=maxi(1,carried_count(item) if depositing else int(stored_items[item]));quantity.step=1
+		quantity.custom_minimum_size=Vector2(130,48);row.add_child(quantity)
+		var selected := make_button("Store selected" if depositing else "Take selected",func(): transfer_storage(item,int(quantity.value),depositing))
+		selected.size_flags_horizontal=Control.SIZE_EXPAND_FILL;row.add_child(selected)
+		var all_button := make_button("Store all" if depositing else "Take all",transfer_storage.bind(item,999,depositing))
+		all_button.size_flags_horizontal=Control.SIZE_EXPAND_FILL;row.add_child(all_button)
 	column.add_child(make_button("Back to chest", open_storage))
 	column.add_child(make_button("Close", close_dialogue))
 

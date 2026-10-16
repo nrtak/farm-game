@@ -1,10 +1,10 @@
 {
-  "updated": "2026-10-16T09:31:28.3160761Z",
+  "updated": "2026-10-16T10:00:42.2203880Z",
   "deadline": "2026-10-16T12:00:00Z",
   "user_direction": "Complete a playable game through Year 2 village vote; keep farming available afterward. Add optional adoptable and raisable farm dog. Make original scenes and routines inspired by cozy farming references. Keep work local until reviewed.",
   "automation_id": "continue-tea-blossom-hills-development",
   "next": [
-    "Finish remaining small everyday-life usability gaps: storage withdrawal quantities, care-board status symbols and smarter single-action plot targeting.",
+    "Remaining everyday-life usability gaps: animal-care status symbols and shop-specific town-map markers.",
     "Implement seasonal forage and rare fish with saved daily limits and suitable artwork.",
     "Visual work still pending: match expansion-room art to the painted house, outdoor construction stages, full project previews, portrait expressions and more decoration choices.",
     "Continue occupation scenes for remaining cast. Before deadline run final checks, preserve checkpoint and summarize remaining work. No uploads."
@@ -31,5 +31,6 @@
   "home_weather": "Physical farmhouse TV, illustrated forecasts and accurate numeric story-goal progress implemented. Dedicated weather test plus story_arc, indoor_clock and everyday_life passed. Native TV, forecast and story journal visually inspected. Suite now includes 41 checks; last full run was 40 before this focused update. No physical iPhone validation.",
   "recipe_book": "Illustrated harvest supper, farmhouse omelet and unlockable festival milk tea; previews show carried ingredients, health gains and locks. Cooking consumes once per confirmed selection, saves history, and animates preparation. Dedicated recipe_book, progression, expansion_fifty and everyday_life checks passed; three native views inspected. Suite includes 42 checks; last full suite was 40 before weather/recipe updates. No upload or physical iPhone validation.",
   "home_expansion": "Storage and kitchen now have distinct floors, windows, cabinets, pantry jars, stove/sink and rugs. Shared furniture rectangles drive physical and navigation collision. Dedicated expansion, stewardship, home_recovery, farm_systems, movement_recovery and indoor_clock checks passed; two native views inspected. Suite now includes 43 checks; last full run remains 40 before these focused updates. Main painted-room art is richer than these code-drawn expansions: visual matching remains unfinished. No claim that all home decoration or construction work is complete.",
-  "construction": "Saved construction journal with materials/work stages, completion history, benefit/date/placement review and morning completion notices. Compatible with older jobs missing metadata. Focused construction and progression tests passed; three native views inspected. Outdoor construction artwork and detailed before/after previews remain partial. Full 44-check regression suite passed, covering all updates through construction journal. No physical iPhone validation or manual full playthrough."
+  "construction": "Saved construction journal with materials/work stages, completion history, benefit/date/placement review and morning completion notices. Compatible with older jobs missing metadata. Focused construction and progression tests passed; three native views inspected. Outdoor construction artwork and detailed before/after previews remain partial. Full 44-check regression suite passed, covering all updates through construction journal. No physical iPhone validation or manual full playthrough.",
+  "everyday_controls": "Added selected storage withdrawals/deposits and tool-appropriate nearby crop targeting, including immediate tool-change highlight refresh. Dedicated controls, storage, farming_loop and everyday_life passed. Updated obsolete world_smoke setup to stand at actual plot before watering; full 45-check regression suite passed. Storage quantity screen visually inspected."
 }
