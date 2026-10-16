@@ -1614,6 +1614,7 @@ func start_conversation(npc: Node2D) -> void:
 		if Cast.is_love_interest(person,character_choice) and int(friendship.get(person,0))>=20: dialogue_text.get_parent().add_child(make_button("Invite",preload("res://EverydayLife.gd").invite.bind(self,person)))
 		dialogue_text.get_parent().add_child(make_button("Goodbye",close_dialogue))
 		dialogue_text.get_parent().add_child(make_button("Give gift",preload("res://VillageDepth.gd").gifts.bind(self,person)))
+		preload("res://StoryArc.gd").conversation_button(self,person,dialogue_text.get_parent())
 	save_game(false)
 
 func accept_story_request() -> void:

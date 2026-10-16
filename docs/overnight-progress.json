@@ -1,12 +1,13 @@
 {
-  "updated": "2026-10-16T07:10:00.8082537Z",
+  "updated": "2026-10-16T07:33:24.5641922Z",
   "deadline": "2026-10-16T12:00:00Z",
   "user_direction": "Complete a playable game through Year 2 village vote; keep farming available afterward. Add optional adoptable and raisable farm dog. Make original scenes and routines inspired by cozy farming references. Keep work local until reviewed.",
   "automation_id": "continue-tea-blossom-hills-development",
   "next": [
-    "Implement StoryArc.gd: optional chronological story chapters with explicit acceptance, clear objectives, progress journal and resumable dialogue; integrate morning farm visits after existing Stewardship events. Preserve the Year 2 vote and extension behavior.",
-    "Add ending/epilogue scene and test both successful vote and extension; existing tests/stewardship.gd covers the old contract.",
-    "Continue remaining partial/pending items in docs/everyday-fifty.json, avoiding feature claims without implementation."
+    "Continue partial everyday-fifty items: physical weather TV interaction, clearer numeric chapter progress, illustrated cooking recipes, additional home decoration and construction stages.",
+    "Implement seasonal forage and rare fish with saved daily limits and suitable artwork.",
+    "Continue occupation scenes for remaining cast; portrait expression artwork is still pending.",
+    "Before the overnight deadline, preserve a checkpoint and report actual checks and remaining work. No uploads."
   ],
   "story_design_notes": [
     "Stewardship.check_visit handles intro, first-year review, vote, festival invitations and two milestone visits. Fallback can offer new story chapters; do not block existing events.",
@@ -25,5 +26,6 @@
     "All Python text file I/O must use UTF-8.",
     "No GitHub/TestFlight upload in scheduled follow-ups."
   ],
-  "farm_dog": "Implemented optional Ranch adoption and morning invitation, naming, daily feed/pet/play, food shop, affection, growth, safe following, house shelter and persistence. Dedicated isolated regression and native puppy/menu/adult screenshots passed; all 39 isolated regression checks passed. Native screenshots visually inspected; no physical iPhone validation."
+  "farm_dog": "Implemented optional Ranch adoption and morning invitation, naming, daily feed/pet/play, food shop, affection, growth, safe following, house shelter and persistence. Dedicated isolated regression and native puppy/menu/adult screenshots passed; all 39 isolated regression checks passed. Native screenshots visually inspected; no physical iPhone validation.",
+  "story_chapters": "Eight optional chronological chapters with explicit acceptance, morning visitors, journal and resident conversation access, location/objective guards, resumable three-beat scenes and one-time friendship rewards. Three-beat Year 2 success epilogue remains accessible from journal. Existing vote extension unchanged. Dedicated story and stewardship checks passed; four native screens visually inspected. All 40 isolated regression checks passed, including actual save reloads during all eight chapters. Local exported startup, sleep and saved relaunch passed. No physical iPhone or full manual playthrough validation."
 }

@@ -145,7 +145,7 @@
       "id": 27,
       "title": "Animals return at night and in bad weather",
       "status": "implemented-desktop-checked",
-      "notes": "Pasture available 9 AM\u20135 PM in normal weather; otherwise animals are in barn."
+      "notes": "Pasture available 9 AM–5 PM in normal weather; otherwise animals are in barn."
     },
     {
       "id": 28,
@@ -178,7 +178,7 @@
       "id": 33,
       "title": "Occupation friendship scenes",
       "status": "partial",
-      "notes": "Some occupation friendship vignettes exist; remaining cast needs authored scenes."
+      "notes": "Eight new chapter scenes involve Haruka, Kenta, Ken, Mika, Hana, Naomi, Rei and Akira at relevant workplaces. Remaining cast still needs additional authored occupation scenes."
     },
     {
       "id": 34,
@@ -204,7 +204,7 @@
       "id": 38,
       "title": "Quest completion scenes",
       "status": "partial",
-      "notes": "Existing reward messages; fuller completion scenes remain."
+      "notes": "Eight optional chapters now have resumable three-beat completion scenes, saved memories and guarded friendship rewards. Legacy side requests still use simpler reward messages."
     },
     {
       "id": 39,

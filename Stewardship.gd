@@ -39,13 +39,15 @@ static func check_visit(farm) -> bool:
 		key = "kenta_visit"
 		person = "Kenta"
 		words = "That reclaimed patch is looking good. I'll be at the carpentry workshop on the southwest edge of town. We can expand the house next—first a storage room, then a kitchen wing."
-	if key.is_empty(): return preload("res://FarmDog.gd").maybe_visit(farm)
+	if key.is_empty():
+		if preload("res://FarmDog.gd").maybe_visit(farm): return true
+		return preload("res://StoryArc.gd").maybe_visit(farm)
 	state[key] = true
 	farm.interior_progress["story"] = state
 	var visitor = preload("res://Npc.gd").new()
 	farm.farm_visitor = visitor
 	farm.add_child(visitor)
-	visitor.setup(person,load("res://assets/npc-%s-walk.png" % person.to_lower()))
+	visitor.setup(person,preload("res://CharacterArt.gd").walk(person))
 	visitor.position = farm.farmhouse.DOOR_POSITION+Vector2(180,100)
 	visitor.z_index = 5
 	visitor.face_player(farm.player.position)
@@ -54,6 +56,7 @@ static func check_visit(farm) -> bool:
 	if key.begins_with("invite_"): VolunteerRequests.offer(farm,column,SeasonalFestivals.today(farm.day+1),farm.day+1)
 	if key == "seira_visit": VolunteerRequests.offer_delivery(farm,column)
 	if key.begins_with("delivery_offer_"): column.add_child(farm.make_button("Deliver two vegetables",VolunteerRequests.deliver.bind(farm)))
+	if key == "vote" and state.get("won",false): column.add_child(farm.make_button("Our next chapter",preload("res://StoryArc.gd").ending.bind(farm)))
 	column.add_child(farm.make_button("Thanks for stopping by",finish_visit.bind(farm,visitor)))
 	farm.save_game(false)
 	return true
