@@ -247,8 +247,8 @@
     {
       "id": 46,
       "title": "Cooking animation and illustrated recipes",
-      "status": "partial",
-      "notes": "Visible cooking preparation; illustrated recipe browser remains."
+      "status": "implemented-desktop-checked",
+      "notes": "Three illustrated recipe tiles and ingredient previews, upgraded-kitchen cooking, festival unlock, exact costs, duplicate-tap guards, saved cooking history and visible preparation animation. Native desktop menus inspected."
     },
     {
       "id": 47,

@@ -818,7 +818,7 @@ func refresh_hud() -> void:
 		"collect_wallet": hint = "Pick up the lost wallet."
 		"regional_door": hint = "Visit the building."
 		"talk_shop": hint = "Talk to %s." % shops[shop_name].nearest_resident(player.position - SHOP_ORIGIN).first_name
-		"cook": hint = "Kitchen · Cook two vegetables into a meal."
+		"cook": hint = "Kitchen · Browse recipes, ingredients and health benefits."
 		"room_activity": hint = "Explore " + InteriorLife.ACTIVITIES[shop_name][0] + "."
 		"counter": hint = "Shop at the counter."
 		"noticeboard": hint = "Plaza Noticeboard · Festivals, requests, and shop hours."
@@ -1053,7 +1053,7 @@ func interact() -> void:
 			start_conversation(shops[shop_name].nearest_resident(player.position - SHOP_ORIGIN))
 			return
 		"cook":
-			InteriorLife.cook(self)
+			preload("res://RecipeBook.gd").book(self)
 			return
 		"room_activity":
 			InteriorLife.open_room(self,shop_name)

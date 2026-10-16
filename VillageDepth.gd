@@ -101,7 +101,7 @@ static func collection(f) -> void:
 			s.keepsakes["Beloved village steward"]=true;f.save_game(false);text+="\nEarned: Beloved village steward. Your farm life continues!"
 	f.dialogue_text.text=text
 	preload("res://PlayerComfort.gd").scroll_text(f,c)
-	if f.inside_house and int(f.interior_progress.get("home",0))>=2 and s.get("festival_recipe",false): c.add_child(f.make_button("Cook festival milk tea",cook_recipe.bind(f)))
+	if f.inside_house and int(f.interior_progress.get("home",0))>=2 and s.get("festival_recipe",false): c.add_child(f.make_button("Festival milk tea recipe",preload("res://RecipeBook.gd").detail.bind(f,"tea")))
 	c.add_child(f.make_button("Close",f.close_dialogue))
 static func festival_reward(f) -> void:
 	if not f.scheduled_gathering: return
