@@ -127,13 +127,13 @@
       "id": 24,
       "title": "Visible construction stages",
       "status": "partial",
-      "notes": "Worker and construction fencing exist; distinct construction stages remain."
+      "notes": "Saved project journal now shows materials prepared, work underway and completion, without changing overnight construction. Visible outdoor construction artwork remains unfinished."
     },
     {
       "id": 25,
       "title": "Carpenter project preview",
       "status": "partial",
-      "notes": "Placement and cost preview exists; finished-project visual preview remains."
+      "notes": "Completed-project history records benefits, dates and a placement schematic. Detailed before/after artwork previews remain unfinished."
     },
     {
       "id": 26,

@@ -96,7 +96,7 @@ static func plan(farm, kind: String) -> Dictionary:
 		return {"level":0,"cost":2500 if kind=="second_story" else 5000,"wood":45 if kind=="second_story" else 75,"harvests":0,"title":"Second story" if kind=="second_story" else "Year-round greenhouse","benefit":"Open upstairs loft with extra beds and a sitting area" if kind=="second_story" else "Grow all seed varieties in any season, sheltered from heatwaves"}
 	if level >= (3 if kind == "land" else 2): return {}
 	if kind == "land": return {"level":level,"cost":PROJECTS[level][1],"wood":0,"harvests":PROJECTS[level][2],"title":PROJECTS[level][0],"benefit":"Three additional crop beds"}
-	if kind == "home": return {"level":level,"cost":[500,900][level],"wood":[12,24][level],"harvests":[5,12][level],"title":["Second room: storage","Third room: kitchen"][level],"benefit":["Double chest capacity","Cook two vegetables for +25 Health"][level]}
+	if kind == "home": return {"level":level,"cost":[500,900][level],"wood":[12,24][level],"harvests":[5,12][level],"title":["Second room: storage","Third room: kitchen"][level],"benefit":["Double chest capacity","Browse recipes and cook restorative meals"][level]}
 	if kind == "barn": return {"level":level,"cost":[600,1000][level],"wood":[18,30][level],"harvests":0,"title":"Two more animal stalls","benefit":"Increase barn capacity to %d animals" % (6+level*2)}
 	return {"level":level,"cost":[12000,20000][level],"wood":[90,150][level],"harvests":0,"title":["Starter field sprinklers","Full field irrigation"][level],"benefit":["Automatically water the first 15 beds each morning and after planting","Automatically water all crop beds each morning and after planting"][level]}
 static func open_carpentry(farm) -> void:
@@ -105,7 +105,7 @@ static func open_carpentry(farm) -> void:
 	farm.dialogue_panel.get_child(0).offset_top = -minf(440,farm.get_viewport_rect().size.y-32)
 	farm.dialogue_text.text = "Lumber supply: %d. Construction finishes after sleeping." % farm.resources.state().lumber
 	if farm.interior_progress.has("construction"):
-		farm.dialogue_text.text = "Kenta is working on your upgrade. Sleep to the next morning to finish construction."
+		farm.dialogue_text.text = preload("res://ConstructionJournal.gd").stage(farm)+". Sleep to the next morning to finish construction."
 	else:
 		var scroll := ScrollContainer.new()
 		scroll.custom_minimum_size = Vector2(0,160)
@@ -117,6 +117,7 @@ static func open_carpentry(farm) -> void:
 		for kind in ["land","home","second_story","barn","irrigation","greenhouse"]:
 			var info := plan(farm,kind)
 			if not info.is_empty(): list.add_child(farm.make_button(kind.capitalize()+": "+info.title,preview_upgrade.bind(farm,kind)))
+	column.add_child(farm.make_button("Project history and progress",preload("res://ConstructionJournal.gd").open.bind(farm)))
 	column.add_child(farm.make_button("Close",farm.close_dialogue))
 static func preview_upgrade(farm, kind: String) -> void:
 	var info := plan(farm,kind)
@@ -141,7 +142,7 @@ static func order_upgrade(farm, kind: String) -> void:
 	farm.coins -= info.cost
 	if is_instance_valid(farm.sound): farm.sound.play_effect("purchase")
 	farm.resources.state().lumber -= info.wood
-	farm.interior_progress.construction = {"kind":kind,"day":farm.day,"level":info.level+1}
+	farm.interior_progress.construction = {"kind":kind,"day":farm.day,"minute":farm.clock_minutes,"level":info.level+1,"title":info.title,"benefit":info.benefit}
 	farm.save_game(false)
 	open_carpentry(farm)
 static func complete_construction(farm) -> void:
@@ -157,6 +158,7 @@ static func complete_construction(farm) -> void:
 		"barn": farm.BarnLife.state(farm).level = int(job.level)
 		"irrigation": farm.resources.state().irrigation = int(job.level)
 		"second_story", "greenhouse": farm.interior_progress[job.kind] = true
+	preload("res://ConstructionJournal.gd").completed(farm,job)
 	farm.interior_progress.erase("construction")
 	farm.resources.irrigate()
 	farm.resources.queue_redraw()

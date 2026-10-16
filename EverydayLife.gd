@@ -110,7 +110,7 @@ static func journal(f) -> void:
  var c=panel(f,"Farm journal","Your animals, neighbors and farm memories.")
  var scroll:=ScrollContainer.new();scroll.custom_minimum_size.y=160;scroll.size_flags_vertical=Control.SIZE_EXPAND_FILL;c.add_child(scroll)
  var list:=VBoxContainer.new();list.size_flags_horizontal=Control.SIZE_EXPAND_FILL;scroll.add_child(list)
- for entry in [["Recipe book",preload("res://RecipeBook.gd").book.bind(f)],["Our village story",preload("res://StoryArc.gd").journal.bind(f)],["Farm dog",preload("res://FarmDog.gd").menu.bind(f)],["Daily animal care",care_board.bind(f)],["Neighbors & gifts",neighbors.bind(f)],["Morning report",morning.bind(f)],["Weather television",forecast.bind(f)],["Farm memories",album.bind(f)],["Seed calendar",seed_calendar.bind(f)],["Town map",town_map.bind(f)],["Home decoration",decorate.bind(f)]]:
+ for entry in [["Carpenter projects",preload("res://ConstructionJournal.gd").open.bind(f)],["Recipe book",preload("res://RecipeBook.gd").book.bind(f)],["Our village story",preload("res://StoryArc.gd").journal.bind(f)],["Farm dog",preload("res://FarmDog.gd").menu.bind(f)],["Daily animal care",care_board.bind(f)],["Neighbors & gifts",neighbors.bind(f)],["Morning report",morning.bind(f)],["Weather television",forecast.bind(f)],["Farm memories",album.bind(f)],["Seed calendar",seed_calendar.bind(f)],["Town map",town_map.bind(f)],["Home decoration",decorate.bind(f)]]:
   list.add_child(f.make_button(entry[0],entry[1]))
  c.add_child(f.make_button("Back",f.close_dialogue))
 static func forecast(f) -> void:
@@ -132,7 +132,9 @@ static func morning(f) -> void:
  if not event.is_empty(): text+="\nFestival today: "+event.name
  var data:Dictionary=f.BarnLife.state(f)
  if data.feed<data.animals.size()*2: text+="\nFeed is running low. Visit the ranch."
- if f.interior_progress.has("construction"): text+="\nConstruction is underway."
+ if f.interior_progress.has("construction"): text+="\n"+preload("res://ConstructionJournal.gd").stage(f)
+ var building_notice:String=preload("res://ConstructionJournal.gd").notice(f)
+ if not building_notice.is_empty(): text+="\n"+building_notice
  var c=panel(f,"Good morning",text);preload("res://PlayerComfort.gd").scroll_text(f,c)
  c.add_child(f.make_button("Start the day",f.close_dialogue))
 static func seed_calendar(f) -> void:
@@ -255,7 +257,7 @@ static func morning_hint(f) -> void:
   if birthday(f,person)==1+posmod(f.day-1,112): text+=person+"'s birthday. "
  var event:Dictionary=SeasonalFestivals.today(f.day)
  if not event.is_empty(): text+=event.name+" today. "
- text+="Details in Farm journal."
+ text+=preload("res://ConstructionJournal.gd").notice(f)+" Details in Farm journal."
  f.say(text)
 
 static func birthday_label(f,person:String) -> String:
