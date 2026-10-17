@@ -17,3 +17,6 @@ Checks
 
 Review limitations
 This is a local refinement, not a new TestFlight upload. Desktop screenshots use the supplied phone's landscape proportions; physical iPhone movement, readability and performance still need review. Building artwork retains the current illustrated style; further art-direction refinements can follow this playable review.
+
+Density and continuity follow-up
+Town frontage artwork now fills more of each block; courtyard paving fills the former blank gaps. Regional ground spacing is compressed by ten percent while actors remain upright and at the same screen scale. Harbor land continues beyond the top/east map boundary, and waterfall water now uses a continuous shoreline rather than a rectangular strip. Trees extend beyond the regional navigation bounds with gaps for exits. Logical movement coordinates, collision boundaries and saved positions remain unchanged in this visual pass.

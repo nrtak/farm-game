@@ -1,6 +1,6 @@
 extends Node2D
 # Ground uses logical map coordinates; upright props cancel only the ground projection.
-const B = Transform2D(Vector2(.62,-.23),Vector2(.42,.35),Vector2.ZERO)
+const B = Transform2D(Vector2(.558,-.207),Vector2(.378,.315),Vector2.ZERO)
 const Layout = preload("res://ApprovedMapLayout.gd")
 const Roads = preload("res://WideRoads.gd")
 var farm
@@ -21,6 +21,7 @@ func _ready():
 		var seasonal=ShaderMaterial.new();seasonal.shader=load("res://SeasonScenery.gdshader");material=seasonal
 		farm.season_scenery.materials.append(seasonal);seasonal.set_shader_parameter("season",float(int((farm.day-1)/28)%4))
 	build_props()
+	build_horizon()
 func active() -> bool:
 	if kind=="home": return farm.inside_house
 	if kind=="room": return farm.location=="shop" and host==farm.shops.get(farm.shop_name)
@@ -71,7 +72,7 @@ func build_props():
 	elif kind in ["tea","harbor","mountain","historic"]:
 		var indices={"Tea Farmhouse":3,"Tea Processing Shed":2,"Fishing Shop":4,"Harbor Homes":5,"Onsen Resort":6,"Mountain Lodge":7,"Mountain Carpentry":7,"Mine":9,"Shrine Residence":8}
 		for title in Layout.doors(kind):
-			prop(landmarks,indices[title],3,Layout.doors(kind)[title]-Vector2(0,18),210 if kind=="harbor" else (245 if kind=="historic" else 190),title.replace(" Residence","").replace("Mountain ",""))
+			prop(landmarks,indices[title],3,Layout.doors(kind)[title]-Vector2(0,18),235 if kind=="harbor" else (260 if kind=="historic" else 215),title.replace(" Residence","").replace("Mountain ",""))
 		for rect: Rect2 in Layout.scenery(kind):
 			for x in range(int(rect.position.x)+20,int(rect.end.x),100):
 				for y in range(int(rect.position.y)+20,int(rect.end.y),110):
@@ -113,6 +114,20 @@ func build_props():
 			var foot=Vector2(r.get_center().x,r.end.y)
 			var width=clampf((r.size.x*.62+r.size.y*.42),70,220)
 			prop(furniture,choices[i%choices.size()],4,foot,width)
+func build_horizon():
+	# Continue the scenery past the navigation bounds; never put new solids in a road.
+	if kind not in ["tea","mountain","historic","waterfall","harbor"]:return
+	for y in [-380,-230,-80,1280,1430]:
+		for x in range(-260,1900,150):
+			if kind=="harbor" and (y>0 or x<250):continue
+			if y>1200 and absf(x-800)<180:continue
+			if kind=="historic" and (x<220 or (y>1200 and x>1300)):continue
+			prop(landmarks,11,3,Vector2(x,y),120+posmod(x,31))
+	if kind in ["tea","mountain"]:
+		for y in range(140,1180,170):
+			for x in [-180,1780]:
+				if (kind=="tea" and absf(y-675)<180) or (kind=="mountain" and absf(y-760)<180):continue
+				prop(landmarks,11,3,Vector2(x,y),145)
 func road(a: Vector2,b: Vector2,width: float=115):
 	draw_line(a,b,Color("ddc995"),width,true)
 	draw_circle(a,width*.5,Color("ddc995"));draw_circle(b,width*.5,Color("ddc995"))
@@ -155,8 +170,12 @@ func _draw():
 			draw_line(p,p+Vector2(3,-6),Color(.34,.49,.25,.23),2)
 	if kind=="harbor":
 		draw_rect(Rect2(Vector2.ZERO,size).grow(1200),Color("70b4bf"))
-		draw_colored_polygon(host.land_outline,Color("dfd1a2"))
-		var coast:PackedVector2Array=host.land_outline.duplicate();coast.append(coast[0]);draw_polyline(coast,Color("d1e9da"),10,true)
+		var coast:PackedVector2Array=host.land_outline.duplicate()
+		coast.remove_at(coast.size()-1)
+		coast.insert(0,Vector2(80,-1600));coast.append(Vector2(3200,1450))
+		var land=coast.duplicate();land.append(Vector2(3200,-1600))
+		draw_colored_polygon(land,Color("dfd1a2"))
+		draw_polyline(coast,Color("d1e9da"),10,true)
 	elif kind=="tea":water(host.pond_outline)
 	elif kind=="mountain":
 		for poly in host.water_polygons:water(poly)
@@ -180,8 +199,8 @@ func _draw():
 		draw_set_transform_matrix(Transform2D.IDENTITY)
 	elif kind=="waterfall":
 		draw_texture_rect(grass_texture,Rect2(Vector2.ZERO,size).grow(900),true)
-		water(PackedVector2Array([Vector2(260,270),Vector2(1320,270),Vector2(1320,530),Vector2(260,530)]))
-		draw_colored_polygon(PackedVector2Array(host.GROUND),Color(.6,.72,.4,.25))
+		water(PackedVector2Array([Vector2(-1400,-1400),Vector2(2800,-1400),Vector2(2800,360),Vector2(1380,460),Vector2(1050,485),Vector2(550,485),Vector2(220,520),Vector2(-1400,440)]))
+
 		for i in range(90):
 			var p=Vector2(350+posmod(i*137,900),600+posmod(i*71,500))
 			if absf(p.x-800)>145:

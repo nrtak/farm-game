@@ -1,6 +1,6 @@
 extends Node2D
 # Presentation projection only: physics, saved positions and quest destinations stay in world units.
-const BASIS = Transform2D(Vector2(0.62,-0.23),Vector2(0.42,0.35),Vector2.ZERO)
+const BASIS = Transform2D(Vector2(0.558,-0.207),Vector2(0.378,0.315),Vector2.ZERO)
 var farm
 var layers: Array = []
 var actor_roots: Array = []

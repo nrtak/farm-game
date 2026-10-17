@@ -23,12 +23,11 @@ func _draw():
  for y in range(280,1590,14):
   for x in range(165,2170,22):
    var p=Vector2(x+(11 if y%28==0 else 0),y)
-   if G.on_road(p+Vector2(11,7),data):
+   if G.on_road(p+Vector2(11,7),data) or Rect2(898,278,1124,1294).has_point(p):
     var colors=[Color("e9d8b5"),Color("decaa4"),Color("d3c5a6"),Color("efe0c1")]
-    quad(Rect2(p,Vector2(20,12)),colors[rng.randi_range(0,3)])
+    var tone=colors[rng.randi_range(0,3)]
+    if not G.on_road(p+Vector2(11,7),data):tone=tone.lerp(Color("b8aa91"),.55)
+    quad(Rect2(p,Vector2(20,12)),tone)
  # Coast stays open, and the inland river never runs through the town.
  for y in range(-80,1600,48):draw_line(G.project(Vector2(105,y)),G.project(Vector2(115,y+22)),Color("c9eef0"),3,true)
- # Straight eastern boundary ends the blocks cleanly; nothing protrudes into the road.
- for y in range(0):
-  var p=G.project(Vector2(2170,y));draw_line(p,p+Vector2(0,-22),Color("867b67"),7,true)
- # draw_polyline(PackedVector2Array([G.project(Vector2(2170,390))+Vector2(0,-22),G.project(Vector2(2170,1240))+Vector2(0,-22)]),Color("c7bda3"),8,true)
+
