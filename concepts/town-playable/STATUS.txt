@@ -1,0 +1,9 @@
+Tea Blossom Hills: new-town movement prototype
+
+Run Launch Preview.cmd on this computer. Arrow keys, touch joystick, or click/tap roads to walk. Routes shows navigable ground; Zoom switches viewing scale. Walk into doorways to enter, then walk south to exit.
+
+Implemented: rendered approved town, camera follow, foot-clearance navigation, 13 automatic entrances, existing interiors, west-facing Fire/Cafe/Blacksmith approaches, four direction-consistent gateway returns, isolated restaurant table-layout blockout. No saved game is read or written.
+
+Validation: simulated movement along routes into all 13 buildings and out again; all four gateway/return points; scenery blocking; four native desktop captures. No physical iPhone validation.
+
+Still pending: restaurant artwork and services; adjoining highlands/harbor/shrine/farm layouts (gateway placeholders only); matching NPC schedules; full save-compatible integration; roof occlusion/fading; iPhone camera/scale testing. Main.tscn and TestFlight remain unchanged.

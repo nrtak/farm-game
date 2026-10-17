@@ -1,0 +1,29 @@
+{
+  "status": "layout reference; not integrated",
+  "method": "built-in image generation",
+  "art": "town-art-layout-v4.png",
+  "approved_layout": "../town-grid-v5/layout.json",
+  "verified": [
+    "13 buildings present",
+    "related buildings paired",
+    "restaurant beside inn",
+    "square festival plaza",
+    "river bend north of plaza",
+    "coastal shrine west",
+    "highlands grouped north",
+    "Ocean and beach rocks removed",
+    "Building side walls and roof depth strengthened",
+    "Visible signed northbound avenue between Town Hall and Library connects town street to highlands",
+    "Fire, Cafe and Blacksmith face west with straight eastern boundary"
+  ],
+  "remaining": [
+    "Closer three-quarter street camera treatment",
+    "Exact footprint and doorway alignment for integration",
+    "Update map transitions and NPC schedules together",
+    "Physical iPhone walking validation"
+  ],
+  "prompt_summary": "Render schematic v4 faithfully using existing town artwork as style only. Preserve thirteen named buildings, grid streets, west festival square, northern U river and grouped highlands. Elevated orthographic three-quarter view, neutral daylight, clear routes and natural signs, no characters or HUD.",
+  "refinement_prompt": "Preserve thirteen-building layout, signs, square plaza and northern river. Strengthen three-quarter building side walls and roof depth without rotating ground grid. Remove ocean and beach rocks.",
+  "highlands_correction_prompt": "Restore wide straight northbound avenue between Town Hall and Library, joining existing town street and highlands path, clear of foliage and roofs; add Highlands sign. Preserve other layout and artwork.",
+  "east_edge_prompt": "Rotate only Fire, Cafe and Blacksmith facades west toward town; retain groupings, signed Highlands route and river. Finish eastern edge with straight low stone wall and streets terminating at inner north-south road."
+}
