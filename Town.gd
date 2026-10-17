@@ -279,6 +279,6 @@ func panel(color: Color) -> StyleBoxFlat:
 
 func street_routes()->Array:
  var result=[]
- for pair in [[Vector2(1300,365),Vector2(1300,1480)],[Vector2(260,970),Vector2(1970,970)],[Vector2(950,700),Vector2(1970,700)],[Vector2(950,1250),Vector2(1970,1250)],[Vector2(970,700),Vector2(970,1250)],[Vector2(1630,700),Vector2(1630,1510)]]:
+ for pair in [[Vector2(1300,365),Vector2(1300,1480)],[Vector2(260,970),Vector2(1870,970)],[Vector2(950,700),Vector2(1870,700)],[Vector2(950,1250),Vector2(1870,1250)],[Vector2(970,700),Vector2(970,1250)],[Vector2(1630,700),Vector2(1630,1510)]]:
   result.append([G.project(pair[0]),G.project(pair[1])])
  return result

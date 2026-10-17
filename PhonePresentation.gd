@@ -27,7 +27,10 @@ func _process(_delta):
 	elif action=="talk_shop":npc=f.shops[f.shop_name].nearest_resident(f.player.position-f.SHOP_ORIGIN)
 	speech.visible=is_instance_valid(npc) and not f.dialogue_open and not f.choosing_character
 	if speech.visible:
-		speech.position=f.get_viewport().canvas_transform*npc.global_position-Vector2(24,100)
+		var bounds:Rect2=npc.sprite.get_global_transform_with_canvas()*npc.sprite.get_rect()
+		speech.position=Vector2(bounds.get_center().x-24,bounds.position.y-68)
+		speech.position.x=clampf(speech.position.x,8,f.get_viewport_rect().size.x-56)
+		speech.position.y=maxf(82,speech.position.y)
 		speech.text="…" if f.held_gift.is_empty() else "♥"
 	if action in ["talk","talk_region","talk_shop"] or f.action_button.disabled:f.action_button.hide()
 	var quiet=action in ["","talk","talk_region","talk_shop","service","regional_door","enter","leave","return_town","historic","north","west","east","town","road"]

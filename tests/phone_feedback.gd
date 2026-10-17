@@ -13,6 +13,14 @@ func run():
 			assert(f.REGIONAL_ROOMS[title][1]==preload("res://ApprovedMapLayout.gd").doors(area)[title],"Artwork and automatic doorway agree")
 	f.enter_shop("Inn",true);await process_frame
 	var npc=f.shops["Inn"].residents[0]
+	var phone_ui
+	for child in f.get_children():
+		if child.get_script()==preload("res://PhonePresentation.gd"):phone_ui=child
+	f.player.position=npc.global_position+Vector2(0,40)
+	f.camera.force_update_scroll();await process_frame;await process_frame
+	assert(phone_ui.speech.visible,"Nearby resident has a talk indicator")
+	var face_bounds:Rect2=npc.sprite.get_global_transform_with_canvas()*npc.sprite.get_rect()
+	assert(phone_ui.speech.get_global_rect().end.y<=face_bounds.position.y,"Talk indicator clears the portrait sprite at indoor zoom")
 	f.produce.Turnip=2;f.held_gift="Turnip"
 	f.start_conversation(npc);await process_frame
 	assert(f.produce.Turnip==1 and f.held_gift.is_empty(),"Talking gives exactly one held item")

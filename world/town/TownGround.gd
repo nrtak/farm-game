@@ -12,10 +12,16 @@ func _draw():
  quad(Rect2(165,-2500,6000,6000),Color("83b960"))
  var rng=RandomNumberGenerator.new();rng.seed=817
  draw_polygon(G.polygon(Rect2(165,-2500,6000,6000)),PackedColorArray([Color.WHITE]),PackedVector2Array([Vector2(0,0),Vector2(20,0),Vector2(20,20),Vector2(0,20)]),grass)
- # Quiet blocks behind the shop fronts contrast with continuous public streets.
- # Each row meets one straight sidewalk; no separate islands or diagonal apron wedges.
+ # Low planting beds occupy the unused backs of the blocks, never the streets.
  for row in [500,780,1060,1340]:
-  quad(Rect2(680 if row in [780,1060] else 1030,row-100,1340 if row in [780,1060] else 990,240),Color("a6b481"))
+  for x in [1080,1430,1770]:
+   var bed=Rect2(x,row-62,110,28)
+   if G.on_road(bed.get_center(),data):continue
+   quad(bed.grow(3),Color("857253"));quad(bed,Color("718b4c"))
+   for n in range(8):
+    var flower=G.project(Vector2(x+8+n*13,row-49))
+    draw_circle(flower,3.5,Color("4f713c"))
+    draw_circle(flower+Vector2(0,-2),1.8,Color("efd0a0") if n%2==0 else Color("dca0b4"))
  for a in data.roads+data.aprons+[data.plaza]:quad(G.rect(a).grow(5),Color("c0b091"));quad(G.rect(a),Color("d9c8a3"))
  for y in range(280,1590,14):
   for x in range(165,2170,22):

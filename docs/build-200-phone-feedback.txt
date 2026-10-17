@@ -20,3 +20,5 @@ This is a local refinement, not a new TestFlight upload. Desktop screenshots use
 
 Density and continuity follow-up
 Town frontage artwork now fills more of each block; courtyard paving fills the former blank gaps. Regional ground spacing is compressed by ten percent while actors remain upright and at the same screen scale. Harbor land continues beyond the top/east map boundary, and waterfall water now uses a continuous shoreline rather than a rectangular strip. Trees extend beyond the regional navigation bounds with gaps for exits. Logical movement coordinates, collision boundaries and saved positions remain unchanged in this visual pass.
+
+Town frontage polish: shortened the eastern street by 100 world units while preserving straight approaches, replaced flat block filler with textured grass, and added low planting beds outside roads. Talk indicators now follow sprite height at camera zoom; nearby residents receive roof fading. Full 51-check regression suite passed; final exported targeted checks and screenshots are recorded in PhoneFeedbackPreview. No physical iPhone validation or new upload.

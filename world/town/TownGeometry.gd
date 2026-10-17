@@ -2,7 +2,7 @@ extends RefCounted
 const ORIGIN=Vector2(120,1050)
 const AXIS_X=Vector2(.86,-.32)
 const AXIS_Y=Vector2(.58,.48)
-const WORLD=Rect2(165,275,1835,1310)
+const WORLD=Rect2(165,275,1735,1310)
 const ALIASES={"Library":"Archive","Police":"Police Box","Fire":"Fire Station","Hospital":"Clinic","Store":"General Store","Cafe":"Caf\u00e9","Carpenter":"Carpentry","Vet":"Veterinarian"}
 const EXITS=[["Highlands",Vector2(1300,300),Vector2(1300,365)],["Harbor",Vector2(185,910),Vector2(260,910)],["Shrine",Vector2(360,390),Vector2(360,470)],["Farm",Vector2(1300,1550),Vector2(1300,1480)]]
 static func project(p:Vector2)->Vector2:return ORIGIN+AXIS_X*p.x+AXIS_Y*p.y

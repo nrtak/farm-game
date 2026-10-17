@@ -29,7 +29,12 @@ func _ready():
 func follow_player(point:Vector2):
  for sprite in building_sprites:
   var bounds=Rect2(sprite.position,sprite.texture.get_size()*sprite.scale)
-  sprite.modulate.a=.3 if bounds.intersects(Rect2(point-Vector2(18,65),Vector2(36,65))) and sprite.z_index>int(point.y/10) else 1.0
+  var obscures_actor=bounds.intersects(Rect2(point-Vector2(18,65),Vector2(36,65))) and sprite.z_index>int(point.y/10)
+  # A nearby conversation partner deserves the same roof fade as the farmer.
+  for npc in get_parent().npcs:
+   if not npc.visible or npc.position.distance_to(point)>150:continue
+   if sprite.z_index>npc.z_index and bounds.intersects(Rect2(npc.position-Vector2(18,65),Vector2(36,65))):obscures_actor=true
+  sprite.modulate.a=.3 if obscures_actor else 1.0
 func atlas(name:String,region:Rect2)->Texture2D:
  if not art_cache.has(name):art_cache[name]=load("res://world/town/"+name+"-atlas.png")
  var a=AtlasTexture.new();a.atlas=art_cache[name];a.region=region;return a
