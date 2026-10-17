@@ -162,9 +162,9 @@ func run() -> void:
 	assert(farm.clock_text() == "7:00 AM")
 	farm.clock_minutes = 450
 	assert(farm.clock_text() == "7:30 AM")
-	var exits := {"mountain": Vector2(1280, 60), "harbor": Vector2(60, 1080), "tea": Vector2(2340, 1080), "historic": Vector2(180,150)}
+	var exits := {"mountain":Vector2(1300,300),"harbor":Vector2(185,910),"historic":Vector2(360,390)}
 	for area in exits:
-		farm.travel_to("town", farm.town.design(exits[area]), false)
+		farm.travel_to("town", farm.town.G.project(exits[area]), false)
 		farm._physics_process(0.016)
 		assert(farm.location == area, "Walk into " + area)
 		farm._physics_process(0.016)
@@ -175,7 +175,7 @@ func run() -> void:
 		assert(farm.location == "town", "Walk back from " + area)
 		farm._physics_process(0.016)
 		assert(farm.location == "town", "Town arrival remains in town")
-	farm.travel_to("town", Vector2(1200, farm.town.SIZE.y - 60), false)
+	farm.travel_to("town", farm.town.G.project(Vector2(1300,1550)), false)
 	farm._physics_process(0.016)
 	assert(farm.location == "farm", "Town south directly reaches farm")
 	farm.player.position = farm.FARM_EXIT

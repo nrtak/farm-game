@@ -180,7 +180,7 @@ static func cooking_moment(f,title:String,text:String) -> void:
  var moment=preload("res://EverydayMoment.gd").new();moment.setup();c.add_child(moment)
  c.add_child(f.make_button("Enjoy your meal",f.close_dialogue))
 static func shops(f) -> void:
- var c=panel(f,"Town shops","Walk through each shop doorway to enter. Ranch: southwest town. Vet: northeast, near the tea-country road.")
+ var c=panel(f,"Town shops","Walk through each shop doorway to enter. Ranch and vet: together on the south street. Restaurant: beside the inn. Highlands: north between Town Hall and Library.")
  var grid=preload("res://MenuTiles.gd").grid(f,c)
  for building in f.town.BUILDINGS:
   var hours:Vector2=f.shop_opening_hours().get(building.name,Vector2(0,1440))
@@ -223,7 +223,11 @@ static func town_map(f) -> void:
  map.draw.connect(func():
   var width:float=minf(map.size.x,map.size.y*1.5)
   var rect:=Rect2((map.size.x-width)/2,0,width,width/1.5)
-  map.draw_texture_rect(preload("res://assets/map-town-open-v3.png"),rect,false)
+  map.draw_rect(rect,Color("70945d"))
+  for road in f.town.data.roads:
+   var polygon=PackedVector2Array()
+   for p in f.town.G.polygon(f.town.G.rect(road)):polygon.append(rect.position+p/f.town.SIZE*rect.size)
+   map.draw_colored_polygon(polygon,Color("dccc9e"))
   if f.location=="town": map.draw_circle(rect.position+(f.player.position-f.TOWN_ORIGIN)/f.town.SIZE*rect.size,7,Color("ffe497")))
  for building in f.town.BUILDINGS:
   var b=f.make_button("",func():

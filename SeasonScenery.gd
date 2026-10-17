@@ -5,6 +5,7 @@ func setup(farm) -> void:
 	var surfaces: Array = [farm.get_node("OutdoorWorld/Environment") if farm.has_node("OutdoorWorld/Environment") else farm.get_node("Environment"),farm.farmhouse.get_node("Artwork"),farm.town]
 	for child in farm.town.get_children():
 		if child is Sprite2D and child.z_index == -10: surfaces.append(child)
+	surfaces.append(farm.town.visuals.get_child(0))
 	surfaces.append_array(farm.regions.values())
 	for surface in surfaces:
 		var material := ShaderMaterial.new()

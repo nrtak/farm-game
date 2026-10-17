@@ -13,6 +13,7 @@ func run():
 		"historic":[[Vector2(420,550),Vector2(1050,550)],[Vector2(420,700),Vector2(1050,700)],[Vector2(406,363),Vector2(406,600)]],
 		"harbor":[[Vector2(1480,660),Vector2(500,660)],[Vector2(1480,585),Vector2(1480,660)],[Vector2(600,660),Vector2(600,990)],[Vector2(665,550),Vector2(665,660)],[Vector2(1016,610),Vector2(1016,660)]],
 		"tea":[[Vector2(80,665),Vector2(1510,665)],[Vector2(453,665),Vector2(453,330)],[Vector2(1042,630),Vector2(1042,665)],[Vector2(860,700),Vector2(860,1050)],[Vector2(1333,700),Vector2(1333,1000)]]}
+	routes.town=f.town.street_routes()
 	for area in routes:
 		f.travel_to(area,routes[area][0][0],false)
 		await physics_frame
@@ -31,9 +32,9 @@ func run():
 	assert(not f.regions.harbor.is_walkable(Vector2(800,1000)))
 	assert(not f.regions.tea.is_walkable(Vector2(200,850)))
 	f.travel_to("tea",Vector2(60,665),false); f.check_walk_exits()
-	assert(f.location=="town")
-	f.travel_to("town",Vector2(300,800),false); f.check_walk_exits()
+	assert(f.location=="mountain")
+	f.travel_to("town",f.town.G.project(Vector2(185,910)),false); f.check_walk_exits()
 	assert(f.location=="harbor","Town exits before the shoreline")
-	assert(not f.town.is_walkable(Vector2(90,800)),"Removed town pier stays ocean")
+	assert(not f.town.is_walkable(f.town.G.project(Vector2(90,800))),"Removed town pier stays ocean")
 	print("PASS: wide farm, town, mountain, shrine, harbor and tea routes have body clearance; shore transition and water boundaries work")
 	quit()

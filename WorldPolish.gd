@@ -57,30 +57,69 @@ func plan(world: Vector2) -> void:
 	var origin := area_origin()
 	var dimensions: Vector2 = farm.WORLD if area == farm else area.SIZE
 	var local := world-origin
+	var cell_size:=16 if farm.location=="town" else 32
 	if not Rect2(Vector2.ZERO,dimensions).has_point(local): return
 	var key: String = farm.location + str(farm.inside_house) + farm.shop_name + str(dimensions)
 	if not grids.has(key):
 		var grid := AStarGrid2D.new()
-		grid.region = Rect2i(Vector2i.ZERO,Vector2i(ceil(dimensions.x/32),ceil(dimensions.y/32)))
-		grid.cell_size = Vector2(32,32)
-		grid.offset = Vector2(16,16)
+		grid.region = Rect2i(Vector2i.ZERO,Vector2i(ceil(dimensions.x/cell_size),ceil(dimensions.y/cell_size)))
+		grid.cell_size = Vector2(cell_size,cell_size)
+		grid.offset = Vector2.ONE*cell_size/2.0
 		grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
 		grid.update()
 		for y in range(grid.region.size.y):
 			for x in range(grid.region.size.x):
-				var point := Vector2(x*32+16,y*32+16)
+				var point := Vector2(x*cell_size+cell_size/2.0,y*cell_size+cell_size/2.0)
 				var clear: bool = area.is_walkable(point) if area.has_method("is_walkable") else false
 				clear = clear and not blocked(point+origin)
 				grid.set_point_solid(Vector2i(x,y),not clear)
 		grids[key] = grid
 	var grid: AStarGrid2D = grids[key]
-	var start := nearest_cell(grid,Vector2i((farm.player.position-origin)/32))
-	var goal := nearest_cell(grid,Vector2i(local/32))
-	for point in grid.get_point_path(start,goal): path.append(point+origin)
+	var start := nearest_cell(grid,Vector2i((farm.player.position-origin)/cell_size))
+	var goal := nearest_cell(grid,Vector2i(local/cell_size))
+	# A projected building corner can intersect an edge between two clear cells.
+	# Reject that edge's destination cell and search again, rather than steering into it.
+	for attempt in range(24):
+		path.clear()
+		var previous:Vector2=farm.player.position
+		var rejected=false
+		for point in grid.get_point_path(start,goal):
+			var world_point:Vector2=point+origin
+			if not segment_clear(previous,world_point):
+				var cell=Vector2i(point/float(cell_size))
+				if cell==start or cell==goal:path.clear();break
+				grid.set_point_solid(cell,true);rejected=true;break
+			path.append(world_point);previous=world_point
+		if not rejected:break
+		path.clear()
 	if path.is_empty(): farm.say("That spot is blocked. Tap an open path."); return
+	# Finish at the actual tapped doorway, not a nearby grid cell.
+	if area.is_walkable(local) and not blocked(world):
+		var exact_clear=true
+		var last:Vector2=path[-1]
+		for i in range(1,17):
+			var sample:Vector2=last.lerp(world,i/16.0)
+			if not area.is_walkable(sample-origin) or blocked(sample):exact_clear=false;break
+		if exact_clear:path.append(world)
+	# Pull straight, body-clear lines through the grid so the player does not weave.
+	var smooth:Array[Vector2]=[]
+	var anchor:Vector2=farm.player.position
+	var index=0
+	while index<path.size():
+		var furthest=index
+		for next in range(index+1,path.size()):
+			if not segment_clear(anchor,path[next]):break
+			furthest=next
+		smooth.append(path[furthest]);anchor=path[furthest];index=furthest+1
+	path=smooth
 	marker = path[-1]
 	marker_time = 1.0
 	queue_redraw()
+func segment_clear(start:Vector2,finish:Vector2)->bool:
+	var count=maxi(1,ceili(start.distance_to(finish)/4.0))
+	for i in range(count+1):
+		if not clear_position(start.lerp(finish,float(i)/count)):return false
+	return true
 func blocked(point: Vector2) -> bool:
 	movement_query.transform=Transform2D(0,point)
 	movement_query.collision_mask=farm.player.collision_mask
@@ -105,7 +144,7 @@ func nearest_cell(grid: AStarGrid2D, cell: Vector2i) -> Vector2i:
 	return nearest
 func direction(manual: Vector2) -> Vector2:
 	if manual.length() > 0.1: path.clear(); return manual
-	while not path.is_empty() and farm.player.position.distance_to(path[0]) < 12: path.pop_front()
+	while not path.is_empty() and farm.player.position.distance_to(path[0]) < 0.5: path.pop_front()
 	return (path[0]-farm.player.position).normalized() if not path.is_empty() else Vector2.ZERO
 func nearest_pet():
 	for pet in farm.town.pets:

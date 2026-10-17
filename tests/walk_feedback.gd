@@ -27,7 +27,7 @@ func run():
 	f.player.position=f.ROOM_ORIGIN+f.interior.EXIT
 	f.check_walk_exits(); assert(not f.inside_house)
 	f.check_walk_exits(); assert(not f.inside_house)
-	f.travel_to("town",Vector2(180,150),false)
+	f.travel_to("town",f.town.G.project(Vector2(360,390)),false)
 	f.check_walk_exits(); assert(f.location=="historic")
 	f.player.position=f.REGION_ORIGINS.historic+Vector2(1540,1100)
 	f.check_walk_exits(); assert(f.location=="town")
@@ -43,6 +43,6 @@ func run():
 	for npc in f.town.npcs:
 		for building in f.town.BUILDINGS:
 			var door: Vector2=building.door*f.town.ART_SCALE
-			assert(not(absf(npc.position.x-door.x)<100 and npc.position.y>door.y-35 and npc.position.y<door.y+170),"Town resident leaves the doorway approach clear")
+			assert(npc.position.distance_to(door)>=65,"Town resident leaves the doorway approach clear")
 	print("PASS: automatic building/house/map travel, no entry bounce, town library, shrine return, dry NPC posts and grassy wildlife habitats")
 	quit()

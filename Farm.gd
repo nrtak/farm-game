@@ -184,6 +184,8 @@ var tool_buttons: Array[Button] = []
 var rocks := [Vector2(430, 810), Vector2(1410, 770), Vector2(1640, 1230)]
 
 func _ready() -> void:
+	var release:Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://data/build_info.json"))
+	get_window().title="Tea Blossom Hills — %s · v%s (%s)" % [release.edition,release.version,release.build]
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--test-session="):
 			SAVE_FILE = "user://test_" + argument.trim_prefix("--test-session=").validate_filename() + ".json"
@@ -211,7 +213,7 @@ func _ready() -> void:
 	road.visible = false
 	add_child(road)
 	town.add_supporting_cast()
-	for service in ["General Store", "Blacksmith", "Café", "Inn", "Clinic", "Town Hall", "Police Box", "Fire Station", "Archive", "Shrine Residence", "Mountain Lodge", "Tea Farmhouse", "Tea Processing Shed", "Harbor Homes", "Fishing Shop", "Hiro Cabin", "Mine", "Carpentry", "Mountain Carpentry", "Onsen Resort", "Barn", "Greenhouse", "Upper Floor", "Ranch", "Veterinarian"]:
+	for service in ["Restaurant", "General Store", "Blacksmith", "Café", "Inn", "Clinic", "Town Hall", "Police Box", "Fire Station", "Archive", "Shrine Residence", "Mountain Lodge", "Tea Farmhouse", "Tea Processing Shed", "Harbor Homes", "Fishing Shop", "Hiro Cabin", "Mine", "Carpentry", "Mountain Carpentry", "Onsen Resort", "Barn", "Greenhouse", "Upper Floor", "Ranch", "Veterinarian"]:
 		var room := ShopScript.new()
 		room.position = Vector2(24000 + shops.size() * 2000, 0)
 		room.visible = false
@@ -697,11 +699,6 @@ func interaction_action() -> String:
 		if town.nearest_service(point) != "" and point.distance_to(service_door(town.nearest_service(point))) < 80: return "service"
 		if town.nearest_npc(point) != null: return "talk"
 		if town.nearest_service(point) != "": return "service"
-		if point.y > 1490 and absf(point.x - 1200) < 180: return "road"
-		if point.y < 120: return "north"
-		if point.x < 180: return "west"
-		if point.x > 2200: return "east"
-		if point.x < 400 and point.y < 340: return "historic"
 		return ""
 	if location == "road": return ""
 	if location == "farm" and player.position.distance_to(FARM_EXIT) < 110: return "town"
@@ -1171,7 +1168,7 @@ func save_game(show_message: bool = true, overnight_checkpoint: bool = false) ->
 		crop_data.append({"stage": plot.stage, "growth": plot.growth, "crop": plot.crop, "last_growth_day": plot.last_growth_day})
 	var file := FileAccess.open(SAVE_FILE+".pending", FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({"version": 19, "interior_progress": interior_progress, "festival_years": festival_years, "pick_level": pick_level, "harvest_level": harvest_level, "stored_items": stored_items, "backpack_level": backpack_level, "mine_lesson_seen": mine_lesson_seen, "ore_basket": ore_basket, "ore_shipping": ore_shipping, "ore_picked_days": ore_picked_days, "tea_lesson_seen": tea_lesson_seen, "tea_leaves": tea_leaves, "packed_tea": packed_tea, "tea_shipping": tea_shipping, "tea_picked_days": tea_picked_days, "fish_basket": fish_basket, "fish_shipping": fish_shipping, "fish_catches": fish_catches, "fishing_quest_stage": fishing_quest_stage, "tea_delivery_stage": tea_delivery_stage, "selected_crop": selected_crop, "extra_seeds": extra_seeds, "produce": produce, "shipping_queue": shipping_queue, "lost_item_stage": lost_item_stage, "day": day, "clock_minutes": clock_minutes, "health": health, "location": location, "shop_name": shop_name, "character": character_choice, "coins": coins, "seeds": seeds, "tool_level": tool_level, "friendship": friendship, "talked_on_day": talked_on_day, "seen_scenes": seen_scenes, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
+		file.store_string(JSON.stringify({"version": 20, "interior_progress": interior_progress, "festival_years": festival_years, "pick_level": pick_level, "harvest_level": harvest_level, "stored_items": stored_items, "backpack_level": backpack_level, "mine_lesson_seen": mine_lesson_seen, "ore_basket": ore_basket, "ore_shipping": ore_shipping, "ore_picked_days": ore_picked_days, "tea_lesson_seen": tea_lesson_seen, "tea_leaves": tea_leaves, "packed_tea": packed_tea, "tea_shipping": tea_shipping, "tea_picked_days": tea_picked_days, "fish_basket": fish_basket, "fish_shipping": fish_shipping, "fish_catches": fish_catches, "fishing_quest_stage": fishing_quest_stage, "tea_delivery_stage": tea_delivery_stage, "selected_crop": selected_crop, "extra_seeds": extra_seeds, "produce": produce, "shipping_queue": shipping_queue, "lost_item_stage": lost_item_stage, "day": day, "clock_minutes": clock_minutes, "health": health, "location": location, "shop_name": shop_name, "character": character_choice, "coins": coins, "seeds": seeds, "tool_level": tool_level, "friendship": friendship, "talked_on_day": talked_on_day, "seen_scenes": seen_scenes, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
 		file.flush()
 		file.close()
 		if DirAccess.rename_absolute(ProjectSettings.globalize_path(SAVE_FILE+".pending"),ProjectSettings.globalize_path(SAVE_FILE))!=OK:
@@ -1289,9 +1286,9 @@ func load_game() -> void:
 	if saved_area in ["town", "road"]:
 		var origin := TOWN_ORIGIN if saved_area == "town" else ROAD_ORIGIN
 		var point := Vector2(float(parsed.get("x", origin.x + 500)), float(parsed.get("y", 500))) - origin
-		if saved_area=="town" and int(parsed.get("version",1))<19: point=town.design(point)
+		if saved_area=="town" and int(parsed.get("version",1))<20: point=town.arrival("farm")
 		var valid: bool = town.is_walkable(point) if saved_area == "town" else Rect2(Vector2(30, 90), Vector2(940, 820)).has_point(point)
-		travel_to(saved_area, point if valid else (Vector2(1200, 1200) if saved_area == "town" else Vector2(500, 500)), false)
+		travel_to(saved_area, point if valid else (town.arrival("farm") if saved_area == "town" else Vector2(500, 500)), false)
 	elif regions.has(saved_area):
 		var point := Vector2(float(parsed.get("x", 0)), float(parsed.get("y", 0))) - Vector2(REGION_ORIGINS[saved_area])
 		travel_to(saved_area, point if regions[saved_area].is_walkable(point) else Vector2(800, 950), false)
@@ -1312,14 +1309,15 @@ func update_walk(delta: float, moving: bool, direction: Vector2 = Vector2.ZERO, 
 	var row := 0 if facing_direction==0 else (2 if facing_direction==4 else (1 if facing_direction in [1,2,3] else 3))
 	var mirror := row==1
 	var index := (3 if mirror else row)*4+phase
-	var key := row*4+phase
+	var key := row*4+phase+(100 if location=="town" else 0)
 	if key==walk_frame: return
 	walk_frame=key
 	farmer.texture=active_texture
 	farmer.flip_h=mirror
 	farmer.region_rect=walk_regions[index]
-	farmer.scale=Vector2.ONE*front_scale
-	farmer.position=side_offsets[index]*front_scale
+	var world_scale:=0.35 if location=="town" else 1.0
+	farmer.scale=Vector2.ONE*front_scale*world_scale
+	farmer.position=side_offsets[index]*front_scale*world_scale
 	if mirror: farmer.position.x*=-1
 func sprite_bounds(image: Image) -> Rect2i:
 	# Ignore nearly transparent export noise when measuring a stride.
@@ -1482,6 +1480,7 @@ func crop(pos: Vector2, stage: int, crop_name: String = "Turnip", growth: float 
 					draw_line(berry + Vector2(-5, -6), berry + Vector2(5, -6), green, 4)
 					draw_circle(berry, 1.8, Color("e7cf95"))
 func travel_to(area: String, point: Vector2, persist: bool = true) -> void:
+	if is_instance_valid(polish):polish.path.clear()
 	if WeatherLife.forecast(day) == "Hurricane":
 		set_location(true,ROOM_ORIGIN+interior.ENTRY)
 		say("Hurricane: stay inside and sleep until tomorrow.")
@@ -1513,8 +1512,9 @@ func travel_to(area: String, point: Vector2, persist: bool = true) -> void:
 		var origin: Vector2 = REGION_ORIGINS[area] if regions.has(area) else (TOWN_ORIGIN if area == "town" else ROAD_ORIGIN)
 		var dimensions: Vector2 = regions[area].SIZE if regions.has(area) else (town.SIZE if area == "town" else road.SIZE)
 		if regions.has(area): regions[area].visible = true
-		var arrival: Vector2 = regions[area].safe_point(point) if regions.has(area) else point
+		var arrival: Vector2 = regions[area].safe_point(point) if regions.has(area) else (town.safe_point(point) if area=="town" else point)
 		player.position = origin + arrival
+		player.z_index=clampi(int(arrival.y/10),1,215) if area=="town" else 5
 		player.collision_mask = 16 if regions.has(area) else (4 if area == "town" else 8)
 		camera.limit_left = int(origin.x)
 		camera.limit_top = 0
@@ -1522,12 +1522,13 @@ func travel_to(area: String, point: Vector2, persist: bool = true) -> void:
 		camera.limit_bottom = int(dimensions.y)
 		camera.offset = Vector2(0,-150) if area=="waterfall" else Vector2.ZERO
 		fit_region_camera(dimensions)
+		if area=="town": camera.zoom=Vector2.ONE*1.45;camera.offset=Vector2(0,-65)
 		camera.reset_smoothing()
 	player.velocity = Vector2.ZERO
 	joystick.reset_stick()
 	nearest = -1
 	update_walk(0.0, false, Vector2.UP)
-	say("Moonveil Falls. Follow the dry clearing; return south to the mountain trail." if area=="waterfall" else "Main Town. Visit the store or meet the residents." if area == "town" else ("South Road. Town north, family farm south." if area == "road" else "Welcome back to the farm."))
+	say("Moonveil Falls. Follow the dry clearing; return south to the mountain trail." if area=="waterfall" else "Main Town. Visit the store or meet the residents." if area == "town" else ("South Road. Town north, family farm south." if area == "road" else ("Highlands. Tea Country branches east at the southern trail; mine north, onsen west, waterfall east." if area=="mountain" else "Welcome to "+str(area).capitalize()+"." )))
 	refresh_hud()
 	queue_redraw()
 	if persist: save_game(false)
@@ -1703,6 +1704,7 @@ func close_dialogue() -> void:
 		var actor = record.npc
 		if actor.get_parent() != record.parent: actor.reparent(record.parent, false)
 		actor.position = record.position
+		actor.scale=record.get("scale",Vector2.ONE)
 		actor.paused = record.paused
 		actor.show_frame(record.facing, 1)
 	scene_actors.clear()
@@ -1715,6 +1717,12 @@ func close_dialogue() -> void:
 	refresh_hud()
 
 func open_service(service: String) -> void:
+	if service=="Restaurant":
+		var menu=make_modal("Restaurant · seasonal kitchen")
+		dialogue_text.text="A warm seasonal meal restores 30 Health for ¥30."
+		menu.add_child(make_button("Enjoy a meal · ¥30",purchase_meal))
+		menu.add_child(make_button("Back",close_dialogue))
+		return
 	if service=="Ranch":
 		BarnLife.open_manager(self);return
 	if service=="Veterinarian":
@@ -1861,7 +1869,7 @@ func service_door(service: String) -> Vector2:
 	return Vector2(-1000, -1000)
 
 func shop_opening_hours() -> Dictionary:
-	return {"Ranch":Vector2(480,1080),"Veterinarian":Vector2(480,1080),"General Store": Vector2(480, 1080), "Blacksmith": Vector2(420, 1020), "Café": Vector2(720, 1140), "Inn": Vector2(360, 1320), "Clinic": Vector2(540, 1020), "Town Hall": Vector2(540, 1020), "Police Box": Vector2(360, 1320), "Fire Station": Vector2(360, 1320), "Archive": Vector2(540, 1080), "Shrine Residence": Vector2(360, 1200), "Mountain Lodge": Vector2(360, 1200), "Tea Farmhouse": Vector2(360, 1200), "Tea Processing Shed": Vector2(360, 1080), "Harbor Homes": Vector2(360, 1200), "Fishing Shop": Vector2(360, 1080), "Hiro Cabin": Vector2(360, 1200), "Mine": Vector2(0, 1440), "Carpentry":Vector2(720,1080), "Mountain Carpentry":Vector2(480,720), "Onsen Resort":Vector2(480,1260), "Barn":Vector2(0,1440),"Greenhouse":Vector2(0,1440),"Upper Floor":Vector2(0,1440)}
+	return {"Restaurant":Vector2(660,1260),"Ranch":Vector2(480,1080),"Veterinarian":Vector2(480,1080),"General Store": Vector2(480, 1080), "Blacksmith": Vector2(420, 1020), "Café": Vector2(720, 1140), "Inn": Vector2(360, 1320), "Clinic": Vector2(540, 1020), "Town Hall": Vector2(540, 1020), "Police Box": Vector2(360, 1320), "Fire Station": Vector2(360, 1320), "Archive": Vector2(540, 1080), "Shrine Residence": Vector2(360, 1200), "Mountain Lodge": Vector2(360, 1200), "Tea Farmhouse": Vector2(360, 1200), "Tea Processing Shed": Vector2(360, 1080), "Harbor Homes": Vector2(360, 1200), "Fishing Shop": Vector2(360, 1080), "Hiro Cabin": Vector2(360, 1200), "Mine": Vector2(0, 1440), "Carpentry":Vector2(720,1080), "Mountain Carpentry":Vector2(480,720), "Onsen Resort":Vector2(480,1260), "Barn":Vector2(0,1440),"Greenhouse":Vector2(0,1440),"Upper Floor":Vector2(0,1440)}
 
 func open_shop_hours() -> void:
 	var column := make_modal("Shop opening hours")
@@ -1917,10 +1925,11 @@ func start_scene(title: String) -> void:
 	for area in regions.values(): all.append_array(area.npcs)
 	for actor in all:
 		if not names.has(actor.first_name): continue
-		scene_actors.append({"npc": actor, "parent": actor.get_parent(), "position": actor.position, "paused": actor.paused, "facing": actor.facing})
+		scene_actors.append({"npc": actor, "parent": actor.get_parent(), "position": actor.position, "paused": actor.paused, "facing": actor.facing, "scale":actor.scale})
 		if actor.get_parent() != town: actor.reparent(town, false)
 		actor.visible = true
-		actor.position = Vector2(1200 + (names.find(actor.first_name) - (names.size() - 1) * 0.5) * 120, 980)
+		actor.position = town.safe_point(town.design(Vector2(1200,910))+Vector2((names.find(actor.first_name)-(names.size()-1)*0.5)*55,0))
+		actor.scale=Vector2.ONE*.35
 		actor.paused = true
 		actor.show_frame(0, 1)
 	show_scene_step()
@@ -1960,9 +1969,10 @@ func begin_festival(spec: Dictionary = {}) -> void:
 	if spec.has("people"): all = all.filter(func(npc): return npc.first_name in spec.people)
 	for i in range(all.size()):
 		var npc = all[i]
-		festival_people.append({"npc": npc, "parent": npc.get_parent(), "position": npc.position, "paused": npc.paused, "facing": npc.facing})
+		festival_people.append({"npc": npc, "parent": npc.get_parent(), "position": npc.position, "paused": npc.paused, "facing": npc.facing, "scale":npc.scale})
 		if npc.get_parent() != host: npc.reparent(host, false)
 		npc.visible = true
+		npc.scale=Vector2.ONE*(.35 if host==town else 1.0)
 		npc.paused = true
 		npc.label.visible = false
 		npc.position = festival_center + Vector2(170 if not current_festival.is_empty() else 270, 0).rotated(TAU * i / all.size())
@@ -1996,6 +2006,7 @@ func end_festival() -> void:
 		var npc = record.npc
 		if npc.get_parent() != record.parent: npc.reparent(record.parent, false)
 		npc.position = record.position
+		npc.scale=record.get("scale",Vector2.ONE)
 		npc.paused = record.paused
 		npc.facing = record.facing
 		npc.label.visible = true
@@ -2016,6 +2027,7 @@ func end_festival() -> void:
 	town.ambient_period = -1
 	festival_button.text = "End Festival"
 	fit_region_camera(regions[location].SIZE if regions.has(location) else town.SIZE)
+	if location=="town":refit_camera()
 	festival_button.visible = false
 	if toast_time <= 0: say("Thanks for joining the gathering. Town life resumes.")
 	refresh_hud()
@@ -2066,6 +2078,7 @@ func enter_shop(service: String, restoring: bool = false) -> void:
 	camera.offset = Vector2.ZERO
 	camera.reset_smoothing()
 	say("Approach a rock and press Mine. Walk out the south doorway to leave." if service == "Mine" else "Welcome to %s. Approach residents or the counter; walk out the south door to leave." % service)
+	update_walk(0,false,Vector2.UP)
 	refresh_hud()
 	save_game(false)
 
@@ -2082,7 +2095,7 @@ func check_walk_exits() -> void:
 			elif REGIONAL_ROOMS.has(shop_name):
 				travel_to(REGIONAL_ROOMS[shop_name][0], REGIONAL_ROOMS[shop_name][1] + (Vector2(0,70) if shop_name == "Onsen Resort" else Vector2(0,70)))
 			else:
-				travel_to("town", service_door(shop_name) + Vector2(0, 70))
+				travel_to("town", town.return_point(shop_name))
 		return
 	if festival_active or dialogue_open: return
 	if inside_house:
@@ -2096,7 +2109,8 @@ func check_walk_exits() -> void:
 	if door_retry<=0:
 		if location=="town":
 			for building in town.BUILDINGS:
-				if player.position.distance_to(TOWN_ORIGIN+building.door*town.ART_SCALE)<50:
+				if building.facing=="W" and town.G.unproject(player.position-TOWN_ORIGIN).x<building.raw_door.x-4:continue
+				if player.position.distance_to(TOWN_ORIGIN+building.door*town.ART_SCALE)<22 and (polish.path.is_empty() or polish.path[-1].distance_to(TOWN_ORIGIN+building.door)<35):
 					door_retry=1.5
 					enter_shop(building.name)
 					return
@@ -2126,20 +2140,22 @@ func check_walk_exits() -> void:
 			elif point.y > 930 and absf(point.x - 500) < 170:
 				travel_to("farm", FARM_EXIT + Vector2(0, 100))
 		"town":
-			var point := player.position - TOWN_ORIGIN
-			if point.y > 1520 and absf(point.x - 1200) < 180:
-				travel_to("farm", FARM_EXIT + Vector2(0, 100))
-			elif point.y < 65 and absf(point.x - 1280) < 180:
-				travel_to("mountain", Vector2(800, 950))
-			elif point.x < 320 and absf(point.y - 800) < 100:
-				travel_to("harbor", Vector2(1480,585))
-			elif point.x > 2300 and absf(point.y - 800) < 130:
-				travel_to("tea", Vector2(140,665))
-			elif point.x < 430 and point.y < 160:
-				travel_to("historic", Vector2(1440,1060))
+			var point := player.position-TOWN_ORIGIN
+			for gate in town.G.EXITS:
+				if not polish.path.is_empty() and polish.path[-1].distance_to(TOWN_ORIGIN+town.G.project(gate[1]))>40:continue
+				if point.distance_to(town.G.project(gate[1]))<24:
+					match gate[0]:
+						"Farm":travel_to("farm",FARM_EXIT+Vector2(0,100))
+						"Highlands":travel_to("mountain",Vector2(800,1050))
+						"Harbor":travel_to("harbor",Vector2(1480,585))
+						"Shrine":travel_to("historic",Vector2(1440,1060))
+					return
 		_:
 			if regions.has(location):
 				var point: Vector2 = player.position - REGION_ORIGINS[location]
+				if location=="mountain" and point.distance_to(Vector2(960,1090))<32:
+					travel_to("tea",Vector2(140,665))
+					return
 				if location=="mountain" and point.x>1480 and absf(point.y-760)<65:
 					travel_to("waterfall",Vector2(800,1040))
 					return
@@ -2147,14 +2163,16 @@ func check_walk_exits() -> void:
 					travel_to("mountain",Vector2(1420,760))
 					return
 				if ((location=="harbor" and point.x>1520 and absf(point.y-585)<120) or (location=="tea" and point.x<75 and absf(point.y-665)<120) or (location=="historic" and point.x>1520 and point.y>1070) or (location=="mountain" and point.y>1120 and absf(point.x-800)<100)):
-					var arrivals := {"mountain": Vector2(1200, 180), "harbor": Vector2(420, 800), "tea": Vector2(2180, 1080), "historic": Vector2(180,300)}
-					travel_to("town", arrivals[location] if location=="harbor" else town.design(arrivals[location]))
+					if location=="tea":
+						travel_to("mountain",regions.mountain.safe_point(Vector2(940,1040)))
+						return
+					travel_to("town", town.arrival(location))
 
 func open_map() -> void:
 	if choosing_character or confirming_sleep or sleep_in_progress or dialogue_open: return
 	var column := make_modal("Walking Routes")
 	dialogue_panel.get_child(0).offset_top = -340
-	dialogue_text.text = "Farm → Town walkway → Main Town.\n\nFrom town: north to Mountain & Onsen; east to Tea Country; west to the Harbor; northwest through the large torii to Shrine Grounds.\n\nHarbor: return east toward town. Tea Country: return west. Shrine Grounds: return southeast. Mountains: return south; follow the eastern trail to Moonveil Falls. Walk through doors and gateways to change areas automatically. The library is northeast of the town square."
+	dialogue_text.text = "Farm → Town walkway → Main Town.\n\nFrom town: north to the Highlands (mountains, tea country, mine, onsen and waterfall); west to the Harbor; northwest through the large torii to Shrine Grounds.\n\nHarbor: return east toward town. Tea Country: return west to the Highlands. Shrine Grounds: return southeast. Mountains: return south; follow the eastern trail to Moonveil Falls. Walk through doors and gateways to change areas automatically. The library is beside Town Hall. Follow the signed tea trail in the Highlands arrival clearing."
 	column.add_child(make_button("Close", close_dialogue))
 
 func open_guide() -> void:
@@ -2162,7 +2180,7 @@ func open_guide() -> void:
 	var revision: Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://data/build_info.json"))
 	var column := make_modal("Tea Blossom Hills · Build "+str(revision.build)+" · "+str(revision.content))
 	dialogue_panel.get_child(0).offset_top = -380
-	dialogue_text.text = "Move with arrows/WASD or the joystick. Hold Shift, or push the joystick farther, to run.\n\nChoose seeds → Plant → Water daily → Sleep → Harvest → Shipping box. Sleep in the house to recover Health.\n\nWalk onto the Town walkway on the farm to enter town directly. All marked region exits work by walking through them; Routes shows directions. Visit the store for seeds, the forge for an upgrade, and the café for meals.\n\nTown exits: north mountain/lake, east tea fields, west harbor, northwest shrine. The plaza Events board previews scenes and the festival."
+	dialogue_text.text = "Move with arrows/WASD or the joystick. Hold Shift, or push the joystick farther, to run.\n\nChoose seeds → Plant → Water daily → Sleep → Harvest → Shipping box. Sleep in the house to recover Health.\n\nWalk onto the Town walkway on the farm to enter town directly. All marked region exits work by walking through them; Routes shows directions. Visit the store for seeds, the forge for an upgrade, and the café for meals.\n\nTown exits: Highlands north (mountains, tea country, mine, onsen and waterfall), harbor west, shrine northwest, farm south. The plaza Events board previews scenes and the festival."
 	dialogue_text.add_theme_font_size_override("font_size", 18)
 	preload("res://PlayerComfort.gd").scroll_text(self,column)
 	column.add_child(make_button("Music & sound",preload("res://GameAudio.gd").menu.bind(self)))
@@ -2280,7 +2298,7 @@ func settle_farm_day() -> void:
 func resident_room(person: String) -> String:
 	if person=="Kenta" and interior_progress.has("construction"): return "Farm construction"
 	if is_rainy_day():
-		var shelter={"Seira":"General Store","Keiko":"General Store","Shohei":"Blacksmith","Gen":"Blacksmith","Akira":"Town Hall","Kenji":"Clinic","Aya":"Clinic","Yumi":"Inn","Hana":"Inn","Naomi":"Café","Jiro":"Fire Station","Yuta":"Fire Station","Mika":"Tea Farmhouse","Sachiko":"Tea Processing Shed","Ken":"Harbor Homes","Masao":"Fishing Shop","Hiro":"Mountain Lodge","Emi":"Mountain Lodge","Haruka":"Archive","Rei":"Shrine Residence"}
+		var shelter={"Seira":"General Store","Keiko":"General Store","Shohei":"Blacksmith","Gen":"Blacksmith","Akira":"Town Hall","Kenji":"Clinic","Aya":"Clinic","Yumi":"Inn","Hana":"Restaurant","Naomi":"Café","Jiro":"Fire Station","Yuta":"Fire Station","Mika":"Tea Farmhouse","Sachiko":"Tea Processing Shed","Ken":"Harbor Homes","Masao":"Fishing Shop","Hiro":"Mountain Lodge","Emi":"Mountain Lodge","Haruka":"Archive","Rei":"Shrine Residence"}
 		if shelter.has(person): return shelter[person]
 	var morning := clock_minutes < 720
 	var evening := clock_minutes >= 1080
@@ -2293,7 +2311,7 @@ func resident_room(person: String) -> String:
 		"Taro": return "Police Box" if clock_minutes >= 1200 or (clock_minutes >= 660 and clock_minutes < 840) else ""
 		"Kenji", "Aya": return "Clinic" if clock_minutes >= 540 and clock_minutes < 1020 else ""
 		"Yumi": return "Inn"
-		"Hana": return "Inn" if morning or evening else ""
+		"Hana": return "Restaurant" if clock_minutes>=660 and clock_minutes<1260 else "Inn"
 		"Naomi": return "Café" if clock_minutes >= 720 and clock_minutes < 1140 else ""
 		"Jiro": return "Fire Station" if morning else ""
 		"Yuta": return "Fire Station" if int((day + int(clock_minutes / 360)) % 2) == 0 else ""
@@ -2584,7 +2602,7 @@ func gathering_available() -> bool:
 func check_scheduled_gathering() -> void:
 	SeasonalFestivals.maybe_start(self)
 	if location != "town" or dialogue_open or festival_active or active_scene != "" or choosing_character: return
-	if gathering_available() and (player.position - TOWN_ORIGIN).distance_to(Vector2(1200, 910)) < 340:
+	if gathering_available() and (player.position - TOWN_ORIGIN).distance_to(town.design(Vector2(1200,910))) < 340:
 		start_scheduled_gathering()
 
 func start_scheduled_gathering() -> void:
@@ -2627,6 +2645,9 @@ func fit_region_camera(dimensions: Vector2) -> void:
 	var fit := maxf(0.58, maxf(viewport_size.x / dimensions.x, viewport_size.y / dimensions.y))
 	camera.zoom = Vector2.ONE * fit
 func refit_camera() -> void:
+	if location=="town":
+		camera.zoom=Vector2.ONE*1.45
+		return
 	if location == "farm" and not inside_house:
 		camera.zoom = Vector2.ONE * maxf(0.58,maxf(get_viewport_rect().size.x/WORLD.x,get_viewport_rect().size.y/WORLD.y))
 	if inside_house:

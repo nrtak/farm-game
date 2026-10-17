@@ -22,11 +22,11 @@ on:
         default: false
       version:
         description: App version
-        default: '0.1.0'
+        default: '0.2.0'
         required: true
       build:
         description: Unique increasing build number
-        default: '1'
+        default: '100'
         required: true
 permissions:
   contents: read
@@ -43,7 +43,7 @@ jobs:
     env:
       APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
       IOS_BUNDLE_ID: ${{ vars.IOS_BUNDLE_ID }}
-      APP_VERSION: ${{ inputs.version || '0.1.0' }}
+      APP_VERSION: ${{ inputs.version || '0.2.0' }}
       BUILD_NUMBER: ${{ inputs.build || github.run_number }}
       SIGNED_BUILD: ${{ inputs.signed || false }}
     steps:

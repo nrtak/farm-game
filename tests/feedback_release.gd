@@ -6,16 +6,16 @@ func run():
 	await process_frame
 	f.set_physics_process(false); f.choose_character("boy")
 	f.interior_progress.story={"intro":true}
-	f.travel_to("town",Vector2(2200,1330),false)
+	f.travel_to("town",f.town.G.project(Vector2(1735,1190)),false)
 	await physics_frame
-	for route in [[Vector2(1700,1330),Vector2(2300,1330)],[Vector2(2240,980),Vector2(2240,1400)],[Vector2(1930,1290),Vector2(1930,1380)]]:
+	for route in [[f.town.G.project(Vector2(1650,1190)),f.town.G.project(Vector2(1810,1190))]]:
 		for i in range(101):
 			var p:Vector2=route[0].lerp(route[1],i/100.0)
 			for offset in [Vector2.ZERO,Vector2(12,0),Vector2(-12,0),Vector2(0,12),Vector2(0,-12)]:
 				assert(f.polish.clear_position(f.TOWN_ORIGIN+p+offset),"Carpenter approach clearance "+str(p+offset))
 	var npc=f.town.npcs[0]
-	npc.position=Vector2(2140,1340);npc.visible=true
-	f.player.position=f.TOWN_ORIGIN+Vector2(2070,1340)
+	npc.position=f.town.G.project(Vector2(1700,1190));npc.visible=true
+	f.player.position=f.TOWN_ORIGIN+npc.position-Vector2(70,0)
 	var before:Vector2=npc.position
 	for step in range(25): f.polish.yield_residents(Vector2.RIGHT,.016)
 	assert(npc.position.distance_to(before)>20,"Residents step aside")

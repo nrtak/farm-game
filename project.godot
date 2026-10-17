@@ -2,6 +2,8 @@ config_version=5
 
 [application]
 config/name="Tea Blossom Hills"
+config/version="0.2.0"
+config/description="New Town Edition · Build 100"
 config/icon="res://assets/tea-blossom-hills-icon.png"
 run/main_scene="res://Main.tscn"
 run/main_scene.town_review="res://concepts/town-rebuild/TownRebuild.tscn"

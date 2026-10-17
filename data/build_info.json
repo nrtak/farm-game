@@ -1,1 +1,6 @@
-{"build": "local", "content": "October 10 revisions"}
+{
+  "build": "100",
+  "content": "New Town Edition",
+  "version": "0.2.0",
+  "edition": "New Town Edition"
+}

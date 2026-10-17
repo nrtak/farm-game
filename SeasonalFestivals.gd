@@ -42,7 +42,7 @@ static func maybe_start(farm) -> void:
 	var attendance: Dictionary = farm.interior_progress.get("festival_attendance",{})
 	if attendance.has(key(farm,event)): return
 	var origin: Vector2 = farm.TOWN_ORIGIN if event.area == "town" else farm.REGION_ORIGINS[event.area]
-	if farm.player.position.distance_to(origin+center(event.area)) > 220: return
+	if farm.player.position.distance_to(origin+(farm.town.design(center(event.area)) if event.area=="town" else center(event.area))) > 220: return
 	event.people = PEOPLE[event.area]
 	farm.begin_festival(event)
 	farm.scheduled_gathering = true

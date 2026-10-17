@@ -22,6 +22,8 @@ const MINE_DOOR := Vector2(1380,205)
 
 func setup(area: String, people: Array) -> void:
 	kind = area
+	if area=="mountain":
+		var board=Label.new();board.text="TEA COUNTRY →";board.position=Vector2(865,1015);board.z_index=220;board.add_theme_font_size_override("font_size",20);board.add_theme_color_override("font_color",Color("493b2d"));var style=StyleBoxFlat.new();style.bg_color=Color("f1dfb3");style.border_color=Color("886742");style.set_border_width_all(2);style.content_margin_left=8;style.content_margin_right=8;style.content_margin_top=5;style.content_margin_bottom=5;board.add_theme_stylebox_override("normal",style);add_child(board)
 	title = {"tea": "Tea Country", "harbor": "Western Harbor", "mountain": "Mountain & Lake", "historic": "Shrine Grounds"}[kind]
 	var art := {"harbor":"map-harbor-open-v2.png","mountain":"map-mountain-open-v2.png","historic":"map-historic-approved-v1.png","tea":"map-tea-open-v2.png"}
 	background = load("res://assets/"+art[kind])

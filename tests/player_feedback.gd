@@ -32,8 +32,8 @@ func run():
 	f.interior_progress.activities=["Blacksmith","Clinic"];f.save_game(false)
 	f.load_game();assert(f.interior_progress.activities.size()==2,"Activity history survives load")
 	assert(f.day==5 and f.coins==int(after.coins),"Reload doesn't pay twice")
-	f.travel_to("town",Vector2(480,800),false)
+	f.travel_to("town",f.town.G.project(Vector2(480,910)),false)
 	await physics_frame
-	for x in range(300,481,10): assert(f.polish.clear_position(f.TOWN_ORIGIN+Vector2(x,800)),"Harbor approach clear")
+	for x in range(300,481,10): assert(f.polish.clear_position(f.TOWN_ORIGIN+f.town.G.project(Vector2(x,910))),"Harbor approach clear")
 	print("PASS: item artwork, farmer-specific hearts, interrupted-sleep checkpoints and harbor approach")
 	quit()

@@ -10,6 +10,7 @@ func setup(game) -> void:
 func habitat(area: String,point: Vector2) -> bool:
 	var node = farm if area=="farm" else (farm.town if area=="town" else farm.regions[area])
 	if not node.is_walkable(point): return false
+	if area=="town":return not farm.town.G.on_road(farm.town.G.unproject(point),farm.town.data)
 	var size: Vector2 = farm.WORLD if area=="farm" else node.SIZE
 	return preload("res://MapHabitat.gd").sample(area,point,size,"grass")
 func populate(area: String) -> void:

@@ -56,7 +56,7 @@ func _draw() -> void:
 			var until:int=posmod(int(event.day)-(farm.day-1)%112-1,112)
 			if until<1 or until>2 or farm.location!=event.area: continue
 			var origin:Vector2=farm.TOWN_ORIGIN if event.area=="town" else farm.REGION_ORIGINS[event.area]
-			var center:Vector2=origin+SeasonalFestivals.center(event.area)
+			var center:Vector2=origin+(farm.town.design(SeasonalFestivals.center(event.area)) if event.area=="town" else SeasonalFestivals.center(event.area))
 			for side in [-1,1]:
 				var point:Vector2=center+Vector2(side*235,-100)
 				draw_line(point,point+Vector2(0,-100),Color("765b3b"),5)
@@ -65,7 +65,7 @@ func _draw() -> void:
 		var key:String=VolunteerRequests.festival_key(farm.day,farm.current_festival)
 		if farm.interior_progress.get("volunteering",{}).get(key,{}).get("status","")=="completed":
 			var origin:Vector2=farm.TOWN_ORIGIN if farm.location=="town" else farm.REGION_ORIGINS.get(farm.location,Vector2.ZERO)
-			var p:Vector2=origin+SeasonalFestivals.center(farm.location)+Vector2(0,-135)
+			var p:Vector2=origin+farm.festival_center+Vector2(0,-135)
 			draw_line(p-Vector2(90,0),p+Vector2(90,0),Color("765b3b"),3)
 			for i in range(7): draw_circle(p+Vector2(-75+i*25,10),8,Color("e6c374"))
 	if farm.location=="mountain":
@@ -96,7 +96,8 @@ static func open_settings(f) -> void:
 	f.close_dialogue();var c=f.make_modal("Settings")
 	f.dialogue_panel.get_child(0).offset_top=-minf(445,f.get_viewport_rect().size.y-32)
 	f.dialogue_text.size_flags_vertical=Control.SIZE_SHRINK_BEGIN
-	f.dialogue_text.text="These preferences are saved with your farm. Tap the ground or use the joystick to move."
+	var release:Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://data/build_info.json"))
+	f.dialogue_text.text="%s · v%s · Build %s\nThese preferences are saved with your farm. Tap the ground or use the joystick to move." % [release.get("edition","Tea Blossom Hills"),release.get("version","0.2.0"),release.get("build","100")]
 	var scroll:=ScrollContainer.new();scroll.custom_minimum_size.y=120;scroll.size_flags_vertical=Control.SIZE_EXPAND_FILL;c.add_child(scroll)
 	var list:=VBoxContainer.new();list.size_flags_horizontal=Control.SIZE_EXPAND_FILL;scroll.add_child(list)
 	var s:=settings(f)

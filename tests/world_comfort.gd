@@ -10,8 +10,8 @@ func run():
 		f.travel_to(area,Vector2(800,950),false)
 		await physics_frame
 		var origin: Vector2=f.TOWN_ORIGIN if area=="town" else f.REGION_ORIGINS[area]
-		for route in preload("res://WideRoads.gd").ROUTES[area]:
-			var side: Vector2=(route[1]-route[0]).normalized().orthogonal()*32
+		for route in (f.town.street_routes() if area=="town" else preload("res://WideRoads.gd").ROUTES[area]):
+			var side: Vector2=(route[1]-route[0]).normalized().orthogonal()*(16 if area=="town" else 32)
 			for i in range(21):
 				for offset in [Vector2.ZERO,side,-side]:
 					var p: Vector2=route[0].lerp(route[1],i/20.0)+offset
@@ -30,7 +30,7 @@ func run():
 	for d in range(1,40):
 		f.day=d
 		if f.is_rainy_day(): break
-	assert(f.resident_room("Mika")=="Tea Farmhouse" and f.resident_room("Hana")=="Inn" and f.resident_room("Yuta")=="Fire Station")
+	assert(f.resident_room("Mika")=="Tea Farmhouse" and f.resident_room("Hana")=="Restaurant" and f.resident_room("Yuta")=="Fire Station")
 	f.refresh_hud()
 	for npc in f.town.npcs:
 		if npc.first_name in ["Seira","Shohei","Akira","Hana","Yuta"]: assert(not npc.visible,"Rain shelter hides outdoor duplicate")

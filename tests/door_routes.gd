@@ -16,6 +16,7 @@ func run():
 		var previous:Vector2=f.player.position
 		for point in f.polish.path:
 			for sample in range(9):
+				if not f.polish.clear_position(previous.lerp(point,sample/8.0)):print("BAD SEGMENT ",previous-f.TOWN_ORIGIN," -> ",point-f.TOWN_ORIGIN)
 				assert(f.polish.clear_position(previous.lerp(point,sample/8.0)),"Route segment body clearance: "+building.name)
 			previous=point
 	for room in preload("res://InteriorArtwork.gd").ROOMS:
