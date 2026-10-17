@@ -34,6 +34,11 @@ func atlas(name:String,region:Rect2)->Texture2D:
  if not art_cache.has(name):art_cache[name]=load("res://world/town/"+name+"-atlas.png")
  var a=AtlasTexture.new();a.atlas=art_cache[name];a.region=region;return a
 func place_building(b:Array):
+ if b[5] in ["N","E"] or b[0] in ["Police","Carpenter"]:
+  var frontage=preload("res://world/town/FrontageCutaway.gd").new();frontage.building=b;add_child(frontage)
+  var sign=place_sign(b[0],Vector2(b[1]+b[3]/2.0,b[2]+b[4]/2.0))
+  sign.z_index=frontage.z_index+1
+  return
  var a=ART[b[0]];var sprite=Sprite2D.new();sprite.texture=atlas(a[0],a[1]);sprite.centered=false
  if b[0] in ["Library","Vet","Fire"]:
   var material=ShaderMaterial.new();material.shader=preload("res://world/town/AtlasBounds.gdshader")
@@ -52,4 +57,5 @@ func place_sign(text:String,point:Vector2):
  sign.add_theme_font_size_override("font_size",14);sign.add_theme_color_override("font_color",Color("473827"))
  var style=StyleBoxFlat.new();style.bg_color=Color("f1dfb3");style.border_color=Color("8a6846");style.set_border_width_all(2);style.content_margin_left=7;style.content_margin_right=7;style.content_margin_top=4;style.content_margin_bottom=4
  sign.add_theme_stylebox_override("normal",style);town_layer.add_child(sign)
+ return sign
 

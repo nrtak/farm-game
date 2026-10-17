@@ -23,7 +23,7 @@ func run() -> void:
 		var door: Vector2 = building.door * farm.town.ART_SCALE
 		assert(farm.town.is_walkable(door), "Every shop entrance is reachable: " + building.name)
 		farm.player.position = farm.TOWN_ORIGIN + door
-		assert(farm.player.move_and_collide(Vector2(0, -150), true) != null, "Buildings block movement")
+		assert(farm.player.move_and_collide(farm.town.G.project(building.rect.get_center())-door, true) != null, "Buildings block movement")
 	var cast_count: int = farm.town.npcs.size()
 	for area in farm.regions.values(): cast_count += area.npcs.size()
 	assert(cast_count == 22, "Full established cast present")
@@ -194,7 +194,7 @@ func run() -> void:
 		farm.clock_minutes = 800
 		farm.travel_to("town", farm.service_door(service), false)
 		farm.interact()
-		assert(farm.location == "shop" and farm.shop_name == service)
+		assert(farm.location == "shop" and farm.shop_name == service,"Door interaction: "+service+" action "+farm.interaction_action()+" location "+farm.location)
 		var room = farm.shops[service]
 		assert(room.visible and room.is_walkable(room.ENTRY) and room.is_walkable(room.COUNTER))
 		farm.player.position = farm.SHOP_ORIGIN + room.residents[0].position + Vector2(0, 65)

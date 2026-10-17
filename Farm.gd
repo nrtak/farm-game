@@ -1183,7 +1183,7 @@ func save_game(show_message: bool = true, overnight_checkpoint: bool = false) ->
 		crop_data.append({"stage": plot.stage, "growth": plot.growth, "crop": plot.crop, "last_growth_day": plot.last_growth_day})
 	var file := FileAccess.open(SAVE_FILE+".pending", FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({"version": 21, "interior_progress": interior_progress, "festival_years": festival_years, "pick_level": pick_level, "harvest_level": harvest_level, "stored_items": stored_items, "backpack_level": backpack_level, "mine_lesson_seen": mine_lesson_seen, "ore_basket": ore_basket, "ore_shipping": ore_shipping, "ore_picked_days": ore_picked_days, "tea_lesson_seen": tea_lesson_seen, "tea_leaves": tea_leaves, "packed_tea": packed_tea, "tea_shipping": tea_shipping, "tea_picked_days": tea_picked_days, "fish_basket": fish_basket, "fish_shipping": fish_shipping, "fish_catches": fish_catches, "fishing_quest_stage": fishing_quest_stage, "tea_delivery_stage": tea_delivery_stage, "selected_crop": selected_crop, "extra_seeds": extra_seeds, "produce": produce, "shipping_queue": shipping_queue, "lost_item_stage": lost_item_stage, "day": day, "clock_minutes": clock_minutes, "health": health, "location": location, "shop_name": shop_name, "character": character_choice, "coins": coins, "seeds": seeds, "tool_level": tool_level, "friendship": friendship, "talked_on_day": talked_on_day, "seen_scenes": seen_scenes, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
+		file.store_string(JSON.stringify({"version": 22, "interior_progress": interior_progress, "festival_years": festival_years, "pick_level": pick_level, "harvest_level": harvest_level, "stored_items": stored_items, "backpack_level": backpack_level, "mine_lesson_seen": mine_lesson_seen, "ore_basket": ore_basket, "ore_shipping": ore_shipping, "ore_picked_days": ore_picked_days, "tea_lesson_seen": tea_lesson_seen, "tea_leaves": tea_leaves, "packed_tea": packed_tea, "tea_shipping": tea_shipping, "tea_picked_days": tea_picked_days, "fish_basket": fish_basket, "fish_shipping": fish_shipping, "fish_catches": fish_catches, "fishing_quest_stage": fishing_quest_stage, "tea_delivery_stage": tea_delivery_stage, "selected_crop": selected_crop, "extra_seeds": extra_seeds, "produce": produce, "shipping_queue": shipping_queue, "lost_item_stage": lost_item_stage, "day": day, "clock_minutes": clock_minutes, "health": health, "location": location, "shop_name": shop_name, "character": character_choice, "coins": coins, "seeds": seeds, "tool_level": tool_level, "friendship": friendship, "talked_on_day": talked_on_day, "seen_scenes": seen_scenes, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
 		file.flush()
 		file.close()
 		if DirAccess.rename_absolute(ProjectSettings.globalize_path(SAVE_FILE+".pending"),ProjectSettings.globalize_path(SAVE_FILE))!=OK:
@@ -1301,7 +1301,7 @@ func load_game() -> void:
 	if saved_area in ["town", "road"]:
 		var origin := TOWN_ORIGIN if saved_area == "town" else ROAD_ORIGIN
 		var point := Vector2(float(parsed.get("x", origin.x + 500)), float(parsed.get("y", 500))) - origin
-		if saved_area=="town" and int(parsed.get("version",1))<21: point=town.arrival("farm")
+		if saved_area=="town" and int(parsed.get("version",1))<22: point=town.arrival("farm")
 		var valid: bool = town.is_walkable(point) if saved_area == "town" else Rect2(Vector2(30, 90), Vector2(940, 820)).has_point(point)
 		travel_to(saved_area, point if valid else (town.arrival("farm") if saved_area == "town" else Vector2(500, 500)), false)
 	elif regions.has(saved_area):
@@ -2126,7 +2126,8 @@ func check_walk_exits() -> void:
 	if door_retry<=0:
 		if location=="town":
 			for building in town.BUILDINGS:
-				if building.facing=="W" and town.G.unproject(player.position-TOWN_ORIGIN).x<building.raw_door.x-4:continue
+				var outward:Vector2={"N":Vector2.UP,"E":Vector2.RIGHT,"S":Vector2.DOWN,"W":Vector2.LEFT}[building.facing]
+				if (town.G.unproject(player.position-TOWN_ORIGIN)-building.raw_door).dot(outward)>4:continue
 				if player.position.distance_to(TOWN_ORIGIN+building.door*town.ART_SCALE)<22 and (polish.path.is_empty() or polish.path[-1].distance_to(TOWN_ORIGIN+building.door)<35):
 					door_retry=1.5
 					enter_shop(building.name)

@@ -157,9 +157,14 @@ func nearest_npc(point: Vector2) -> Node2D:
     return result
 
 func nearest_service(point: Vector2) -> String:
+    var result=""
+    var distance=110.0
     for building in BUILDINGS:
-        if point.distance_to(building.door * ART_SCALE) < 110.0: return building.name
-    return ""
+        var candidate=point.distance_to(building.door*ART_SCALE)
+        if candidate<distance:
+            distance=candidate
+            result=building.name
+    return result
 
 func _draw()->void:
  if festival_decorated:
@@ -174,7 +179,8 @@ func add_ambient_life() -> void:
         npc.setup(names[i], preload("res://CharacterArt.gd").walk(names[i]))
         npc.first_name = names[i]
         npc.label.text = names[i]
-        npc.position = Vector2(1140 + i * 90, 950)
+        npc.position = safe_npc_point(G.project(Vector2(850+i*90,900)))
+        npc.scale=Vector2.ONE*.35
         npc.speed = 65 + i * 4
         visitors.append(npc)
     for i in range(5):
@@ -183,7 +189,8 @@ func add_ambient_life() -> void:
         pet.artwork = "res://assets/%s-walk-rest-v1.png" % ["tan-dog", "cream-dog", "gray-cat", "orange-cat", "shiba"][i]
         add_child(pet)
         pet.coat = [Color("c49b70"), Color("ede0ca"), Color("777f87"), Color("ce9161"), Color("d5a064")][i]
-        pet.position = Vector2(1120 + i * 35, 1100)
+        pet.position = safe_npc_point(G.project(Vector2(850+i*70,900)))
+        pet.scale=Vector2.ONE*.45
         pet.route = walk_route(pet.position, [Vector2(1200, 910 + i*60), Vector2(1400, 674.074), Vector2(1200, 925.926)])
         pets.append(pet)
 
@@ -210,6 +217,7 @@ func tick_ambient(delta: float, minute: float, rainy: bool, rooms: Dictionary = 
             else: point = Vector2(1200,520+i*260)
             if npc.get_parent() != destination: npc.reparent(destination,false)
             npc.position = destination.safe_npc_point(point) if destination.has_method("safe_npc_point") else destination.safe_point(point) if destination.has_method("safe_point") else point
+            npc.scale=Vector2.ONE*(.35 if destination==self else 1.0)
             npc.set_route([])
             npc.show_frame(0,1)
         for i in range(pets.size()):
@@ -219,6 +227,7 @@ func tick_ambient(delta: float, minute: float, rainy: bool, rooms: Dictionary = 
                 if pet.get_parent() != area:
                     pet.reparent(area)
                     pet.position = area.safe_point(Vector2(620+(i-2)*170,600))
+                pet.scale=Vector2.ONE
                 pet.route = [pet.position, pet.position + Vector2(0, 25.9259)]
                 if rainy: pet.route = [area.safe_point(Vector2(640+(i-2)*160,430))]
                 pet.index = 0
@@ -270,6 +279,6 @@ func panel(color: Color) -> StyleBoxFlat:
 
 func street_routes()->Array:
  var result=[]
- for pair in [[Vector2(1300,365),Vector2(1300,1480)],[Vector2(260,910),Vector2(1880,910)],[Vector2(990,630),Vector2(1880,630)],[Vector2(990,1190),Vector2(1880,1190)],[Vector2(990,1470),Vector2(1590,1470)],[Vector2(990,630),Vector2(990,1470)],[Vector2(1590,630),Vector2(1590,1470)]]:
+ for pair in [[Vector2(1300,365),Vector2(1300,1480)],[Vector2(260,910),Vector2(1880,910)],[Vector2(990,630),Vector2(1880,630)],[Vector2(740,1340),Vector2(1880,1340)],[Vector2(740,1000),Vector2(740,1340)],[Vector2(1880,630),Vector2(1880,1340)]]:
   result.append([G.project(pair[0]),G.project(pair[1])])
  return result
