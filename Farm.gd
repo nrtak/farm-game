@@ -385,7 +385,8 @@ func make_ui() -> void:
 	date_label.add_theme_font_size_override("font_size", 20)
 	hud.add_child(date_label)
 	pocket_label=Label.new()
-	pocket_label.add_theme_stylebox_override("normal",parchment())
+	pocket_label.add_theme_color_override("font_shadow_color",Color("f5e7c3"))
+	pocket_label.add_theme_constant_override("shadow_outline_size",3)
 	pocket_label.add_theme_color_override("font_color",Color("493b2d"))
 	pocket_label.add_theme_font_size_override("font_size",19)
 	hud.add_child(pocket_label)
@@ -405,7 +406,7 @@ func make_ui() -> void:
 	health_label = Label.new()
 	health_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	health_label.add_theme_color_override("font_color", Color("493b2d"))
-	health_label.add_theme_font_size_override("font_size", 16)
+	health_label.add_theme_font_size_override("font_size", 13)
 	health_bar.add_child(health_label)
 	health_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	message_label = Label.new()
@@ -416,7 +417,9 @@ func make_ui() -> void:
 	message_label.add_theme_constant_override("shadow_offset_y", 2)
 	message_label.add_theme_font_size_override("font_size", 16)
 	message_label.add_theme_stylebox_override("normal", parchment())
-	message_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	message_label.max_lines_visible = 2
+	message_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	message_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud.add_child(message_label)
 	joystick = JoystickScript.new()
@@ -463,8 +466,18 @@ func make_ui() -> void:
 	var battery_button := make_button("Routes", open_map)
 	battery_button.name = "MapButton"
 	hud.add_child(battery_button)
-	for entry in [[save_button,"save"],[character_button,"bag"],[guide_button,"guide"],[pause_button,"pause"],[battery_button,"routes"]]:
+	for entry in [[save_button,"save"],[character_button,"bag"],[guide_button,"settings"],[pause_button,"pause"],[battery_button,"routes"]]:
 		entry[0].icon=load("res://assets/ui-%s.svg" % entry[1])
+		entry[0].tooltip_text=entry[0].text
+		entry[0].text=""
+		entry[0].custom_minimum_size=Vector2(48,48)
+		var icon_style=parchment()
+		icon_style.set_corner_radius_all(24)
+		entry[0].add_theme_stylebox_override("normal",icon_style)
+		var icon_active=icon_style.duplicate()
+		icon_active.bg_color=Color("e7c786")
+		entry[0].add_theme_stylebox_override("pressed",icon_active)
+		entry[0].add_theme_stylebox_override("hover",icon_active)
 	festival_button = make_button("End Festival", end_festival)
 	festival_button.visible = false
 	hud.add_child(festival_button)
@@ -483,23 +496,24 @@ func layout_ui() -> void:
 			margin = Vector2(safe.position) * ratio + Vector2(20, 20)
 			right = (screen.x - safe.end.x) * ratio.x + 20
 			bottom = (screen.y - safe.end.y) * ratio.y + 24
-	quest_label.position = margin + Vector2(180,40)
-	date_label.position = margin + Vector2(150,0)
-	pocket_label.position=margin
-	weather_icon.position=margin+Vector2(110,7)
-	health_bar.position = Vector2(margin.x,view.y-bottom-195)
-	health_bar.size = Vector2(155,24)
+	quest_label.position = margin + Vector2(0,80)
+	date_label.position = margin
+	pocket_label.position=margin+Vector2(0,48)
+	weather_icon.position=margin+Vector2(330,10)
+	health_bar.position = margin+Vector2(105,50)
+	health_bar.size = Vector2(110,20)
 	joystick.position = Vector2(margin.x, view.y - bottom - 168)
 	action_button.position = Vector2(view.x - right - 138, view.y - bottom - 128)
 	action_button.size = Vector2(138, 72)
 	tool_bar.position = Vector2((view.x - 430) / 2, view.y - bottom - 102)
-	message_label.position = Vector2(margin.x, view.y - bottom - 26)
-	message_label.size = Vector2(view.x - margin.x - right, 26)
-	hud.get_node("SaveButton").position = Vector2(view.x - right - 95, margin.y)
-	hud.get_node("CharacterButton").position = Vector2(view.x - right - 200, margin.y)
-	hud.get_node("GuideButton").position = Vector2(view.x - right - 315, margin.y)
-	hud.get_node("PauseButton").position = Vector2(view.x - right - 95, margin.y + 50)
-	hud.get_node("MapButton").position = Vector2(view.x - right - 265, margin.y + 50)
+	var message_width=minf(620,view.x-margin.x-right-150)
+	message_label.position = Vector2((view.x-message_width)/2, view.y-bottom-58)
+	message_label.size = Vector2(message_width,48)
+	var controls=["MapButton","CharacterButton","SaveButton","PauseButton","GuideButton"]
+	for i in range(controls.size()):
+		var control=hud.get_node(controls[i])
+		control.position=Vector2(view.x-right-48-(controls.size()-1-i)*56,margin.y)
+		control.size=Vector2(48,48)
 	Engine.max_fps = 30 if battery_saver else 60
 	Engine.physics_ticks_per_second = 30 if battery_saver else 60
 	festival_button.position = Vector2(view.x - right - 160, margin.y + 108)
@@ -509,7 +523,8 @@ func toggle_pause() -> void:
 	paused_by_player = not paused_by_player
 	joystick.reset_stick()
 	player.velocity = Vector2.ZERO
-	hud.get_node("PauseButton").text = "Resume" if paused_by_player else "Pause"
+	hud.get_node("PauseButton").icon = load("res://assets/ui-play.svg" if paused_by_player else "res://assets/ui-pause.svg")
+	hud.get_node("PauseButton").tooltip_text = "Resume" if paused_by_player else "Pause"
 	refresh_hud()
 
 func _notification(what: int) -> void:
@@ -743,7 +758,7 @@ func refresh_hud() -> void:
 	if not quest_label.text.is_empty(): quest_label.text="Requests · see Bag"
 	health_bar.visible=not dialogue_open
 	health_bar.value = health
-	health_label.text = "Health %d / 100" % int(ceil(health))
+	health_label.text = "HP %d" % int(ceil(health))
 	health_fill.bg_color = Color("a5be83") if health >= 50 else (Color("e7c786") if health >= 25 else Color("da927c"))
 	farmer.modulate = Color("d1c7bb") if health < 25 else Color.WHITE
 	tool_bar.visible = location == "farm" and not inside_house and not dialogue_open and not preload("res://AnimalPasture.gd").BOUNDS.grow(80).has_point(player.position)
@@ -837,7 +852,7 @@ func refresh_hud() -> void:
 			elif regions.has(location): hint = "Meet the residents or approach a building doorway to visit."
 	if is_rainy_day() and not inside_house and location != "shop": hint = "Rain · " + hint
 	message_label.text = hint if fishing_active else (toast if toast_time > 0 else hint)
-	if paused_by_player: message_label.text = "Paused. Press Resume to continue."
+	if paused_by_player: message_label.text = "Paused · Tap ▶ to resume."
 	elif toast_time <= 0 and health < 25:
 		message_label.text = "Health is low. Rest in bed." if health >= WORK_COSTS[selected_tool] else "Too tired to work. Rest in bed."
 	var pinned:String=preload("res://PlayerComfort.gd").settings(self).get("pin","")
@@ -1168,7 +1183,7 @@ func save_game(show_message: bool = true, overnight_checkpoint: bool = false) ->
 		crop_data.append({"stage": plot.stage, "growth": plot.growth, "crop": plot.crop, "last_growth_day": plot.last_growth_day})
 	var file := FileAccess.open(SAVE_FILE+".pending", FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({"version": 20, "interior_progress": interior_progress, "festival_years": festival_years, "pick_level": pick_level, "harvest_level": harvest_level, "stored_items": stored_items, "backpack_level": backpack_level, "mine_lesson_seen": mine_lesson_seen, "ore_basket": ore_basket, "ore_shipping": ore_shipping, "ore_picked_days": ore_picked_days, "tea_lesson_seen": tea_lesson_seen, "tea_leaves": tea_leaves, "packed_tea": packed_tea, "tea_shipping": tea_shipping, "tea_picked_days": tea_picked_days, "fish_basket": fish_basket, "fish_shipping": fish_shipping, "fish_catches": fish_catches, "fishing_quest_stage": fishing_quest_stage, "tea_delivery_stage": tea_delivery_stage, "selected_crop": selected_crop, "extra_seeds": extra_seeds, "produce": produce, "shipping_queue": shipping_queue, "lost_item_stage": lost_item_stage, "day": day, "clock_minutes": clock_minutes, "health": health, "location": location, "shop_name": shop_name, "character": character_choice, "coins": coins, "seeds": seeds, "tool_level": tool_level, "friendship": friendship, "talked_on_day": talked_on_day, "seen_scenes": seen_scenes, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
+		file.store_string(JSON.stringify({"version": 21, "interior_progress": interior_progress, "festival_years": festival_years, "pick_level": pick_level, "harvest_level": harvest_level, "stored_items": stored_items, "backpack_level": backpack_level, "mine_lesson_seen": mine_lesson_seen, "ore_basket": ore_basket, "ore_shipping": ore_shipping, "ore_picked_days": ore_picked_days, "tea_lesson_seen": tea_lesson_seen, "tea_leaves": tea_leaves, "packed_tea": packed_tea, "tea_shipping": tea_shipping, "tea_picked_days": tea_picked_days, "fish_basket": fish_basket, "fish_shipping": fish_shipping, "fish_catches": fish_catches, "fishing_quest_stage": fishing_quest_stage, "tea_delivery_stage": tea_delivery_stage, "selected_crop": selected_crop, "extra_seeds": extra_seeds, "produce": produce, "shipping_queue": shipping_queue, "lost_item_stage": lost_item_stage, "day": day, "clock_minutes": clock_minutes, "health": health, "location": location, "shop_name": shop_name, "character": character_choice, "coins": coins, "seeds": seeds, "tool_level": tool_level, "friendship": friendship, "talked_on_day": talked_on_day, "seen_scenes": seen_scenes, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
 		file.flush()
 		file.close()
 		if DirAccess.rename_absolute(ProjectSettings.globalize_path(SAVE_FILE+".pending"),ProjectSettings.globalize_path(SAVE_FILE))!=OK:
@@ -1286,7 +1301,7 @@ func load_game() -> void:
 	if saved_area in ["town", "road"]:
 		var origin := TOWN_ORIGIN if saved_area == "town" else ROAD_ORIGIN
 		var point := Vector2(float(parsed.get("x", origin.x + 500)), float(parsed.get("y", 500))) - origin
-		if saved_area=="town" and int(parsed.get("version",1))<20: point=town.arrival("farm")
+		if saved_area=="town" and int(parsed.get("version",1))<21: point=town.arrival("farm")
 		var valid: bool = town.is_walkable(point) if saved_area == "town" else Rect2(Vector2(30, 90), Vector2(940, 820)).has_point(point)
 		travel_to(saved_area, point if valid else (town.arrival("farm") if saved_area == "town" else Vector2(500, 500)), false)
 	elif regions.has(saved_area):
@@ -1528,7 +1543,7 @@ func travel_to(area: String, point: Vector2, persist: bool = true) -> void:
 	joystick.reset_stick()
 	nearest = -1
 	update_walk(0.0, false, Vector2.UP)
-	say("Moonveil Falls. Follow the dry clearing; return south to the mountain trail." if area=="waterfall" else "Main Town. Visit the store or meet the residents." if area == "town" else ("South Road. Town north, family farm south." if area == "road" else ("Highlands. Tea Country branches east at the southern trail; mine north, onsen west, waterfall east." if area=="mountain" else "Welcome to "+str(area).capitalize()+"." )))
+	say("Moonveil Falls. Follow the dry clearing; return south to the mountain trail." if area=="waterfall" else "Town · Shops and neighbors." if area == "town" else ("South Road. Town north, family farm south." if area == "road" else ("Highlands. Tea Country branches east at the southern trail; mine north, onsen west, waterfall east." if area=="mountain" else "Welcome to "+str(area).capitalize()+"." )))
 	refresh_hud()
 	queue_redraw()
 	if persist: save_game(false)

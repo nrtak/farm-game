@@ -40,12 +40,14 @@ func _process(delta:float) -> void:
 	if not farm.dialogue_open and not farm.choosing_character and not farm.paused_by_player:
 		var action:String=farm.interaction_action()
 		if action in ["talk_shop","talk_region"]: action="talk"
-		if action in ["counter","service"]: action="shop"
+		if action in ["counter","service"]: action="" # The service button already identifies shopping.
 		if action=="pet_animal": action="pet"
 		if action in ["regional_door","enter","barn_enter","greenhouse_enter","leave"]: action="shipping"
 		if action in ["talk","shop","shipping","pet","water","plant","harvest","well"]:
 			cue={"talk":"…","shop":"¥","shipping":"↓","pet":"♡","water":"~","plant":"+","harvest":"✓","well":"~"}[action]
 			cue_point=farm.player.position+Vector2(55,-100)
+		# The screen action button is the single interaction prompt in town.
+		if farm.location=="town": cue=""
 		if farm.location=="waterfall" and int(preload("res://VillageDepth.gd").state(farm).get("falls",0))==0 and (farm.player.position-farm.REGION_ORIGINS.waterfall).y<770:
 			preload("res://VillageDepth.gd").waterfall(farm)
 	queue_redraw()

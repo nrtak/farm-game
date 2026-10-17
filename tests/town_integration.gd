@@ -27,7 +27,7 @@ func run():
  f.player.position=f.REGION_ORIGINS.tea+Vector2(60,665);f.check_walk_exits();assert(f.location=="mountain")
  f.enter_shop("Restaurant",true);f.health=40;f.coins=100;f.open_service("Restaurant");f.purchase_meal();assert(f.coins==70 and f.health==70);f.close_dialogue()
  f.travel_to("town",f.town.arrival("farm"),false);f.coins=321;f.save_game(false);f.coins=0;f.load_game();assert(f.coins==321 and f.location=="town")
- var file=FileAccess.open(f.SAVE_FILE,FileAccess.READ);var save=JSON.parse_string(file.get_as_text());file.close();save.version=19;save.x=7000;save.y=400
+ var file=FileAccess.open(f.SAVE_FILE,FileAccess.READ);var save=JSON.parse_string(file.get_as_text());file.close();save.version=20;save.x=7000;save.y=400
  file=FileAccess.open(f.SAVE_FILE,FileAccess.WRITE);file.store_string(JSON.stringify(save));file.close();f.load_game()
  assert(f.town.is_walkable(f.player.position-f.TOWN_ORIGIN) and f.coins==321,"Legacy save migration preserves progress")
  print("PASS: 13 live interiors, door paths, real regional gates, tea connection, restaurant purchase, save/reload and legacy town migration")
