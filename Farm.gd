@@ -2636,24 +2636,7 @@ func start_scheduled_gathering() -> void:
 	column.add_child(make_button("Continue ▶", advance_dialogue))
 
 func open_calendar() -> void:
-	var column := make_modal("Festival calendar")
-	dialogue_panel.get_child(0).offset_top=-minf(440,get_viewport_rect().size.y-32)
-	dialogue_text.text="%s · Tomorrow: %s" % [calendar_text(),WeatherLife.forecast(day+1)]
-	dialogue_text.size_flags_vertical=Control.SIZE_SHRINK_BEGIN
-	var scroll:=ScrollContainer.new();scroll.custom_minimum_size.y=100;scroll.size_flags_vertical=Control.SIZE_EXPAND_FILL;column.add_child(scroll)
-	var list:=VBoxContainer.new();list.size_flags_horizontal=Control.SIZE_EXPAND_FILL;scroll.add_child(list)
-	for event in SeasonalFestivals.EVENTS:
-		if int((event.day-1)/28)!=int(((day-1)%112)/28): continue
-		var evening:bool=event.id in ["obon","lantern","onsen","newyear"]
-		var row=make_button("%d · %s · %s" % [(event.day-1)%28+1,event.name,"6–10 PM" if evening else "10 AM–6 PM"],func(): pass)
-		row.mouse_filter=Control.MOUSE_FILTER_IGNORE
-		if not row.has_meta("item_art"): preload("res://ItemArtwork.gd").attach(row,"Sardine" if event.area=="harbor" else "Tea packets" if event.area=="tea" else "Meal")
-		list.add_child(row)
-	for person in friendship:
-		var birthday:int=preload("res://EverydayLife.gd").birthday(self,person)
-		if int((birthday-1)/28)!=int(((day-1)%112)/28): continue
-		list.add_child(make_button("%d · %s birthday" % [(birthday-1)%28+1,person],preload("res://EverydayLife.gd").relationship.bind(self,person)))
-	column.add_child(make_button("Close",close_dialogue))
+	preload("res://VillageCalendar.gd").open(self)
 
 func storage_limit() -> int:
 	return 999 * (1 + int(interior_progress.get("home",0)))

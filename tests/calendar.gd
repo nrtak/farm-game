@@ -15,6 +15,25 @@ func run() -> void:
 	assert(farm.interaction_action() == "calendar")
 	farm.interact()
 	assert(farm.dialogue_open and farm.dialogue_text.text.contains("Spring 14"))
+	var calendar = preload("res://VillageCalendar.gd")
+	var festivals := 0
+	var birthdays := 0
+	for annual_day in range(1, 113):
+		for entry in calendar.entries(farm, annual_day):
+			if entry.kind == "festival": festivals += 1
+			else: birthdays += 1
+	assert(festivals == 16 and birthdays == farm.friendship.size())
+	for season in range(4):
+		calendar.open(farm, season)
+		assert(farm.dialogue_panel.find_child("CalendarDays", true, false).get_child_count() == 28)
+	calendar.show_day(farm, 112)
+	assert(farm.dialogue_text.text.contains("New Year") and farm.dialogue_text.text.contains("6–10 PM"))
+	calendar.show_day(farm, 41)
+	assert(farm.dialogue_text.text.contains("West harbor"))
+	farm.day = 126
+	farm.open_calendar()
+	assert(farm.dialogue_text.text.contains("Spring 14"))
+	farm.day = 14
 	farm.close_dialogue()
 	farm.travel_to("town", Vector2(1200, 1000), false)
 	farm.check_scheduled_gathering()
