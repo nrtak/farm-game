@@ -22,3 +22,8 @@ Interface and street refinement: icon-only top controls with tooltips, compact h
 Perimeter layout stage: thirteen buildings occupy the outer north/east/south/west edges, leaving the central court clear. All entrances face inward. North/east-facing buildings plus police/carpenter currently use explicitly provisional code-drawn cutaway fronts; finished directional artwork is outstanding. Existing interiors, services and exits remain connected. Save format 22 relocates older town saves. Door proximity selects the closest shop, not the first shop within range. Visitors and pets receive correct town scale before their first schedule update.
 
 The overview screenshot uses a review-only zoom to show the layout; normal gameplay retains the closer following camera. This stage is local only and should receive visual review before any upload.
+
+
+### Compact aligned blocks (October 17)
+
+Replaced the oversized perimeter court with aligned civic, hospitality, shopping and trade rows. Related services remain together. Straight streets remain body-clear and all 13 doorways are connected. The festival plaza remains northwest, separate from everyday shopping streets. Normal 1.45 camera zoom and player-follow panning are retained. Save version 23 relocates older town saves to the safe farm-side arrival, preserving progress. Desktop screenshots show adjacent rows at gameplay zoom; no physical iPhone check has been performed.

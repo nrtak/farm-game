@@ -19,10 +19,10 @@ func run():
   if b.facing!="W":continue
   f.travel_to("town",f.town.G.project(b.raw_door-Vector2(8,0)),false);f.door_retry=0;f.check_walk_exits()
   assert(f.location=="town","Passing the west-facing facade does not enter: "+b.name)
- for b in f.town.BUILDINGS:
-  var front:Vector2={"N":Vector2.UP,"E":Vector2.RIGHT,"S":Vector2.DOWN,"W":Vector2.LEFT}[b.facing]
-  assert((Vector2(1350,1000)-b.raw_door).dot(front)>0,"All entrances face the square: "+b.name)
-  assert(not b.rect.intersects(Rect2(900,740,1000,620)),"No building in the central crossing space")
+ # Every building has its own navigable approach, tested above; the town now uses aligned blocks.
+ for pair in f.town.street_routes():
+  for step in range(21):
+   assert(f.town.is_walkable(pair[0].lerp(pair[1],step/20.0)),"Straight street remains clear")
  for gate in f.town.G.EXITS:
   f.travel_to("town",f.town.G.project(gate[1]),false);f.check_walk_exits()
   assert(f.location=={"Farm":"farm","Highlands":"mountain","Harbor":"harbor","Shrine":"historic"}[gate[0]],"Actual map: "+gate[0])
@@ -31,7 +31,7 @@ func run():
  f.player.position=f.REGION_ORIGINS.tea+Vector2(60,665);f.check_walk_exits();assert(f.location=="mountain")
  f.enter_shop("Restaurant",true);f.health=40;f.coins=100;f.open_service("Restaurant");f.purchase_meal();assert(f.coins==70 and f.health==70);f.close_dialogue()
  f.travel_to("town",f.town.arrival("farm"),false);f.coins=321;f.save_game(false);f.coins=0;f.load_game();assert(f.coins==321 and f.location=="town")
- var file=FileAccess.open(f.SAVE_FILE,FileAccess.READ);var save=JSON.parse_string(file.get_as_text());file.close();save.version=21;save.x=7000;save.y=400
+ var file=FileAccess.open(f.SAVE_FILE,FileAccess.READ);var save=JSON.parse_string(file.get_as_text());file.close();save.version=22;save.x=7000;save.y=400
  file=FileAccess.open(f.SAVE_FILE,FileAccess.WRITE);file.store_string(JSON.stringify(save));file.close();f.load_game()
  assert(f.town.is_walkable(f.player.position-f.TOWN_ORIGIN) and f.coins==321,"Legacy save migration preserves progress")
  print("PASS: 13 live interiors, door paths, real regional gates, tea connection, restaurant purchase, save/reload and legacy town migration")
