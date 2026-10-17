@@ -22,6 +22,8 @@ func run() -> void:
 	assert(game.regions.waterfall.is_walkable(Vector2(800,700)))
 	for theme in ["farm","town","nature","interior","night","rain","falls"]:
 		assert(game.sound.loop_stream("res://assets/audio/music-"+theme+".wav")!=null,"Music exported: "+theme)
+	assert(load("res://world/town/perimeter-shops-atlas.png")!=null,"Town frontage artwork exported")
+	assert(load("res://assets/inventory-painted-atlas.png")!=null,"Painted inventory artwork exported")
 	game.interior_progress.story={"intro":true}
 	game.enter_shop("Tea Processing Shed",true)
 	game.tea_leaves=1

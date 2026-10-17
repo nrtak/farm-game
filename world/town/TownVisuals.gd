@@ -46,9 +46,12 @@ func place_building(b:Array):
   sprite.position=center-Vector2(width/2,width*.72)
   sprite.z_index=int(center.y/10)
   town_layer.add_child(sprite);building_sprites.append(sprite)
-  var direction=G.outward(b)
-  var sign=place_sign(b[0],G.door(b)+Vector2(-direction.y,direction.x)*38)
-  sign.z_index=maxi(sprite.z_index+1,int(G.project(G.door(b)).y/10)+2)
+  var plaque=Label.new();plaque.text=b[0];plaque.position=Vector2(cell.x*.22,cell.y*.60)
+  plaque.add_theme_font_size_override("font_size",25)
+  plaque.add_theme_color_override("font_color",Color("493523"))
+  var board=StyleBoxFlat.new();board.bg_color=Color("e8ce99");board.border_color=Color("795331");board.set_border_width_all(3);board.set_corner_radius_all(3)
+  board.content_margin_left=8;board.content_margin_right=8;board.content_margin_top=3;board.content_margin_bottom=3
+  plaque.add_theme_stylebox_override("normal",board);sprite.add_child(plaque)
   return
  var a=ART[b[0]];var sprite=Sprite2D.new();sprite.texture=atlas(a[0],a[1]);sprite.centered=false
  if b[0] in ["Library","Vet","Fire"]:

@@ -121,6 +121,8 @@ static func layout(f,margin:Vector2,right:float,bottom:float) -> void:
 	if s.get("right_stick",false):
 		f.joystick.position.x=f.get_viewport_rect().size.x-right-168
 		f.action_button.position.x=margin.x
+		f.hud.get_node("MapButton").position.x=margin.x
+		f.hud.get_node("CharacterButton").position.x=margin.x+88
 static func pin_menu(f) -> void:
 	f.close_dialogue();var c=f.make_modal("Pin a request")
 	f.dialogue_text.text="Choose one reminder for the small on-screen tracker."

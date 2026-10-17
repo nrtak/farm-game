@@ -15,6 +15,13 @@ func _draw():
  var river=PackedVector2Array()
  for a in data.river:river.append(G.project(Vector2(a[0],a[1])))
  draw_polyline(river,Color("c5d4a1"),56,true);draw_polyline(river,Color("4d9fb0"),42,true);draw_polyline(river,Color("75c5d0"),28,true)
+ # Continuous stone courtyards under the compact blocks remove leftover grass wedges.
+ # Green space remains outside the urban block and beside the separate festival plaza.
+ quad(Rect2(890,480,1140,1100),Color("bcab8e"))
+ quad(Rect2(898,488,1124,1084),Color("d4c3a5"))
+ for b in data.buildings:
+  if b[0] in ["Ranch","Vet"]:
+   quad(Rect2(b[1]-18,b[2]-18,b[3]+48,b[4]+60),Color("caba97"))
  for a in data.roads+data.aprons+[data.plaza]:quad(G.rect(a).grow(5),Color("c0b091"));quad(G.rect(a),Color("d9c8a3"))
  for y in range(280,1590,14):
   for x in range(165,2170,22):

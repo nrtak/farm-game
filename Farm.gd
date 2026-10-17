@@ -478,6 +478,12 @@ func make_ui() -> void:
 		icon_active.bg_color=Color("e7c786")
 		entry[0].add_theme_stylebox_override("pressed",icon_active)
 		entry[0].add_theme_stylebox_override("hover",icon_active)
+	for entry in [[battery_button,"Map"],[character_button,"Bag"]]:
+		entry[0].text=entry[1]
+		entry[0].custom_minimum_size=Vector2(80,48)
+		entry[0].add_theme_constant_override("icon_max_width",24)
+		entry[0].add_theme_font_size_override("font_size",16)
+		entry[0].tooltip_text="Town map" if entry[1]=="Map" else "Backpack · items and supplies"
 	festival_button = make_button("End Festival", end_festival)
 	festival_button.visible = false
 	hud.add_child(festival_button)
@@ -509,7 +515,11 @@ func layout_ui() -> void:
 	var message_width=minf(620,view.x-margin.x-right-150)
 	message_label.position = Vector2((view.x-message_width)/2, view.y-bottom-58)
 	message_label.size = Vector2(message_width,48)
-	var controls=["MapButton","CharacterButton","SaveButton","PauseButton","GuideButton"]
+	for i in range(2):
+		var gameplay_control=hud.get_node(["MapButton","CharacterButton"][i])
+		gameplay_control.position=Vector2(view.x-right-168+i*88,view.y-bottom-200)
+		gameplay_control.size=Vector2(80,48)
+	var controls=["PauseButton","SaveButton","GuideButton"]
 	for i in range(controls.size()):
 		var control=hud.get_node(controls[i])
 		control.position=Vector2(view.x-right-48-(controls.size()-1-i)*56,margin.y)
@@ -751,7 +761,7 @@ func refresh_hud() -> void:
 	if fishing_quest_stage in [1, 2]: quest_label.text += ("\nFishing: catch one fish." if fishing_quest_stage == 1 else "\nFishing: report to Masao.")
 	quest_label.text = quest_label.text.strip_edges()
 	quest_label.visible = not dialogue_open and not quest_label.text.is_empty()
-	date_label.text = ("Ⅱ " if inside_house or location=="shop" else "") + "%s %d · Y%d  |  %s" % [SEASONS[int((day-1)/28)%4],(day-1)%28+1,int((day-1)/112)+1,clock_text()]
+	date_label.text = ("Ⅱ " if inside_house or location=="shop" else "") + "%s %d · Year %d  |  %s" % [SEASONS[int((day-1)/28)%4],(day-1)%28+1,int((day-1)/112)+1,clock_text()]
 	if WeatherLife.forecast(day)!="Normal": date_label.text+=" · "+WeatherLife.forecast(day)
 	pocket_label.text="¥%d" % coins
 	weather_icon.texture=load("res://assets/ui-rain.svg" if is_rainy_day() else "res://assets/ui-sun.svg")
