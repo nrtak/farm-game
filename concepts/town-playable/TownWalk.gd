@@ -32,7 +32,7 @@ var last_direction=Vector2.DOWN
 var room_solids:Array=[]
 
 func _ready():
- background=ImageTexture.create_from_image(Image.load_from_file("res://concepts/town-playable/town.png"))
+ background=load("res://concepts/town-playable/town.png")
  avatar=preload("res://Npc.gd").new();add_child(avatar)
  avatar.setup("boy",preload("res://CharacterArt.gd").walk("boy"));avatar.paused=true;avatar.label.hide();avatar.scale=Vector2.ONE*.28;avatar.set_physics_process(false)
  camera=Camera2D.new();camera.zoom=Vector2.ONE*1.7;add_child(camera);camera.make_current()

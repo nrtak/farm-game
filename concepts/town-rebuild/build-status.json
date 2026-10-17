@@ -1,0 +1,9 @@
+{
+  "status": "Complete local town-layout review build; main-game integration pending",
+  "layout": "Approved town-grid-v5: 13 buildings, compact related services, square plaza, inland river north of square, west coast and shrine, north highlands",
+  "renderer": "Projected ground coordinates with independent 2.5D building sprites, footprint collision, straight route smoothing and foreground visibility",
+  "checks": ["13 continuous-walk automatic entries and returns", "4 returnable boundary gates", "169 inter-building path queries with corner clearance", "World/projection round trip", "Buildings, trees, river and ocean block movement", "Foreground building fade", "Packaged scene startup and native rendering"],
+  "remaining_integration": ["Connect shops, dialogue, story and save state to production gameplay", "Replace boundary preview rooms with full neighboring maps", "Physical iPhone validation and TestFlight deployment"],
+  "art": "Original generated atlases and grass; runtime atlas regions keep source files intact",
+  "save_policy": "Review scene never loads or writes gameplay saves"
+}

@@ -1,0 +1,18 @@
+TEA BLOSSOM HILLS - TOWN REVIEW
+
+Open "Open Town Review.cmd" on this computer.
+Walk with arrow keys, the on-screen joystick, or click/tap the ground.
+Walk into a doorway to enter. Walk south inside to return.
+Zoom toggles between walking view and the full town overview.
+Reset returns to the central street. Routes shows navigation guidance.
+
+This is a separate review build of the complete 13-building town layout.
+The normal game launch and saved progress are unchanged.
+Shops, dialogue, story progression and full neighboring maps are not active here.
+The four labeled boundary gates are returnable preview rooms, not the rebuilt surrounding world.
+Existing building interiors are reused; the restaurant has a new furnished layout.
+
+Checks: all 13 automatic entrances/returns; four boundary gates;
+169 inter-building route checks; river, ocean, tree and building collision;
+foreground visibility; packaged native rendering and correct review startup.
+No physical iPhone validation or manual full-game playthrough has been claimed.

@@ -19,12 +19,12 @@ func ground_polygons():
 func doors():return CIVIC_DOORS if district=="civic" else MARKET_DOORS
 func change_district(next:String,point:Vector2):
  district=next
- background=ImageTexture.create_from_image(Image.load_from_file("res://concepts/angled-street-v1/"+("civic-background.png" if district=="civic" else "market-background.png")))
+ background=load("res://concepts/angled-street-v1/"+("civic-background.png" if district=="civic" else "market-background.png"))
  back_to_town(point)
 
 func _ready():
  super._ready()
- background=ImageTexture.create_from_image(Image.load_from_file("res://concepts/angled-street-v1/market-background.png"))
+ background=load("res://concepts/angled-street-v1/market-background.png")
  avatar.scale=Vector2.ONE*.65;camera.zoom=Vector2.ONE*.68;position_on_map=Vector2(780,620)
  # Replace inherited zoom/reset actions with scale-appropriate actions for this street.
  var bar=title.get_parent()

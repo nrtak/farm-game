@@ -4,6 +4,8 @@ config_version=5
 config/name="Tea Blossom Hills"
 config/icon="res://assets/tea-blossom-hills-icon.png"
 run/main_scene="res://Main.tscn"
+run/main_scene.town_review="res://concepts/town-rebuild/TownRebuild.tscn"
+config/name.town_review="Tea Blossom Hills - Town Review"
 
 [display]
 window/size/viewport_width=960
