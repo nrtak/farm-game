@@ -9,7 +9,7 @@ func run():
 	f.set_physics_process(false);f.choose_character("boy");f.close_dialogue();f.clock_minutes=780;f.interior_progress.story={"intro":true};preload("res://VillageDepth.gd").state(f).falls=3
 	for area in ["town","harbor","historic","mountain","tea","waterfall"]:
 		var p=Vector2(800,750)
-		if area=="town":p=f.town.return_point("Police Box")
+		if area=="town":p=f.town.G.project(Vector2(1660,960))
 		elif area=="harbor":p=Vector2(900,640)
 		elif area=="historic":p=Vector2(500,650)
 		f.travel_to(area,p,false);f.update_walk(0,false,Vector2.DOWN);f.toast_time=0;f.refresh_hud();await shot(area)

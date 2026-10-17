@@ -22,27 +22,27 @@
     ],
     [
       "Hospital",
-      1750,
+      2000,
       500,
-      170,
+      500,
       110,
-      "S"
+      "W"
     ],
     [
       "Police",
-      1750,
+      2000,
       780,
-      170,
+      500,
       110,
-      "S"
+      "W"
     ],
     [
       "Fire",
-      1750,
+      2000,
       1060,
-      170,
+      500,
       110,
-      "S"
+      "W"
     ],
     [
       "Carpenter",
@@ -54,11 +54,11 @@
     ],
     [
       "Blacksmith",
-      1750,
+      2000,
       1340,
-      170,
+      500,
       110,
-      "S"
+      "W"
     ],
     [
       "Ranch",
@@ -149,13 +149,7 @@
     [
       1590,
       640,
-      110,
-      940
-    ],
-    [
-      1940,
-      640,
-      80,
+      410,
       940
     ],
     [
@@ -179,22 +173,22 @@
       70
     ],
     [
-      1750,
-      610,
-      170,
-      70
+      1850,
+      500,
+      150,
+      110
     ],
     [
-      1750,
-      890,
-      170,
-      70
+      1850,
+      780,
+      150,
+      110
     ],
     [
-      1750,
-      1170,
-      170,
-      70
+      1850,
+      1060,
+      150,
+      110
     ],
     [
       1400,
@@ -203,10 +197,10 @@
       70
     ],
     [
-      1750,
-      1450,
-      170,
-      70
+      1850,
+      1340,
+      150,
+      110
     ],
     [
       700,
@@ -376,5 +370,5 @@
       "Vet"
     ]
   },
-  "note": "Straight parallel building rows, each fronting the street to its south. Continuous north/south avenues and east/west streets; no dogleg shop approaches."
+  "note": "Eastern hospital, police, fire and forge form the outer town frontage. Their plots extend beyond the playable east boundary, with one continuous street on the west and no rear lane."
 }
