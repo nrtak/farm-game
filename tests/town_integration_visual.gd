@@ -11,6 +11,7 @@ func run():
  f.town.update_label_visibility(f.player.position-f.TOWN_ORIGIN);await shot("playable-town-market")
  f.travel_to("town",f.town.G.project(Vector2(1300,650)),false);f.update_walk(0,false,Vector2.DOWN);f.town.update_label_visibility(f.player.position-f.TOWN_ORIGIN);await shot("playable-town-civic")
  f.travel_to("town",f.town.G.project(Vector2(1200,980)),false);f.camera.zoom=Vector2.ONE*.43;f.camera.offset=Vector2.ZERO;await shot("playable-town-perimeter")
+ f.travel_to("town",f.town.G.project(Vector2(1180,1320)),false);f.camera.zoom=Vector2.ONE*1.45;f.camera.offset=Vector2(0,-65);f.update_walk(0,false,Vector2.DOWN);await shot("playable-town-shops")
  f.enter_shop("Restaurant",true);await shot("playable-town-restaurant")
  f.travel_to("mountain",Vector2(960,1090),false);await shot("playable-highlands-trail")
  f.queue_free();await process_frame;print("PASS: playable production town and restaurant rendered");quit()

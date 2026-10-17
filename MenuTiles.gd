@@ -6,7 +6,7 @@ static func grid(f,column) -> GridContainer:
  scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED
  column.add_child(scroll)
  var g:=GridContainer.new()
- g.columns=maxi(2,int((f.get_viewport_rect().size.x-100)/155))
+ g.columns=maxi(2,int((f.get_viewport_rect().size.x-100)/136))
  g.size_flags_horizontal=Control.SIZE_EXPAND_FILL
  g.add_theme_constant_override("h_separation",8)
  g.add_theme_constant_override("v_separation",8)
@@ -14,20 +14,24 @@ static func grid(f,column) -> GridContainer:
  f.dialogue_text.size_flags_vertical=Control.SIZE_SHRINK_BEGIN
  return g
 static func tile(button:Button) -> void:
- button.custom_minimum_size=Vector2(140,140)
+ button.tooltip_text=button.text
+ if button.text.contains("nights") and button.text.contains("seeds") and button.text.contains("¥"):
+  button.text=str(button.get_meta("item_art","Seeds"))+"\n5 seeds · ¥"+button.text.get_slice("¥",1)
+ elif button.text.contains(" · ¥"): button.text=button.text.replace(" · ¥", "\n¥")
+ button.custom_minimum_size=Vector2(122,112)
  button.size_flags_horizontal=Control.SIZE_EXPAND_FILL
  button.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
- button.add_theme_font_size_override("font_size",17)
+ button.add_theme_font_size_override("font_size",16)
  for state in ["normal","hover","pressed","disabled","focus"]:
   var style=button.get_theme_stylebox(state).duplicate()
-  style.content_margin_left=8;style.content_margin_right=8;style.content_margin_top=76
+  style.content_margin_left=8;style.content_margin_right=8;style.content_margin_top=61
   button.add_theme_stylebox_override(state,style)
  var icon=button.get_node_or_null("ItemArtwork")
  if icon!=null:
   for connection in button.resized.get_connections(): button.resized.disconnect(connection.callable)
   icon.scale=Vector2.ONE
-  button.resized.connect(func(): icon.position=Vector2(button.size.x/2,39))
-  icon.position=Vector2(70,39)
+  button.resized.connect(func(): icon.position=Vector2(button.size.x/2,31))
+  icon.position=Vector2(61,31)
 static func arrange(f,column) -> void:
  if not is_instance_valid(column): return
  for child in column.get_children():
@@ -41,8 +45,19 @@ static func arrange(f,column) -> void:
  var index:int=goods[0].get_index()
  var g:GridContainer
  if column.get_parent() is ScrollContainer:
-  g=GridContainer.new();g.columns=maxi(2,int((f.get_viewport_rect().size.x-100)/155));g.size_flags_horizontal=Control.SIZE_EXPAND_FILL;column.add_child(g)
+  g=GridContainer.new();g.columns=maxi(2,int((f.get_viewport_rect().size.x-100)/136));g.size_flags_horizontal=Control.SIZE_EXPAND_FILL;column.add_child(g)
  else: g=grid(f,column)
  column.move_child(g if g.get_parent()==column else g.get_parent(),index)
  for button in goods:
   button.reparent(g);tile(button)
+
+static func quantity(button:Button,count:int,kept:bool=false) -> void:
+ var badge:=Label.new()
+ badge.text=("Keep · " if kept else "")+"×"+str(count)
+ badge.mouse_filter=Control.MOUSE_FILTER_IGNORE
+ badge.add_theme_font_size_override("font_size",15)
+ badge.add_theme_color_override("font_color",Color("405b48"))
+ button.add_child(badge)
+ badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+ badge.grow_horizontal=Control.GROW_DIRECTION_BEGIN
+ badge.offset_right=-8;badge.offset_top=5

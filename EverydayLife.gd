@@ -33,12 +33,15 @@ static func bag(f,filter:String="All") -> void:
  var c=panel(f,"Backpack · %d / %d" % [f.backpack_count(),f.BACKPACK_SIZES[f.backpack_level]],"Tap an item for uses, price and shipping protection.")
  var tabs:=HBoxContainer.new();c.add_child(tabs)
  for title in ["All","Crops","Fish","Materials","Animal products"]:
-  tabs.add_child(f.make_button(title,bag.bind(f,title)))
+  var tab=f.make_button(title,bag.bind(f,title));tab.size_flags_horizontal=Control.SIZE_EXPAND_FILL;tab.disabled=title==filter;tabs.add_child(tab)
  var grid=preload("res://MenuTiles.gd").grid(f,c)
  for item in carried(f):
   if filter!="All" and category(f,item)!=filter: continue
-  var b=f.make_button("%s ×%d%s" % [item,f.carried_count(item)," · Keep" if state(f).protected.get(item,false) else ""],details.bind(f,item))
+  var b=f.make_button(item,details.bind(f,item))
   grid.add_child(b);preload("res://MenuTiles.gd").tile(b)
+  preload("res://MenuTiles.gd").quantity(b,f.carried_count(item),state(f).protected.get(item,false))
+ if grid.get_child_count()==0:
+  var empty:=Label.new();empty.text="No items here yet.";grid.add_child(empty)
  var actions:=HBoxContainer.new();c.add_child(actions)
  actions.add_child(f.make_button("Requests",VolunteerRequests.journal.bind(f)))
  actions.add_child(f.make_button("Farm journal",journal.bind(f)))

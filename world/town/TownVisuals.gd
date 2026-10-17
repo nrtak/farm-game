@@ -35,9 +35,20 @@ func atlas(name:String,region:Rect2)->Texture2D:
  var a=AtlasTexture.new();a.atlas=art_cache[name];a.region=region;return a
 func place_building(b:Array):
  if b[5] in ["N","E"] or b[0] in ["Police","Carpenter"]:
-  var frontage=preload("res://world/town/FrontageCutaway.gd").new();frontage.building=b;add_child(frontage)
-  var sign=place_sign(b[0],Vector2(b[1]+b[3]/2.0,b[2]+b[4]/2.0))
-  sign.z_index=frontage.z_index+1
+  var names=["Inn","Restaurant","Store","Cafe","Ranch","Vet","Police","Carpenter"]
+  var index=names.find(b[0])
+  var texture=load("res://world/town/perimeter-shops-atlas.png")
+  var cell=texture.get_size()/Vector2(4,2)
+  var sprite=Sprite2D.new();sprite.texture=atlas("perimeter-shops",Rect2(Vector2(index%4,index/4)*cell,cell));sprite.centered=false
+  var width=205.0
+  sprite.scale=Vector2.ONE*(width/cell.x)
+  var center=G.project(Vector2(b[1]+b[3]/2.0,b[2]+b[4]/2.0))
+  sprite.position=center-Vector2(width/2,width*.72)
+  sprite.z_index=int(center.y/10)
+  town_layer.add_child(sprite);building_sprites.append(sprite)
+  var direction=G.outward(b)
+  var sign=place_sign(b[0],G.door(b)+Vector2(-direction.y,direction.x)*38)
+  sign.z_index=maxi(sprite.z_index+1,int(G.project(G.door(b)).y/10)+2)
   return
  var a=ART[b[0]];var sprite=Sprite2D.new();sprite.texture=atlas(a[0],a[1]);sprite.centered=false
  if b[0] in ["Library","Vet","Fire"]:
@@ -56,6 +67,7 @@ func place_sign(text:String,point:Vector2):
  var sign=Label.new();sign.text=text;sign.position=G.project(point)-Vector2(45,35);sign.z_index=int(G.project(point).y/10)
  sign.add_theme_font_size_override("font_size",14);sign.add_theme_color_override("font_color",Color("473827"))
  var style=StyleBoxFlat.new();style.bg_color=Color("f1dfb3");style.border_color=Color("8a6846");style.set_border_width_all(2);style.content_margin_left=7;style.content_margin_right=7;style.content_margin_top=4;style.content_margin_bottom=4
+ var post=Line2D.new();post.points=PackedVector2Array([Vector2(0,-8),Vector2(0,12)]);post.width=5;post.default_color=Color("795638");post.position=G.project(point);post.z_index=sign.z_index;town_layer.add_child(post)
  sign.add_theme_stylebox_override("normal",style);town_layer.add_child(sign)
  return sign
 

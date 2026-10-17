@@ -1,4 +1,11 @@
 extends Node2D
+const PAINTED = preload("res://assets/inventory-painted-atlas.png")
+const REGIONS = {
+ "Turnip":Rect2(0,0,340,350), "Potato":Rect2(350,85,300,260), "Strawberry":Rect2(680,60,260,290), "Sardine":Rect2(940,80,314,270),
+ "Mackerel":Rect2(0,390,355,200), "Sea Bream":Rect2(355,370,315,240), "Copper":Rect2(675,365,275,260), "Iron":Rect2(960,365,294,260),
+ "Tea leaves":Rect2(20,630,330,275), "Tea packets":Rect2(365,635,290,270), "Milk":Rect2(725,625,170,280), "Egg":Rect2(1000,645,230,260),
+ "Wool":Rect2(15,910,320,290), "Lumber":Rect2(340,920,310,280), "Cake":Rect2(650,895,315,305), "Watering can":Rect2(950,905,304,290)
+}
 var item := ""
 var show_caption := true
 func show_item(value: String) -> void:
@@ -6,6 +13,12 @@ func show_item(value: String) -> void:
 	visible = true
 	queue_redraw()
 func _draw() -> void:
+	if REGIONS.has(item):
+		var source:Rect2=REGIONS[item]
+		var dimensions:Vector2=source.size*(62.0/maxf(source.size.x,source.size.y))
+		draw_texture_rect_region(PAINTED,Rect2(-dimensions/2,dimensions),source)
+		caption()
+		return
 	var ink := Color("493b2d")
 	var green := Color("82946d")
 	draw_circle(Vector2.ZERO, 34, Color("f3e4be"))
@@ -86,10 +99,13 @@ func _draw() -> void:
 	else:
 		draw_line(Vector2(0, 22), Vector2(0, -22), green, 5)
 		for point in [Vector2(-10, 6), Vector2(10, -6), Vector2(-8, -16)]: draw_circle(point, 11, green)
+	caption()
+
+func caption() -> void:
 	if not show_caption: return
 	var width := ThemeDB.fallback_font.get_string_size(item, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x
 	draw_rect(Rect2(-width / 2 - 10, 38, width + 20, 31), Color("f3e4be"))
-	draw_string(ThemeDB.fallback_font, Vector2(-width / 2, 61), item, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, ink)
+	draw_string(ThemeDB.fallback_font, Vector2(-width / 2, 61), item, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("493b2d"))
 
 func box(color: Color) -> StyleBoxFlat:
 	var style:=StyleBoxFlat.new()

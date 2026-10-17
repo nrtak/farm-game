@@ -1,0 +1,9 @@
+Preview assets created with the built-in image-generation tool, 2026-10-17.
+
+world/town/perimeter-shops-atlas.png
+Prompt: Production game sprite atlas, transparent background, 4 columns by 2 rows. Cozy illustrated timber and plaster village in elevated isometric view. Open-front architectural cutaways, partial rear roof, low near walls, no people or text. Top row: blue inn, terracotta restaurant, green produce store, pink cafe. Bottom row: red ranch supply, mint vet, navy police, honey timber carpenter. Consistent lighting, separate cells and no scenery. These are provisional cutaway exterior representations, not new room layouts.
+
+assets/inventory-painted-atlas.png
+Prompt: Cozy farming inventory atlas, transparent background, 4x4 cells, one centered item each, no text or borders. Colorful painted icons readable at 64px. Rows: turnip/potatoes/strawberry/sardine; mackerel/sea bream/copper/iron; tea leaves/tea packet/milk/egg; wool/logs/cake/watering can. Gentle dimensional shading and clear silhouettes.
+
+Original generated outputs retained. Atlas regions are selected at runtime; no image processing used. Existing collision layout and doorway triggers unchanged. Rendered on desktop at phone-sized resolution; no physical iPhone validation. Town frontages remain a visual review pass; additional directional exterior art can replace these cutaways after feedback.
