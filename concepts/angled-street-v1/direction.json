@@ -1,0 +1,25 @@
+{
+  "status": "Playable isolated store/cafe street prototype; not integrated into main game",
+  "method": "built-in image generation",
+  "image": "market-street-camera.png",
+  "references": [
+    "exec-59115faa-f6f0-403b-bf37-665a0d9d0932.png",
+    "exec-5e14e894-d0a4-4917-a07f-561cbb1ce1d6.png"
+  ],
+  "direction": "Use original close 2.5D neighborhood references instead of stretching full-town map. Ground grid projects diagonally while world streets remain straight. Larger readable buildings, substantial side walls, higher artwork density. Approved world adjacency remains authoritative.",
+  "prompt_summary": "Close market-street gameplay camera concept, strict supplied perspective/style references. Store and Cafe, straight T-junction, planted gardens outside lanes, police/fire glimpse north, readable farmer scale, neutral daylight, no HUD.",
+  "implementation_needed": [
+    "Resolve Cafe/Fire world-west facing orientation against projected axes",
+    "Extend neighborhood art chunks with consistent scale and edges",
+    "Match interior character scale and perspective before main-game integration",
+    "Connect gateway placeholders to approved town layout and services"
+  ],
+  "caution": "This image demonstrates camera/art direction, not an exact placement replacement for approved map.",
+  "completed": [
+    "Removed painted characters from market-background.png",
+    "Matched ground polygons and obstacle exclusions to artwork",
+    "Smoothed tap routes without cutting blocked corners",
+    "Validated automatic store/cafe entry and return, plus gateway routes",
+    "Rendered and inspected native Godot screenshots; no physical iPhone validation"
+  ]
+}
