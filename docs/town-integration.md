@@ -13,3 +13,5 @@ The approved angled town is now the production `Main.tscn` town, with original g
 Validation uses isolated saves. The added integration and continuous-physics movement checks are included in the standard release suite. Exported-pack startup, save/relaunch, route checks, and native rendered screenshots are checked separately.
 
 The local playable package is in `../PlayableTown/`. This is a Windows package using the installed Godot runtime. Neighboring maps retain their existing artwork/perspective. Physical iPhone testing and a manual full-story playthrough remain outstanding; no GitHub or TestFlight upload is part of this local integration.
+
+Pre-upload audit: corrected seasonal festival friendship awards (the guest list was cleared too early), and restored guest visibility, labels, and drawing order after celebrations. Continuous-town regression checks cover reward delivery, one-time payment, and guest restoration.

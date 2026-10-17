@@ -1969,7 +1969,7 @@ func begin_festival(spec: Dictionary = {}) -> void:
 	if spec.has("people"): all = all.filter(func(npc): return npc.first_name in spec.people)
 	for i in range(all.size()):
 		var npc = all[i]
-		festival_people.append({"npc": npc, "parent": npc.get_parent(), "position": npc.position, "paused": npc.paused, "facing": npc.facing, "scale":npc.scale})
+		festival_people.append({"npc": npc, "parent": npc.get_parent(), "position": npc.position, "paused": npc.paused, "facing": npc.facing, "scale":npc.scale,"visible":npc.visible,"label_visible":npc.label.visible,"z_index":npc.z_index})
 		if npc.get_parent() != host: npc.reparent(host, false)
 		npc.visible = true
 		npc.scale=Vector2.ONE*(.35 if host==town else 1.0)
@@ -2009,10 +2009,12 @@ func end_festival() -> void:
 		npc.scale=record.get("scale",Vector2.ONE)
 		npc.paused = record.paused
 		npc.facing = record.facing
-		npc.label.visible = true
+		npc.visible = record.get("visible",true)
+		npc.label.visible = record.get("label_visible",true)
+		npc.z_index = record.get("z_index",5)
 		npc.show_frame(npc.facing, 1)
-	festival_people.clear()
 	SeasonalFestivals.finish(self)
+	festival_people.clear()
 	if scheduled_gathering:
 		var year := int((day - 1) / 112) + 1
 		if not festival_years.has(year):

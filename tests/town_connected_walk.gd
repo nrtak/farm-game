@@ -24,7 +24,16 @@ func run():
  f.day=4;f.clock_minutes=800;f.travel_to("town",f.town.design(Vector2(1200,910)),false)
  SeasonalFestivals.maybe_start(f);assert(f.festival_active,"Festival starts at relocated square")
  for record in f.festival_people:assert(f.town.is_walkable(record.npc.position),"Festival guest on dry land")
- f.end_festival();assert(not f.festival_active and is_equal_approx(f.camera.zoom.x,1.45))
+ var guest=f.festival_people[0].npc
+ var friendship_before=int(f.friendship.get(guest.first_name,0))
+ var guest_record=f.festival_people[0].duplicate()
+ var coins_before=f.coins
+ f.end_festival()
+ assert(int(f.friendship.get(guest.first_name,0))==mini(100,friendship_before+2),"Festival awards friendship before clearing attendees")
+ assert(f.coins==coins_before+50,"Seasonal festival pays once")
+ assert(guest.visible==guest_record.visible and guest.z_index==guest_record.z_index,"Festival restores guest visibility and drawing order")
+ f.end_festival();assert(f.coins==coins_before+50,"Repeated festival exit cannot repeat rewards")
+ assert(not f.festival_active and is_equal_approx(f.camera.zoom.x,1.45))
  for name in ["mountain","harbor","historic"]:
   var exits={"mountain":Vector2(800,1140),"harbor":Vector2(1540,585),"historic":Vector2(1540,1100)}
   f.travel_to(name,exits[name],false);f.player.position=f.REGION_ORIGINS[name]+exits[name];f.check_walk_exits()
