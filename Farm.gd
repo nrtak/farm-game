@@ -51,7 +51,7 @@ var fishing_active := false
 var fishing_elapsed := 0.0
 var fish_catches := 0
 var fishing_quest_stage := 0
-const REGIONAL_ROOMS := {"Onsen Resort":["mountain",Vector2(615,445)],"Mountain Lodge":["mountain",Vector2(1073,480)],"Mountain Carpentry":["mountain",Vector2(1427,715)],"Mine":["mountain",Vector2(1380,205)],"Tea Farmhouse":["tea",Vector2(453,330)],"Tea Processing Shed":["tea",Vector2(1042,630)],"Fishing Shop":["harbor",Vector2(665,550)],"Harbor Homes":["harbor",Vector2(1016,610)],"Shrine Residence":["historic",Vector2(406,363)]}
+const REGIONAL_ROOMS := {"Onsen Resort":["mountain",Vector2(615,445)],"Mountain Lodge":["mountain",Vector2(1073,480)],"Mountain Carpentry":["mountain",Vector2(1427,715)],"Mine":["mountain",Vector2(1380,205)],"Tea Farmhouse":["tea",Vector2(453,330)],"Tea Processing Shed":["tea",Vector2(1042,630)],"Fishing Shop":["harbor",Vector2(660,430)],"Harbor Homes":["harbor",Vector2(1080,430)],"Shrine Residence":["historic",Vector2(406,363)]}
 var quest_label: Label
 var hud_elapsed := 0.0
 var draw_elapsed := 0.0
@@ -102,6 +102,7 @@ const FarmhouseScene = preload("res://Farmhouse.tscn")
 const InteriorScene = preload("res://FarmhouseInterior.tscn")
 const ROOM_ORIGIN := Vector2(3000, 0)
 const SEASONS := ["Spring", "Summer", "Autumn", "Winter"]
+var held_gift := ""
 var perspective: Node2D
 var outdoor_world: Node2D
 var season_scenery = preload("res://SeasonScenery.gd").new()
@@ -303,6 +304,7 @@ func _ready() -> void:
 	var pasture=preload("res://AnimalPasture.gd").new();add_child(pasture);pasture.setup(self)
 	var dog=preload("res://FarmDog.gd").new();add_child(dog);dog.setup(self)
 	perspective=preload("res://world/angled/WorldPerspective.gd").new();add_child(perspective);perspective.setup(self)
+	var phone_ui=preload("res://PhonePresentation.gd").new();add_child(phone_ui);phone_ui.setup(self)
 
 func finish_launch() -> void:
 	# A failed launch retries at the farmhouse entrance without deleting progress.
@@ -1568,6 +1570,14 @@ func start_conversation(npc: Node2D) -> void:
 	npc.paused = true
 	npc.face_player(player.position)
 	var person: String = npc.first_name
+	if not held_gift.is_empty():
+		var item=held_gift
+		held_gift=""
+		var c=make_modal(person,true)
+		dialogue_text.text="That item is no longer in your bag."
+		preload("res://VillageDepth.gd").give(self,person,item)
+		c.add_child(make_button("Close",close_dialogue))
+		return
 	if not friendship.has(person): friendship[person] = 0
 	if town.EXTRA_DIALOGUE.has(person): dialogue_lines.assign(town.EXTRA_DIALOGUE[person])
 	if int(talked_on_day.get(person, -1)) != day:
@@ -1635,16 +1645,14 @@ func start_conversation(npc: Node2D) -> void:
 	if not first and pending_request.is_empty(): preload("res://VillageDepth.gd").conversation(self,person)
 	dialogue_index = 0
 	make_modal(person, true)
-	dialogue_text.text = dialogue_lines[0]
+	dialogue_text.text = "\n\n".join(dialogue_lines)
 	if pending_request != "":
 		dialogue_text.text = "Request · " + "\n".join(dialogue_lines)
 		dialogue_text.get_parent().add_child(make_button("Accept request", accept_story_request))
 		dialogue_text.get_parent().add_child(make_button("Not now", close_dialogue))
 	else:
-		dialogue_text.get_parent().add_child(make_button("Continue", advance_dialogue))
+		dialogue_text.get_parent().add_child(make_button("Close", close_dialogue))
 		if Cast.is_love_interest(person,character_choice) and int(friendship.get(person,0))>=20: dialogue_text.get_parent().add_child(make_button("Invite",preload("res://EverydayLife.gd").invite.bind(self,person)))
-		dialogue_text.get_parent().add_child(make_button("Goodbye",close_dialogue))
-		dialogue_text.get_parent().add_child(make_button("Give gift",preload("res://VillageDepth.gd").gifts.bind(self,person)))
 		preload("res://StoryArc.gd").conversation_button(self,person,dialogue_text.get_parent())
 	save_game(false)
 
@@ -1656,7 +1664,7 @@ func accept_story_request() -> void:
 		_: return
 	close_dialogue()
 	save_game(false)
-	say("Request accepted. Your objective is shown below the clock.")
+	say("Request accepted. Open Bag > Requests to review your objective.")
 
 func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 	# Replace only the panel, preserving an active conversation and its request.
@@ -1707,7 +1715,7 @@ func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 		name_label.add_theme_font_size_override("font_size",23)
 		var compact=preload("res://CompactConversation.gd").new()
 		panel.add_child(compact)
-		compact.setup(panel,column,preload("res://CharacterArt.gd").portrait(title))
+		compact.setup(panel,column,preload("res://CharacterArt.gd").portrait(title),close_dialogue)
 	if not portrait: preload("res://MenuTiles.gd").arrange.call_deferred(self,column)
 	refresh_hud()
 	return column
@@ -2185,7 +2193,7 @@ func check_walk_exits() -> void:
 		_:
 			if regions.has(location):
 				var point: Vector2 = player.position - REGION_ORIGINS[location]
-				if location=="mountain" and point.distance_to(Vector2(960,1090))<32:
+				if location=="mountain" and point.distance_to(Vector2(960,1090))<55:
 					travel_to("tea",Vector2(140,665))
 					return
 				if location=="mountain" and point.x>1480 and absf(point.y-760)<65:

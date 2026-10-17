@@ -139,7 +139,7 @@ func tick(delta: float, minute: float, rainy: bool = false) -> void:
 func is_walkable(point:Vector2)->bool:
  for offset in [Vector2.ZERO,Vector2(13,0),Vector2(-13,0),Vector2(0,13),Vector2(0,-13)]:
   var p=G.unproject(point+offset)
-  if not G.WORLD.has_point(p) or G.river_distance(p,data)<35:return false
+  if not G.WORLD.has_point(p):return false
   for b in data.buildings:
    if Rect2(b[1],b[2],b[3],b[4]).has_point(p):return false
   if G.rect(data.fountain).has_point(p):return false

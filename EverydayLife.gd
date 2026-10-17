@@ -53,6 +53,7 @@ static func details(f,item:String) -> void:
  if f.ORE.has(item): uses="Keep some for tool and building upgrades, or ship for money."
  if item in ["Milk","Egg","Potato"]: uses="Useful in cooking; also suitable for gifts and shipping."
  var c=panel(f,item,"In bag: %d · Sale price: ¥%d each.\n%s" % [f.carried_count(item),price(f,item),uses])
+ c.add_child(f.make_button("Hold as gift",func(): f.held_gift=item;f.close_dialogue();f.say("Holding "+item+". Tap a nearby resident to give it.")))
  c.add_child(f.make_button("Allow shipping" if state(f).protected.get(item,false) else "Protect from shipping",protect.bind(f,item)))
  if f.inside_house:
   var amount:=SpinBox.new();amount.min_value=1;amount.max_value=maxi(1,f.carried_count(item));amount.custom_minimum_size.y=48;c.add_child(amount)

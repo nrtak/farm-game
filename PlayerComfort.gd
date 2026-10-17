@@ -39,7 +39,7 @@ func _process(delta:float) -> void:
 	cue=""
 	if not farm.dialogue_open and not farm.choosing_character and not farm.paused_by_player:
 		var action:String=farm.interaction_action()
-		if action in ["talk_shop","talk_region"]: action="talk"
+		if action in ["talk","talk_shop","talk_region"]: action="" # Tappable resident marker is drawn in the HUD.
 		if action in ["counter","service"]: action="" # The service button already identifies shopping.
 		if action=="pet_animal": action="pet"
 		if action in ["regional_door","enter","barn_enter","greenhouse_enter","leave"]: action="shipping"
@@ -70,7 +70,7 @@ func _draw() -> void:
 			var p:Vector2=origin+farm.festival_center+Vector2(0,-135)
 			draw_line(p-Vector2(90,0),p+Vector2(90,0),Color("765b3b"),3)
 			for i in range(7): draw_circle(p+Vector2(-75+i*25,10),8,Color("e6c374"))
-	if farm.location=="mountain":
+	if farm.location=="mountain" and not farm.has_meta("angled_world"):
 		var trail:Vector2=farm.REGION_ORIGINS.mountain+Vector2(1320,760)
 		draw_line(trail+Vector2(-10,-55),trail+Vector2(-10,-105),Color("775333"),9)
 		draw_style_box(farm.parchment(),Rect2(trail+Vector2(-145,-160),Vector2(285,55)))

@@ -32,7 +32,7 @@ func _process(_delta):
 	var angled:bool=farm.location!="town"
 	farm.camera.enabled=not angled
 	if angled:
-		var zoom=1.45 if not farm.festival_active else .85
+		var zoom=1.8 if not farm.festival_active else .85
 		var view=BASIS.scaled(Vector2.ONE*zoom)
 		view.origin=farm.get_viewport_rect().size/2+Vector2(0,65)-view*farm.player.position
 		farm.get_viewport().canvas_transform=view
@@ -41,11 +41,22 @@ func _process(_delta):
 		var row:int=int(frame/4)
 		var index=(3 if row==1 else row)*4+frame%4
 		index=clampi(index,0,farm.side_offsets.size()-1)
-		var offset:Vector2=farm.side_offsets[index]*farm.front_scale*.35
+		var actor_scale=.50 if farm.inside_house or farm.location=="shop" else .35
+		var offset:Vector2=farm.side_offsets[index]*farm.front_scale*actor_scale
 		if farm.farmer.flip_h:offset.x*=-1
-		farm.farmer.transform=BASIS.affine_inverse()*Transform2D(0,Vector2.ONE*farm.front_scale*.35,0,offset)
+		farm.farmer.transform=BASIS.affine_inverse()*Transform2D(0,Vector2.ONE*farm.front_scale*actor_scale,0,offset)
 		farm.player.z_index=clampi(int((BASIS*(farm.player.position-farm.polish.area_origin())).y)+1000,1,4000)
 	else:
+		# Reset the inverse regional basis before drawing in the already projected town.
+		farm.farmer.rotation=0
+		farm.farmer.skew=0
+		var frame=maxi(0,farm.walk_frame)%100
+		var row=int(frame/4)
+		var index=clampi((3 if row==1 else row)*4+frame%4,0,farm.side_offsets.size()-1)
+		farm.farmer.position=farm.side_offsets[index]*farm.front_scale*.35
+		if farm.farmer.flip_h:farm.farmer.position.x*=-1
+		farm.farmer.scale=Vector2.ONE*farm.front_scale*.35
+		farm.camera.zoom=Vector2.ONE*1.7
 		farm.player.z_index=clampi(int((farm.player.position-farm.TOWN_ORIGIN).y/10),1,4000)
 		farm.camera.force_update_scroll()
 	if farm.item_moment.visible:
@@ -62,7 +73,7 @@ func _process(_delta):
 		if not root.visible:continue
 		for actor in root.get_children():
 			if actor.get_script()!=preload("res://Npc.gd") and actor.get_script()!=preload("res://AmbientPet.gd"):continue
-			var size=.45 if actor.get_script()==preload("res://AmbientPet.gd") else .35
+			var size=.45 if actor.get_script()==preload("res://AmbientPet.gd") else (.55 if farm.location=="shop" or farm.inside_house else .40)
 			if root==farm.town:
 				if actor.has_meta("ground_projection"):actor.remove_meta("ground_projection")
 				actor.transform=Transform2D(0,Vector2.ONE*size,0,actor.position)

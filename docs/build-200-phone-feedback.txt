@@ -1,0 +1,19 @@
+Build 200 phone feedback refinement
+
+The supplied iPhone screenshots revealed projection state leaking back into town, overly small residents indoors, repetitive navigation prompts, and unclear regional approaches.
+
+Changes
+- Reset farmer rotation, skew, size and animation offset on returning to town. Closer camera tracking throughout the world, with larger indoor actors and unchanged furniture collision boundaries.
+- Split the clock from the date. Remove the persistent Requests/see Bag banner and routine Talk/Visit/Explore prompts. Requests remain accessible in Bag > Requests.
+- Add a tappable speech marker for the nearby resident. Ordinary conversation is collected into one compact panel with a close control; longer text can scroll without Continue pages. Request acceptance and story-specific decisions remain explicit.
+- Backpack item details now offer Hold as gift. The item appears beside the farmer; interacting with a resident gives one item. Existing daily gift limits remain, and cancelling the held item consumes nothing.
+- Restore complete exterior art for police/carpentry. Extend town courtyards and remove the visible town river and fence boundary.
+- Align the harbor's two buildings along the north edge, remove extra obstructing shed footprints, update automatic door positions and widen connecting paths.
+- Broaden shrine approaches and the return route. Add river water in the shrine grounds, keep trees on land, add entrance lanterns and replace the angular paving slab with grass and clear paths.
+- Widen highlands/waterfall approaches, add an explicit Tea Country sign and route, correct Tea Country's return sign to Highlands, remove the incorrectly projected old Moonveil sign, and fill waterfall surroundings with ground detail and trees.
+
+Checks
+51 automated checks passed with isolated saves. New regression coverage includes returning upright from regions to town, doorway/art coordinate agreement, single-item gifting, daily gift limits and opt-in requests. The shrine route endpoint was corrected after a clearance test found it too close to the map boundary.
+
+Review limitations
+This is a local refinement, not a new TestFlight upload. Desktop screenshots use the supplied phone's landscape proportions; physical iPhone movement, readability and performance still need review. Building artwork retains the current illustrated style; further art-direction refinements can follow this playable review.

@@ -71,7 +71,7 @@ func build_props():
 	elif kind in ["tea","harbor","mountain","historic"]:
 		var indices={"Tea Farmhouse":3,"Tea Processing Shed":2,"Fishing Shop":4,"Harbor Homes":5,"Onsen Resort":6,"Mountain Lodge":7,"Mountain Carpentry":7,"Mine":9,"Shrine Residence":8}
 		for title in Layout.doors(kind):
-			prop(landmarks,indices[title],3,Layout.doors(kind)[title]-Vector2(0,18),230,title.replace(" Residence","").replace("Mountain ",""))
+			prop(landmarks,indices[title],3,Layout.doors(kind)[title]-Vector2(0,18),210 if kind=="harbor" else (245 if kind=="historic" else 190),title.replace(" Residence","").replace("Mountain ",""))
 		for rect: Rect2 in Layout.scenery(kind):
 			for x in range(int(rect.position.x)+20,int(rect.end.x),100):
 				for y in range(int(rect.position.y)+20,int(rect.end.y),110):
@@ -85,6 +85,7 @@ func build_props():
 			for y in range(90,1200,145):
 				for x in range(90,1600,145):
 					var point=Vector2(x,y)
+					if x<210:continue
 					if Geometry2D.is_point_in_polygon(point,host.walk_outline):continue
 					var beside_path=false
 					for i in range(host.walk_outline.size()):
@@ -92,7 +93,8 @@ func build_props():
 					if not beside_path and not Rect2(210,0,410,410).has_point(point):prop(landmarks,11,3,point,130)
 	elif kind=="waterfall":
 		prop(landmarks,10,3,Vector2(800,485),410)
-		for p in [Vector2(240,570),Vector2(1340,570),Vector2(180,810),Vector2(1410,820)]: prop(landmarks,11,3,p,140)
+		for y in range(200,1300,140):
+			for x in [-120,30,170,1400,1550,1710]:prop(landmarks,11,3,Vector2(x,y),130)
 	elif kind=="road":
 		for y in range(150,850,150):
 			for x in [150,850]:prop(landmarks,11,3,Vector2(x,y),120)
@@ -144,9 +146,9 @@ func _draw():
 	var size=Vector2(3000,2000) if kind=="farm" else Vector2(1600,1200)
 	if kind=="road":size=Vector2(1000,1000)
 	var grass=Color("8eae62")
-	draw_rect(Rect2(Vector2.ZERO,size).grow(1200),Color("456b48"))
+	draw_rect(Rect2(Vector2.ZERO,size).grow(1200),grass)
 	draw_rect(Rect2(Vector2.ZERO,size),grass)
-	draw_texture_rect(grass_texture,Rect2(Vector2.ZERO,size),true,Color(.95,.98,.90,.58))
+	draw_texture_rect(grass_texture,Rect2(Vector2.ZERO,size).grow(1200),true,Color(.95,.98,.90,.58))
 	for y in range(15,int(size.y),48):
 		for x in range(15,int(size.x),53):
 			var p=Vector2(x+sin(y+x)*14,y+cos(x)*10)
@@ -159,20 +161,34 @@ func _draw():
 	elif kind=="mountain":
 		for poly in host.water_polygons:water(poly)
 	elif kind=="historic":
-		draw_rect(Rect2(Vector2.ZERO,size),Color("456b48"))
-		draw_colored_polygon(host.walk_outline,Color("d5cdb4"))
+		for poly in host.water_polygons:water(poly)
+		draw_texture_rect(grass_texture,Rect2(Vector2.ZERO,size).grow(900),true)
+		for poly in host.water_polygons:water(poly)
+		# The walkable clearing is grass, with clear stone approaches rather than a polygon slab.
+		for p in [Vector2(245,310),Vector2(580,310)]:
+			draw_set_transform_matrix(B.affine_inverse()*Transform2D(0,B*p))
+			draw_rect(Rect2(-13,-10,26,12),Color("899182"))
+			draw_rect(Rect2(-6,-45,12,35),Color("a6ad9b"))
+			draw_rect(Rect2(-15,-65,30,24),Color("b4b6a3"))
+			draw_rect(Rect2(-8,-59,16,13),Color("eed39a"))
+			draw_line(Vector2(-21,-68),Vector2(21,-68),Color("646e62"),7)
+			draw_set_transform_matrix(Transform2D.IDENTITY)
 		draw_set_transform_matrix(B.affine_inverse()*Transform2D(0,B*Vector2(1450,1080)))
 		for x in [-68,68]:draw_line(Vector2(x,0),Vector2(x,-120),Color("a64030"),12)
 		draw_line(Vector2(-95,-124),Vector2(95,-124),Color("384f48"),14)
 		draw_line(Vector2(-84,-94),Vector2(84,-94),Color("b54c38"),10)
 		draw_set_transform_matrix(Transform2D.IDENTITY)
 	elif kind=="waterfall":
-		draw_rect(Rect2(Vector2.ZERO,size),Color("456e59"))
+		draw_texture_rect(grass_texture,Rect2(Vector2.ZERO,size).grow(900),true)
 		water(PackedVector2Array([Vector2(260,270),Vector2(1320,270),Vector2(1320,530),Vector2(260,530)]))
-		draw_colored_polygon(PackedVector2Array(host.GROUND),grass)
-		road(Vector2(800,1140),Vector2(800,720),130)
+		draw_colored_polygon(PackedVector2Array(host.GROUND),Color(.6,.72,.4,.25))
+		for i in range(90):
+			var p=Vector2(350+posmod(i*137,900),600+posmod(i*71,500))
+			if absf(p.x-800)>145:
+				draw_circle(p,6,Color("779646"));draw_circle(p+Vector2(0,-4),2,Color("eadfb2"))
+		road(Vector2(800,1240),Vector2(800,580),230)
 	elif kind=="road":road(Vector2(500,40),Vector2(500,960),250)
-	for route in Roads.ROUTES.get(kind,[]):road(route[0],route[1],140 if kind=="farm" else 115)
+	for route in Roads.ROUTES.get(kind,[]):road(route[0],route[1],180)
 	for door: Vector2 in Layout.doors(kind).values():
 		var best=door+Vector2(0,120);var distance=INF
 		for route in Roads.ROUTES.get(kind,[]):
@@ -212,7 +228,10 @@ func _draw():
 		draw_colored_polygon(PackedVector2Array([Vector2(-48,-68),Vector2(0,-95),Vector2(48,-68)]),Color("867453"))
 		draw_set_transform_matrix(Transform2D.IDENTITY)
 		for plot in farm.plots:draw_rect(Rect2(plot.position-Vector2(34,34),Vector2(68,68)),Color("a78657"))
-	var signs={"farm":[Vector2(1550,240),"Town"],"harbor":[Vector2(1450,580),"Town · East"],"tea":[Vector2(160,600),"Town · West"],"historic":[Vector2(1390,1040),"Town"],"mountain":[Vector2(900,1040),"Town · South"],"waterfall":[Vector2(900,1090),"Mountain trail"]}
+	var signs={"farm":[Vector2(1550,240),"Town"],"harbor":[Vector2(1450,580),"Town · East"],"tea":[Vector2(160,600),"Highlands · West"],"historic":[Vector2(1390,1040),"Town"],"mountain":[Vector2(900,1040),"Town · South"],"waterfall":[Vector2(900,1090),"Mountain trail"]}
+	if kind=="mountain":
+		draw_sign(Vector2(1080,1030),"Tea Country")
+		draw_sign(Vector2(1440,710),"Waterfall")
 	if signs.has(kind):draw_sign(signs[kind][0],signs[kind][1])
 func draw_room():
 	var floor_rect:Rect2=host.FLOOR if kind=="home" else Rect2(110,170,880,620)

@@ -1,17 +1,17 @@
 extends RefCounted
 const ROUTES:={
 "town":[[Vector2(495,1260),Vector2(495,1350)],[Vector2(2105,560),Vector2(2105,800)],[Vector2(330,805),Vector2(1100,805)],[Vector2(1100,940),Vector2(1650,940)],[Vector2(500,1350),Vector2(2080,1350)]],
-"mountain":[[Vector2(830,1080),Vector2(830,540)],[Vector2(600,550),Vector2(1240,550)],[Vector2(830,760),Vector2(1530,760)]],
+"mountain":[[Vector2(960,1090),Vector2(960,760)],[Vector2(830,1080),Vector2(830,540)],[Vector2(600,550),Vector2(1240,550)],[Vector2(830,760),Vector2(1530,760)]],
 "tea":[[Vector2(70,675),Vector2(1520,675)],[Vector2(453,675),Vector2(453,380)],[Vector2(860,720),Vector2(860,1040)],[Vector2(1333,720),Vector2(1333,1010)]],
-"harbor":[[Vector2(500,660),Vector2(1480,660)],[Vector2(1480,585),Vector2(1480,660)]],
-"historic":[[Vector2(420,550),Vector2(1100,550)],[Vector2(420,700),Vector2(1100,700)]],
+"harbor":[[Vector2(500,660),Vector2(1540,660)],[Vector2(660,430),Vector2(660,660)],[Vector2(1080,430),Vector2(1080,660)],[Vector2(1480,585),Vector2(1480,660)]],
+"historic":[[Vector2(406,363),Vector2(406,700)],[Vector2(406,700),Vector2(1460,700)],[Vector2(1460,700),Vector2(1460,1100)],[Vector2(1460,1100),Vector2(1550,1100)]],
 "farm":[[Vector2(1485,240),Vector2(1485,530)],[Vector2(1485,530),Vector2(2400,530)],[Vector2(850,700),Vector2(850,1430)]]}
 static func clearances(kind: String) -> Array[Rect2]:
 	var result: Array[Rect2]=[]
 	for route in ROUTES.get(kind,[]):
 		result.append(Rect2(route[0].min(route[1]),(route[1]-route[0]).abs()).grow( sixty(kind)))
 	return result
-static func sixty(kind: String) -> float: return 44.0 if kind=="town" else (60.0 if kind!="farm" else 85.0)
+static func sixty(kind: String) -> float: return 44.0 if kind=="town" else (90.0 if kind!="farm" else 85.0)
 static func clip(kind: String,rects: Array) -> Array:
 	var result: Array=rects.duplicate()
 	for clearance in clearances(kind):

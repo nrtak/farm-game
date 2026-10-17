@@ -34,7 +34,7 @@ func atlas(name:String,region:Rect2)->Texture2D:
  if not art_cache.has(name):art_cache[name]=load("res://world/town/"+name+"-atlas.png")
  var a=AtlasTexture.new();a.atlas=art_cache[name];a.region=region;return a
 func place_building(b:Array):
- if b[5] in ["N","E"] or b[0] in ["Police","Carpenter"]:
+ if b[5] in ["N","E"] and b[0] not in ["Police","Carpenter"]:
   var names=["Inn","Restaurant","Store","Cafe","Ranch","Vet","Police","Carpenter"]
   var index=names.find(b[0])
   var texture=load("res://world/town/perimeter-shops-atlas.png")

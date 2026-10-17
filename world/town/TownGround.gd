@@ -12,13 +12,10 @@ func _draw():
  quad(Rect2(165,-2500,6000,6000),Color("83b960"))
  var rng=RandomNumberGenerator.new();rng.seed=817
  draw_polygon(G.polygon(Rect2(165,-2500,6000,6000)),PackedColorArray([Color.WHITE]),PackedVector2Array([Vector2(0,0),Vector2(20,0),Vector2(20,20),Vector2(0,20)]),grass)
- var river=PackedVector2Array()
- for a in data.river:river.append(G.project(Vector2(a[0],a[1])))
- draw_polyline(river,Color("c5d4a1"),56,true);draw_polyline(river,Color("4d9fb0"),42,true);draw_polyline(river,Color("75c5d0"),28,true)
  # Continuous stone courtyards under the compact blocks remove leftover grass wedges.
  # Green space remains outside the urban block and beside the separate festival plaza.
- quad(Rect2(890,480,1140,1100),Color("bcab8e"))
- quad(Rect2(898,488,1124,1084),Color("d4c3a5"))
+ quad(Rect2(890,270,1140,1310),Color("bcab8e"))
+ quad(Rect2(898,278,1124,1294),Color("d4c3a5"))
  for b in data.buildings:
   if b[0] in ["Ranch","Vet"]:
    quad(Rect2(b[1]-18,b[2]-18,b[3]+48,b[4]+60),Color("caba97"))
@@ -32,6 +29,6 @@ func _draw():
  # Coast stays open, and the inland river never runs through the town.
  for y in range(-80,1600,48):draw_line(G.project(Vector2(105,y)),G.project(Vector2(115,y+22)),Color("c9eef0"),3,true)
  # Straight eastern boundary ends the blocks cleanly; nothing protrudes into the road.
- for y in range(390,1240,22):
+ for y in range(0):
   var p=G.project(Vector2(2170,y));draw_line(p,p+Vector2(0,-22),Color("867b67"),7,true)
- draw_polyline(PackedVector2Array([G.project(Vector2(2170,390))+Vector2(0,-22),G.project(Vector2(2170,1240))+Vector2(0,-22)]),Color("c7bda3"),8,true)
+ # draw_polyline(PackedVector2Array([G.project(Vector2(2170,390))+Vector2(0,-22),G.project(Vector2(2170,1240))+Vector2(0,-22)]),Color("c7bda3"),8,true)

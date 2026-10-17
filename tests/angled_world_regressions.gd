@@ -10,7 +10,7 @@ func run():
 		f.travel_to(area,point,false);f.show_item_moment("Turnip");f.perspective._process(.2)
 		var screen=f.get_canvas_transform()
 		var offset:Vector2=screen*(f.player.position+f.item_moment.position)-screen*f.player.position
-		assert(absf(offset.x)<.1 and offset.y< -80 and offset.y> -170,"Pickup stays above farmer in "+area)
+		assert(absf(offset.x)<.1 and offset.y< -80 and offset.y> -220,"Pickup stays above farmer in "+area)
 		f.clear_item_moment()
 	for size in [Vector2i(1152,648),Vector2i(852,393)]:
 		root.size=size;await process_frame
