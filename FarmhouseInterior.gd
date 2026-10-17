@@ -46,6 +46,7 @@ func is_walkable(point: Vector2, radius: float = 12.0) -> bool:
 	return true
 
 func _draw() -> void:
+	if get_parent().has_meta("angled_world"): return
 	draw_rect(Rect2(Vector2.ZERO, SIZE), Color("293e37"))
 	draw_rect(Rect2(70, 90, FLOOR.size.x+40, 650), Color("684a33"))
 	draw_rect(Rect2(90, 110, FLOOR.size.x, 80), Color("d9be8b"))

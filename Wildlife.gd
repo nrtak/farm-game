@@ -11,6 +11,21 @@ func habitat(area: String,point: Vector2) -> bool:
 	var node = farm if area=="farm" else (farm.town if area=="town" else farm.regions[area])
 	if not node.is_walkable(point): return false
 	if area=="town":return not farm.town.G.on_road(farm.town.G.unproject(point),farm.town.data)
+	if farm.has_meta("angled_world"):
+		if area in ["harbor","historic"]:return false
+		var routes:Array=preload("res://WideRoads.gd").ROUTES.get(area,[])
+		for route in routes:
+			if point.distance_to(Geometry2D.get_closest_point_to_segment(point,route[0],route[1]))<90:return false
+		for door:Vector2 in preload("res://ApprovedMapLayout.gd").doors(area).values():
+			var best=door;var distance=INF
+			for route in routes:
+				var p=Geometry2D.get_closest_point_to_segment(door,route[0],route[1])
+				if p.distance_to(door)<distance:best=p;distance=p.distance_to(door)
+			if point.distance_to(Geometry2D.get_closest_point_to_segment(point,door,best))<65:return false
+		if area=="farm":
+			for plot in farm.plots:
+				if point.distance_to(plot.position)<55:return false
+		return true
 	var size: Vector2 = farm.WORLD if area=="farm" else node.SIZE
 	return preload("res://MapHabitat.gd").sample(area,point,size,"grass")
 func populate(area: String) -> void:
@@ -49,6 +64,9 @@ func _draw() -> void:
 		var p: Vector2=record.point+origin
 		var bob := sin(elapsed*2+record.phase)*2
 		draw_set_transform(p+Vector2(0,bob))
+		if is_instance_valid(farm.perspective) and area!="town":
+			var b=farm.perspective.BASIS
+			draw_set_transform_matrix(b.affine_inverse()*Transform2D(0,Vector2.ONE*.65,0,b*p+Vector2(0,bob)))
 		var fur := Color("a1784e") if record.kind!=1 else Color("d6ccb3")
 		draw_circle(Vector2.ZERO,14,fur)
 		draw_circle(Vector2(13,-8),9,fur)

@@ -7,6 +7,9 @@ func run() -> void:
 	for frame in range(90): await process_frame
 	assert(game.choosing_character,"Fresh exported launch reaches farmer selection")
 	game.choose_character("boy")
+	assert(game.perspective.layers.size()==game.shops.size()+game.regions.size()+3,"Every map and interior has its new presentation layer")
+	for art in ["landmarks","furniture"]:
+		assert(load("res://world/angled/"+art+".png")!=null,"New world artwork packaged: "+art)
 	assert(game.regions.mountain.background.resource_path.ends_with("map-mountain-open-v2.png"))
 	assert(game.regions.harbor.background.resource_path.ends_with("map-harbor-open-v2.png"))
 	assert(game.regions.tea.background.resource_path.ends_with("map-tea-open-v2.png"))

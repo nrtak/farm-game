@@ -1,0 +1,35 @@
+World perspective rebuild — 2026-10-17
+
+Direction
+Keep the approved compact, aligned town blocks and extend the elevated angled presentation to the farm, harbor, shrine, tea country, highlands, waterfall, connecting road and interiors. Prefer clear roads and identifiable entrances over decorative obstacles.
+
+User-provided general gameplay reference:
+https://harvestmoon.fandom.com/wiki/Harvest_Moon:_Back_To_Nature
+Use its farming routines, village life, festivals and progression as design reference. Tea Blossom Hills retains its own characters, art, locations, dialogue and Year 2 village-vote story.
+
+Implementation
+WorldPerspective projects the existing logical ground coordinates and follows the farmer. Touch destinations unproject through the viewport; joystick directions are converted into the ground plane. Character and building sprites remain upright. The existing town keeps its established projection. Save positions, quest destinations, collisions and service locations retain their logical coordinates.
+
+WorldScenery replaces the old single painted backgrounds with projected ground, roads, water boundaries, regional landmark sprites and distinct room furnishings. Scenery uses the existing blocked footprints. Indoor furniture uses the collision rectangles. Calendar, storage, mining depletion, barn occupants, greenhouse crops, home expansions and seasonal coloring remain represented.
+
+Artwork sources
+world/angled/landmarks.png: generated original 4-by-3 regional building, tree and waterfall atlas; source exec-b71a72e7-2c60-47af-9fc3-9eab48de1977.png.
+world/angled/furniture.png: generated original 4-by-4 furniture atlas; source exec-19aa6825-8315-4e58-9ce3-1f058d8d57db.png.
+Both sources are retained in the task's generated_images directory. Regions are selected at runtime; no reference-game artwork is packaged.
+
+Review scope
+This is a playable first world-wide perspective pass. It is not a claim of final art polish. The local screenshot set covers every region and shop. Physical iPhone rendering, touch feel, memory use and a manual full-story playthrough still require testing. Existing small procedural effects such as tool actions, fences and weather can receive further art refinement after this layout review.
+
+Deep review and fixes
+Restored fishing feedback and placed both fishing floats in water rather than on the pier. Anchored pickup icons above the farmer in each projection. Restored the home weather television. Separated farm tool buttons from the message panel at desktop and small-phone viewport sizes. Corrected NPC facing and actor depth; excluded wildlife from roads and crop beds. Added visible woodland at blocked shrine boundaries and clipped atlas cells to avoid neighboring artwork leaking into props.
+
+Validation completed
+All 50 automated gameplay checks passed using isolated saves. A fresh local Windows game pack then passed six additional package checks: angled camera/control/interior isolation, visual regressions, town integration, continuous town walking, startup/sleep/save/relaunch, and audio routing/settings. The exported game rendered 41 gameplay screenshots without reported engine errors. Fishing and home screenshots were visually inspected after export. These checks do not replace an iPhone playtest or establish that every possible bug is resolved.
+
+Music refinement
+All seven music tracks retain their tempos and durations with a lower melody register, softer harmonics and gentler percussion. A 16-second town sample accompanies the local review gallery.
+
+Delivery
+Local review package: ../WorldRebuildPreview/TeaBlossomHills.pck
+Gallery: ../previews/world-review.html
+No GitHub or TestFlight upload was performed for this review.

@@ -102,6 +102,7 @@ const FarmhouseScene = preload("res://Farmhouse.tscn")
 const InteriorScene = preload("res://FarmhouseInterior.tscn")
 const ROOM_ORIGIN := Vector2(3000, 0)
 const SEASONS := ["Spring", "Summer", "Autumn", "Winter"]
+var perspective: Node2D
 var outdoor_world: Node2D
 var season_scenery = preload("res://SeasonScenery.gd").new()
 var wildlife: Node2D
@@ -301,6 +302,7 @@ func _ready() -> void:
 
 	var pasture=preload("res://AnimalPasture.gd").new();add_child(pasture);pasture.setup(self)
 	var dog=preload("res://FarmDog.gd").new();add_child(dog);dog.setup(self)
+	perspective=preload("res://world/angled/WorldPerspective.gd").new();add_child(perspective);perspective.setup(self)
 
 func finish_launch() -> void:
 	# A failed launch retries at the farmhouse entrance without deleting progress.
@@ -511,7 +513,7 @@ func layout_ui() -> void:
 	joystick.position = Vector2(margin.x, view.y - bottom - 168)
 	action_button.position = Vector2(view.x - right - 138, view.y - bottom - 128)
 	action_button.size = Vector2(138, 72)
-	tool_bar.position = Vector2((view.x - 430) / 2, view.y - bottom - 102)
+	tool_bar.position = Vector2((view.x - 430) / 2, view.y - bottom - 126)
 	var message_width=minf(620,view.x-margin.x-right-150)
 	message_label.position = Vector2((view.x-message_width)/2, view.y-bottom-58)
 	message_label.size = Vector2(message_width,48)
@@ -627,6 +629,7 @@ func _physics_process(delta: float) -> void:
 	if Input.is_physical_key_pressed(KEY_W): direction.y -= 1
 	if Input.is_physical_key_pressed(KEY_S): direction.y += 1
 	direction += joystick.direction
+	if is_instance_valid(perspective): direction=perspective.manual_direction(direction)
 	direction = polish.direction(direction)
 	running = Input.is_physical_key_pressed(KEY_SHIFT) or joystick.direction.length() > 0.72
 	player.velocity = direction.limit_length() * (RUN_SPEED if running else SPEED)
@@ -1327,6 +1330,7 @@ func read_saved_json(path: String) -> Variant:
 	return parser.data
 
 func update_walk(delta: float, moving: bool, direction: Vector2 = Vector2.ZERO, travel: float = -1.0) -> void:
+	if is_instance_valid(perspective) and location!="town": direction=perspective.BASIS*direction
 	if direction.length() > 0.15:
 		facing_direction = posmod(int(round((direction.angle()-PI/2)/(PI/4))),8)
 	walk_distance = walk_distance+(travel if travel>=0 else delta*SPEED) if moving else 0.0

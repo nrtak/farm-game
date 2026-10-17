@@ -40,9 +40,17 @@ SCORES={
  'falls':(84,'bell',[[84,79,76,79],[81,77,72,77],[81,76,72,76],[79,74,71,72]])}
 ROOT.mkdir(exist_ok=True,parents=True);records=[]
 def music_tone(midi,duration,voice='pluck'):
- # A lower register and gentle low-pass keep the upbeat score comfortable.
- sound=tone(midi-3,duration,voice)
- return np.convolve(sound,np.ones(7)/7,mode='same')
+ # Lower melody/chord voices without slowing playback or making bass muddy.
+ # A rounded fundamental replaces the bright bell/flute upper harmonics.
+ note=midi-12 if midi>=60 else midi-3
+ t=np.arange(int(SR*duration))/SR
+ phase=2*np.pi*(440*2**((note-69)/12))*t
+ attack=.035 if voice in ('flute','bell') else .018
+ env=np.minimum(t/attack,1)*np.minimum((duration-t)/.09,1)
+ env*=np.exp(-t*(2.1 if voice=='pluck' else 1.2))
+ sound=(np.sin(phase)+.065*np.sin(phase*2)+.012*np.sin(phase*3))*env*.45
+ kernel=np.hanning(17);kernel/=kernel.sum()
+ return np.convolve(sound,kernel,mode='same')
 for track_index,(name,(bpm,voice,phrase)) in enumerate(SCORES.items()):
  beat=60/bpm;out=np.zeros(round(128*beat*SR))
  percussion_rng=np.random.default_rng(10411+track_index)
@@ -71,7 +79,7 @@ for track_index,(name,(bpm,voice,phrase)) in enumerate(SCORES.items()):
   for offset in ([1,3] if gentle else [0,.5,1,1.5,2,2.5,3,3.5]):
    t=np.arange(int(.055*SR))/SR
    noise=percussion_rng.normal(0,.10,len(t))
-   brush=(noise-np.roll(noise,1))*np.exp(-t*75)*(1-np.exp(-t*1200))
+   brush=np.convolve(noise,np.ones(9)/9,mode='same')*np.exp(-t*75)*(1-np.exp(-t*300))
    add(out,brush,(bar*4+offset)*beat,.035 if gentle else .075)
  record=write('music-'+name,out);record['bpm']=bpm;records.append(record)
 # Preserve the original effects/ambience noise sequence independently of the score.

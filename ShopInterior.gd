@@ -70,6 +70,7 @@ func is_walkable(point: Vector2) -> bool:
 	return true
 
 func _draw() -> void:
+	if get_parent().has_meta("angled_world"): return
 	if kind=="Restaurant":
 		draw_texture_rect(preload("res://world/town/restaurant.png"),Rect2(Vector2.ZERO,SIZE),false)
 		return

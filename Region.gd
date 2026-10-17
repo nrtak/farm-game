@@ -140,6 +140,7 @@ func safe_point(preferred: Vector2) -> Vector2:
 	return Vector2(800,600)
 
 func _draw() -> void:
+	if get_parent().has_meta("angled_world"): return
 	if background != null:
 		draw_texture_rect(background, Rect2(Vector2.ZERO, SIZE), false)
 		preload("res://WideRoads.gd").draw(self,kind)

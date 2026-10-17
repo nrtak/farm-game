@@ -48,6 +48,10 @@ func _draw():
   var region:Rect2=farm.BarnLife.art_regions[farm.BarnLife.SPECIES.keys().find(a.species)]
   var size:Vector2=region.size*(100.0/region.size.y)
   draw_circle(point(i)+Vector2(0,4),16,Color(0.2,.25,.15,.18))
+  if is_instance_valid(farm.perspective):
+   var b=farm.perspective.BASIS
+   draw_set_transform_matrix(b.affine_inverse()*Transform2D(0,Vector2.ONE*.65,0,b*p));p=Vector2.ZERO
   draw_texture_rect_region(farm.BarnLife.art,Rect2(p-Vector2(size.x/2,size.y-10),size),region)
   if farm.player.position.distance_to(point(i))<110:
    draw_string(ThemeDB.fallback_font,p+Vector2(-38,-65),a.get("name",a.species),HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color("493b2d"))
+  draw_set_transform_matrix(Transform2D.IDENTITY)

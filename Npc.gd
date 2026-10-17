@@ -185,12 +185,14 @@ func tick(delta: float) -> void:
 	elif area.has_method("is_walkable") and not area.is_walkable(next): route.clear(); show_frame(facing,1); return
 	position = next
 	travel += distance
+	if has_meta("ground_projection"):direction=get_meta("ground_projection")*direction
 	if absf(direction.x) > absf(direction.y): facing = 1 if direction.x < 0 else 3
 	else: facing = 0 if direction.y >= 0 else 2
 	show_frame(facing, int(travel / 24.0) % 4 if distance > 0.1 else 1)
 
 func face_player(player_position: Vector2) -> void:
 	var direction := player_position - global_position
+	if has_meta("ground_projection"):direction=get_meta("ground_projection")*direction
 	if absf(direction.x) > absf(direction.y): facing = 1 if direction.x < 0 else 3
 	else: facing = 0 if direction.y >= 0 else 2
 	show_frame(facing, 1)

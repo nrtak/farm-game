@@ -25,6 +25,7 @@ func _ready() -> void:
 	queue_redraw()
 
 func _draw() -> void:
+	if get_parent().has_meta("angled_world"):return
 	draw_rect(Rect2(Vector2.ZERO, SIZE), Color("91aa73"))
 	draw_rect(Rect2(350, 0, 300, 1000), Color("d8c393"))
 	for y in range(120, 850, 130):
