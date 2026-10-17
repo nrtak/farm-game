@@ -12,22 +12,17 @@ func _draw():
  quad(Rect2(165,-2500,6000,6000),Color("83b960"))
  var rng=RandomNumberGenerator.new();rng.seed=817
  draw_polygon(G.polygon(Rect2(165,-2500,6000,6000)),PackedColorArray([Color.WHITE]),PackedVector2Array([Vector2(0,0),Vector2(20,0),Vector2(20,20),Vector2(0,20)]),grass)
- # Continuous stone courtyards under the compact blocks remove leftover grass wedges.
- # Green space remains outside the urban block and beside the separate festival plaza.
- quad(Rect2(890,270,1140,1310),Color("bcab8e"))
- quad(Rect2(898,278,1124,1294),Color("d4c3a5"))
- for b in data.buildings:
-  if b[0] in ["Ranch","Vet"]:
-   quad(Rect2(b[1]-18,b[2]-18,b[3]+48,b[4]+60),Color("caba97"))
+ # Quiet blocks behind the shop fronts contrast with continuous public streets.
+ # Each row meets one straight sidewalk; no separate islands or diagonal apron wedges.
+ for row in [500,780,1060,1340]:
+  quad(Rect2(680 if row in [780,1060] else 1030,row-100,1340 if row in [780,1060] else 990,240),Color("a6b481"))
  for a in data.roads+data.aprons+[data.plaza]:quad(G.rect(a).grow(5),Color("c0b091"));quad(G.rect(a),Color("d9c8a3"))
  for y in range(280,1590,14):
   for x in range(165,2170,22):
    var p=Vector2(x+(11 if y%28==0 else 0),y)
-   if G.on_road(p+Vector2(11,7),data) or Rect2(898,278,1124,1294).has_point(p):
+   if G.on_road(p+Vector2(11,7),data):
     var colors=[Color("e9d8b5"),Color("decaa4"),Color("d3c5a6"),Color("efe0c1")]
     var tone=colors[rng.randi_range(0,3)]
-    if not G.on_road(p+Vector2(11,7),data):tone=tone.lerp(Color("b8aa91"),.55)
     quad(Rect2(p,Vector2(20,12)),tone)
  # Coast stays open, and the inland river never runs through the town.
  for y in range(-80,1600,48):draw_line(G.project(Vector2(105,y)),G.project(Vector2(115,y+22)),Color("c9eef0"),3,true)
-
