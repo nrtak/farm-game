@@ -10,6 +10,7 @@ func run():
  town.camera.zoom=Vector2.ONE*.95;town.position_on_map=Vector2(1160,720);await shot("angled-market-close")
  town.enter("General Store",Vector2(400,514));await shot("angled-market-store")
  town.back_to_town(Vector2(780,620));town.show_routes=true;await shot("angled-market-routes")
+ town.change_district("civic",Vector2(780,650));town.show_routes=false;await shot("angled-civic-walk")
  town.queue_free();await create_timer(.4).timeout
  print("PASS: angled market native street, close view, store and collision previews rendered")
  quit()

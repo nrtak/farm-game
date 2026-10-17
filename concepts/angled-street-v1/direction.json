@@ -1,5 +1,5 @@
 {
-  "status": "Playable isolated store/cafe street prototype; not integrated into main game",
+  "status": "Playable connected market and civic street preview; not integrated into main game",
   "method": "built-in image generation",
   "image": "market-street-camera.png",
   "references": [
@@ -20,6 +20,9 @@
     "Matched ground polygons and obstacle exclusions to artwork",
     "Smoothed tap routes without cutting blocked corners",
     "Validated automatic store/cafe entry and return, plus gateway routes",
-    "Rendered and inspected native Godot screenshots; no physical iPhone validation"
+    "Rendered and inspected native Godot screenshots; no physical iPhone validation",
+    "Added matching Police/Fire artwork and ground collision",
+    "Connected market north exit to civic street with safe south return",
+    "Automated continuous walking through all four interiors and district round trip passed"
   ]
 }
