@@ -32,11 +32,15 @@ func _draw():
   draw_rect(rect,Color("846443"))
   var horizontal:bool=rect.size.x>rect.size.y
   var length:float=rect.size.x if horizontal else rect.size.y
+  var rise=Vector2(0,-25)
+  if is_instance_valid(farm.perspective):rise=farm.perspective.BASIS.affine_inverse()*Vector2(0,-24)
+  var end=rect.position+(Vector2(length,0) if horizontal else Vector2(0,length))
+  for height in [.35,.8]:draw_line(rect.position+rise*height,end+rise*height,Color("b58c59"),5,true)
   for step in range(0,int(length),65):
    var p:Vector2=rect.position+(Vector2(step,0) if horizontal else Vector2(0,step))
-   draw_line(p+Vector2(0,6),p+Vector2(0,-25),Color("9f794a"),9)
-   draw_circle(p+Vector2(0,-25),5,Color("c6a06a"))
- draw_string(ThemeDB.fallback_font,Vector2(1380,1580),"Pasture",HORIZONTAL_ALIGNMENT_LEFT,-1,21,Color("584631"))
+   draw_line(p,p+rise,Color("9f794a"),9)
+   draw_circle(p+rise,5,Color("c6a06a"))
+ if not is_instance_valid(farm.perspective):draw_string(ThemeDB.fallback_font,Vector2(1380,1580),"Pasture",HORIZONTAL_ALIGNMENT_LEFT,-1,21,Color("584631"))
  if not outside(farm): return
  farm.BarnLife.prepare_art()
  var animals:Array=farm.BarnLife.state(farm).animals

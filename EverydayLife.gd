@@ -283,7 +283,7 @@ static func falls_seasons(f) -> void:
  c.add_child(f.make_button("Listen to this season",listen_season.bind(f)))
  c.add_child(f.make_button("Another time",f.close_dialogue))
 static func listen_season(f) -> void:
- if f.location!="waterfall" or int(preload("res://VillageDepth.gd").state(f).get("falls",0))<3: return
+ if not preload("res://ShrineFalls.gd").nearby(f) or int(preload("res://VillageDepth.gd").state(f).get("falls",0))<3: return
  var s:Dictionary=state(f)
  if not s.get("waterfall_seasons") is Dictionary: s.waterfall_seasons={}
  var season:int=int((f.day-1)/28)%4

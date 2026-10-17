@@ -15,7 +15,7 @@ func setup(_area: String,_people: Array) -> void:
 func _process(_delta:float) -> void:
 	if ambience==null: return
 	var f=get_parent()
-	if is_visible_in_tree() and f.window_focused and not f.paused_by_player:
+	if preload("res://ShrineFalls.gd").nearby(f) and f.window_focused and not f.paused_by_player:
 		if not ambience.playing: ambience.play()
 	elif ambience.playing: ambience.stop()
 func is_walkable(point: Vector2) -> bool:

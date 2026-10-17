@@ -59,7 +59,7 @@ func setup(area: String, people: Array) -> void:
 		var person: String = people[i]
 		var npc := NpcScript.new()
 		add_child(npc)
-		var posts := {"Mika":Vector2(600,440),"Sachiko":Vector2(1235,680),"Ken":Vector2(770,470),"Masao":Vector2(1230,480),"Emi":Vector2(470,520),"Hiro":Vector2(1210,530),"Haruka":Vector2(470,520),"Rei":Vector2(1190,550)}
+		var posts := {"Mika":Vector2(1200,400),"Sachiko":Vector2(1200,570),"Ken":Vector2(770,470),"Masao":Vector2(1230,480),"Emi":Vector2(470,520),"Hiro":Vector2(1210,530),"Haruka":Vector2(470,520),"Rei":Vector2(1290,810)}
 		npc.position = safe_npc_point(posts.get(person,Vector2(800,600)))
 		var index := Cast.index_of(person)
 		var walk_path := "res://assets/npc-%s-walk.png" % person.to_lower()

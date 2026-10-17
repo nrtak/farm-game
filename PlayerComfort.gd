@@ -48,7 +48,7 @@ func _process(delta:float) -> void:
 			cue_point=farm.player.position+Vector2(55,-100)
 		# The screen action button is the single interaction prompt in town.
 		if farm.location=="town": cue=""
-		if farm.location=="waterfall" and int(preload("res://VillageDepth.gd").state(farm).get("falls",0))==0 and (farm.player.position-farm.REGION_ORIGINS.waterfall).y<770:
+		if preload("res://ShrineFalls.gd").nearby(farm) and int(preload("res://VillageDepth.gd").state(farm).get("falls",0))==0:
 			preload("res://VillageDepth.gd").waterfall(farm)
 	queue_redraw()
 func _draw() -> void:
@@ -70,8 +70,8 @@ func _draw() -> void:
 			var p:Vector2=origin+farm.festival_center+Vector2(0,-135)
 			draw_line(p-Vector2(90,0),p+Vector2(90,0),Color("765b3b"),3)
 			for i in range(7): draw_circle(p+Vector2(-75+i*25,10),8,Color("e6c374"))
-	if farm.location=="mountain" and not farm.has_meta("angled_world"):
-		var trail:Vector2=farm.REGION_ORIGINS.mountain+Vector2(1320,760)
+	if farm.location=="historic" and not farm.has_meta("angled_world"):
+		var trail:Vector2=farm.REGION_ORIGINS.historic+Vector2(1050,700)
 		draw_line(trail+Vector2(-10,-55),trail+Vector2(-10,-105),Color("775333"),9)
 		draw_style_box(farm.parchment(),Rect2(trail+Vector2(-145,-160),Vector2(285,55)))
 		draw_string(ThemeDB.fallback_font,trail+Vector2(-130,-125),"Moonveil Falls →",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("493b2d"))

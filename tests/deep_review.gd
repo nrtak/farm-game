@@ -14,7 +14,7 @@ func run():
  f.begin_festival();var festival_zoom=f.camera.zoom
  for i in range(3):f.perspective._process(.016)
  assert(f.camera.zoom==festival_zoom,"Festival zoom survives subsequent presentation frames")
- f.end_festival();f.perspective._process(.016);assert(is_equal_approx(f.camera.zoom.x,1.7),"Walking zoom returns after festival")
+ f.end_festival();f.perspective._process(.016);assert(is_equal_approx(f.camera.zoom.x,f.perspective.TOWN_ZOOM),"Walking zoom returns after festival")
  f.save_game(false);f.held_gift="Turnip";f.load_game();assert(f.held_gift.is_empty(),"Reload clears stale held selection")
  f.start_scene("A Table for Everyone")
  assert(not f.scene_actors.is_empty(),"Scene has actors")

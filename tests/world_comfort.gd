@@ -19,13 +19,14 @@ func run():
 	print("LANE FAILURES: ",failures)
 	assert(failures.is_empty())
 	f.travel_to("mountain",Vector2(1490,760),false);f.check_walk_exits()
-	assert(f.location=="waterfall")
-	assert(f.regions.waterfall.background!=null)
-	assert(not f.regions.waterfall.is_walkable(Vector2(800,350)),"Pool cannot be walked on")
-	for y in range(550,1100,20): assert(f.regions.waterfall.is_walkable(Vector2(800,y)))
-	f.save_game(false);f.load_game();assert(f.location=="waterfall")
-	f.player.position=f.REGION_ORIGINS.waterfall+Vector2(800,1140);f.check_walk_exits()
 	assert(f.location=="mountain")
+	f.travel_to("waterfall",Vector2.ZERO,false)
+	assert(f.location=="historic")
+	assert(not f.regions.historic.is_walkable(Vector2(1050,400)),"Pool cannot be walked on")
+	for y in range(540,701,20): assert(f.regions.historic.is_walkable(Vector2(1050,y)))
+	f.save_game(false);f.load_game();assert(f.location=="historic")
+	f.player.position=f.REGION_ORIGINS.historic+Vector2(1540,1100);f.check_walk_exits()
+	assert(f.location=="town")
 	f.clock_minutes=850
 	for d in range(1,40):
 		f.day=d

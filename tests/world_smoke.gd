@@ -39,7 +39,7 @@ func run() -> void:
 	for area_name in farm.regions:
 		var area = farm.regions[area_name]
 		farm.travel_to(area_name, Vector2(800, 950), false)
-		assert(area.visible and farm.player.collision_mask == 16, "Region has its collision layer")
+		assert((area.visible or area_name=="waterfall") and farm.player.collision_mask == 16, "Region has its collision layer")
 		for step in range(600):
 			area.tick(0.1, 600)
 			for resident in area.npcs: assert(area.is_walkable(resident.position), "Regional paths remain on clear ground")
@@ -51,9 +51,10 @@ func run() -> void:
 		await process_frame
 		farm.player.position = farm.REGION_ORIGINS[area_name] + Vector2(800, 1100)
 		if area_name=="waterfall":
-			farm.player.position=farm.REGION_ORIGINS.waterfall+Vector2(800,1140)
+			farm.close_dialogue()
+			farm.player.position=farm.REGION_ORIGINS.historic+Vector2(1540,1100)
 			farm.check_walk_exits()
-			assert(farm.location=="mountain","Falls return to mountain trail")
+			assert(farm.location=="town","Shrine falls return to town")
 			farm.travel_to("town",Vector2(1100,940),false)
 		else:
 			farm.interact()

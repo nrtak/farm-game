@@ -8,6 +8,7 @@ var host
 var kind: String
 var landmarks: Texture2D
 var furniture: Texture2D
+var farm_props: Texture2D
 var grass_texture: Texture2D
 var props: Array = []
 var built_level := -1
@@ -20,6 +21,7 @@ func _ready():
 	if kind not in ["home","room"]:
 		var seasonal=ShaderMaterial.new();seasonal.shader=load("res://SeasonScenery.gdshader");material=seasonal
 		farm.season_scenery.materials.append(seasonal);seasonal.set_shader_parameter("season",float(int((farm.day-1)/28)%4))
+	farm_props=load("res://world/angled/farm-props-v2.png")
 	build_props()
 	build_horizon()
 func active() -> bool:
@@ -32,6 +34,10 @@ func prop(texture: Texture2D, index: int, rows: int, foot: Vector2, width: float
 	s.use_parent_material=true
 	var cell=Vector2(texture.get_width()/4.0,texture.get_height()/float(rows))
 	var start=Vector2(index%4,int(index/4))*cell
+	if texture==furniture:
+		# This hand-painted atlas is not an exact grid; isolate each prop's real bounds.
+		var regions=[Rect2(0,0,335,320),Rect2(360,0,245,322),Rect2(635,50,340,265),Rect2(990,45,310,270),Rect2(0,315,310,300),Rect2(330,320,320,290),Rect2(655,325,325,295),Rect2(1000,310,300,310),Rect2(0,620,325,265),Rect2(335,630,335,285),Rect2(680,610,280,300),Rect2(975,620,325,280),Rect2(0,885,375,305),Rect2(405,890,265,300),Rect2(670,895,350,295),Rect2(1020,900,280,290)]
+		start=regions[index].position;cell=regions[index].size
 	if rows==3:
 		var starts=[0.0,350.0,690.0,1086.0]
 		start.y=starts[int(index/4)];cell.y=starts[int(index/4)+1]-start.y
@@ -48,6 +54,15 @@ func prop(texture: Texture2D, index: int, rows: int, foot: Vector2, width: float
 		var wood=StyleBoxFlat.new();wood.bg_color=Color("eedbb0");wood.border_color=Color("775234");wood.set_border_width_all(3)
 		wood.content_margin_left=5;wood.content_margin_right=5;sign.add_theme_stylebox_override("normal",wood);s.add_child(sign)
 	return s
+func farm_prop(index:int,foot:Vector2,width:float):
+	var regions=[Rect2(0,0,625,630),Rect2(625,0,629,690),Rect2(0,635,625,619),Rect2(625,700,629,554)]
+	var region:Rect2=regions[index]
+	var sprite=Sprite2D.new();sprite.texture=farm_props;sprite.region_enabled=true;sprite.region_filter_clip_enabled=true;sprite.region_rect=region;sprite.centered=false
+	var ratio=width/region.size.x
+	sprite.transform=B.affine_inverse()*Transform2D(0,Vector2.ONE*ratio,0,B*foot-Vector2(width*.5,region.size.y*ratio*.96))
+	sprite.z_as_relative=false;sprite.z_index=clampi(int((B*foot).y)+1000,1,4000)
+	add_child(sprite);props.append(sprite)
+	return sprite
 func refresh_props():
 	if kind=="home" and built_level!=host.home_level:
 		for p in props:p.queue_free()
@@ -59,8 +74,22 @@ func refresh_props():
 		var bounds=Rect2(t.origin,s.region_rect.size*t.x.length())
 		s.modulate.a=.28 if not farm.sleep_in_progress and s.z_index>farm.player.z_index and bounds.intersects(Rect2(foot-Vector2(18,62),Vector2(36,62))) else 1.0
 		if kind=="room" and host.kind=="Mine" and i<host.depleted.size():s.visible=not host.depleted[i]
+		if s.has_meta("tea_index"):
+			var picked:bool=farm.tea_picked_days[s.get_meta("tea_index")]>=farm.day
+			s.self_modulate=Color("91a878") if picked else Color.WHITE
+func home_prop(index:int,foot:Vector2,width:float):
+	var texture=load("res://world/angled/home-furnishings-v3.png")
+	var regions=[Rect2(0,0,512,490),Rect2(512,0,520,490),Rect2(1045,0,491,490),Rect2(0,490,500,534),Rect2(535,530,490,450)]
+	var region:Rect2=regions[index]
+	var sprite=Sprite2D.new();sprite.texture=texture;sprite.region_enabled=true;sprite.region_filter_clip_enabled=true;sprite.region_rect=region;sprite.centered=false
+	var ratio=width/region.size.x
+	sprite.transform=B.affine_inverse()*Transform2D(0,Vector2.ONE*ratio,0,B*foot-Vector2(width*.5,region.size.y*ratio*.94))
+	sprite.z_as_relative=false;sprite.z_index=clampi(int((B*foot).y)+1000,1,4000)
+	add_child(sprite);props.append(sprite)
 func build_props():
 	if kind=="farm":
+		farm_prop(0,farm.SHIPPING_BOX,105)
+		farm_prop(1,preload("res://FarmResources.gd").WELL-Vector2(0,73),90)
 		prop(landmarks,0,3,Vector2(775,530),410,"Home")
 		prop(landmarks,1,3,Vector2(2420,415),300,"Barn")
 		for i in range(1,farm.SOLID_OUTLINES.size()):
@@ -72,10 +101,15 @@ func build_props():
 	elif kind in ["tea","harbor","mountain","historic"]:
 		var indices={"Tea Farmhouse":3,"Tea Processing Shed":2,"Fishing Shop":4,"Harbor Homes":5,"Onsen Resort":6,"Mountain Lodge":7,"Mountain Carpentry":7,"Mine":9,"Shrine Residence":8}
 		for title in Layout.doors(kind):
-			prop(landmarks,indices[title],3,Layout.doors(kind)[title]-Vector2(0,18),235 if kind=="harbor" else (260 if kind=="historic" else 215),title.replace(" Residence","").replace("Mountain ",""))
+			prop(landmarks,indices[title],3,Layout.doors(kind)[title]-Vector2(0,18),235 if kind=="harbor" else (260 if kind=="historic" else (300 if kind=="tea" else 215)),title.replace(" Residence","").replace("Mountain ",""))
 		for rect: Rect2 in Layout.scenery(kind):
 			for x in range(int(rect.position.x)+20,int(rect.end.x),100):
 				for y in range(int(rect.position.y)+20,int(rect.end.y),110):
+					if kind=="tea":
+						var obscures_road=false
+						for route in Roads.ROUTES.tea:
+							if Vector2(x,y).distance_to(Geometry2D.get_closest_point_to_segment(Vector2(x,y),route[0],route[1]))<160:obscures_road=true
+						if obscures_road:continue
 					prop(landmarks,11,3,Vector2(x,y),95)
 		# Secondary sheds are solid too: give every blocked footprint a visible structure.
 		var doors=Layout.doors(kind).values()
@@ -83,15 +117,24 @@ func build_props():
 		for i in range(doors.size(),all_buildings.size()):
 			var r:Rect2=all_buildings[i];prop(landmarks,5 if kind=="harbor" else 2,3,Vector2(r.get_center().x,r.end.y),120)
 		if kind=="historic":
+			prop(landmarks,10,3,preload("res://ShrineFalls.gd").WATERLINE,300)
 			for y in range(90,1200,145):
 				for x in range(90,1600,145):
 					var point=Vector2(x,y)
-					if x<210:continue
+					if x<210 or Rect2(730,0,670,550).has_point(point):continue
 					if Geometry2D.is_point_in_polygon(point,host.walk_outline):continue
 					var beside_path=false
 					for i in range(host.walk_outline.size()):
 						if point.distance_to(Geometry2D.get_closest_point_to_segment(point,host.walk_outline[i],host.walk_outline[(i+1)%host.walk_outline.size()]))<65:beside_path=true
 					if not beside_path and not Rect2(210,0,410,410).has_point(point):prop(landmarks,11,3,point,130)
+		if kind=="tea":
+			for x in [760,960,1160,1360]:
+				for y in [810,920,1030]:
+					var p=Vector2(x,y);var beside_harvest=false
+					for spot in farm.TEA_SPOTS:
+						if p.distance_to(spot)<110:beside_harvest=true
+					if not beside_harvest:farm_prop(3,p,78)
+			for i in range(farm.TEA_SPOTS.size()):farm_prop(3,farm.TEA_SPOTS[i],78).set_meta("tea_index",i)
 	elif kind=="waterfall":
 		prop(landmarks,10,3,Vector2(800,485),410)
 		for y in range(200,1300,140):
@@ -105,14 +148,19 @@ func build_props():
 		if kind=="home":
 			solid_list.assign(host.SOLIDS);solid_list.append_array(preload("res://HomeExpansion.gd").solids(host.home_level))
 			choices=[0,3,2,4,1];built_level=host.home_level
+			home_prop(0,Vector2(host.BED.get_center().x,host.BED.end.y),145)
+			home_prop(1,Vector2(host.TABLE.get_center().x,host.TABLE.end.y),125)
+			home_prop(2,Vector2(570,265),95)
+			home_prop(3,Vector2(185,285),75)
+			home_prop(4,Vector2(host.CHEST.get_center().x,host.CHEST.end.y),85)
 		else:
 			solid_list.assign(host.solids)
 			choices={"General Store":[2,5,5,1],"Blacksmith":[6,7,6],"Carpentry":[6,6,1],"Mountain Carpentry":[6,6,1],"Clinic":[9,8,8],"Veterinarian":[8,1,9],"Ranch":[12,12,2],"Barn":[12],"Mine":[14],"Archive":[1],"Shrine Residence":[13,1,3],"Tea Processing Shed":[11],"Tea Farmhouse":[11,3,1],"Café":[2,3,4],"Restaurant":[3,3,4],"Police Box":[9,1],"Fire Station":[10,9],"Town Hall":[9,1],"Greenhouse":[5,15],"Upper Floor":[0,1,3]}.get(host.kind,[2,0,3,1])
 		for i in range(solid_list.size()):
-			if kind=="home" and i in [2,3]:continue
+			if kind=="home" and i<5:continue
 			var r: Rect2=solid_list[i]
 			var foot=Vector2(r.get_center().x,r.end.y)
-			var width=clampf((r.size.x*.62+r.size.y*.42),70,220)
+			var width=clampf((r.size.x*.46+r.size.y*.28),55,150)
 			prop(furniture,choices[i%choices.size()],4,foot,width)
 func build_horizon():
 	# Continue the scenery past the navigation bounds; never put new solids in a road.
@@ -208,6 +256,8 @@ func _draw():
 		road(Vector2(800,1240),Vector2(800,580),230)
 	elif kind=="road":road(Vector2(500,40),Vector2(500,960),250)
 	for route in Roads.ROUTES.get(kind,[]):road(route[0],route[1],180)
+	# Continue the exit scenery beyond the trigger without advertising an out-of-bounds route.
+	if kind=="tea":road(Vector2(-800,675),Vector2(180,675),180)
 	for door: Vector2 in Layout.doors(kind).values():
 		var best=door+Vector2(0,120);var distance=INF
 		for route in Roads.ROUTES.get(kind,[]):
@@ -224,33 +274,17 @@ func _draw():
 			draw_line(host.fishing_spot,bob,Color("f1ead2"),2)
 			draw_circle(bob,8,Color("cf6d53") if host.fishing_state==1 else Color("ffe18c"))
 			if host.fishing_state==2:draw_circle(bob,20,Color("ffe18c"),false,4)
-	if kind=="tea":
-		for x in [850,990,1130,1320,1460]:
-			for y in range(800,1070,75):
-				draw_rect(Rect2(x-30,y-22,60,44),Color("958258"))
-				for dx in [-17,0,17]:
-					draw_circle(Vector2(x+dx,y),18,Color("50783c"));draw_circle(Vector2(x+dx-3,y-6),11,Color("70944c"))
-		for i in range(farm.TEA_SPOTS.size()):
-			var spot:Vector2=farm.TEA_SPOTS[i]
-			draw_circle(spot,26,Color("998358"))
-			for dx in [-10,10]:draw_circle(spot+Vector2(dx,-4),12,Color("79985a") if farm.tea_picked_days[i]<farm.day else Color("5b7549"))
 	if kind=="farm":
 		road(Vector2(1485,140),Vector2(1485,530),140)
 		road(Vector2(775,550),Vector2(1485,550),140)
 		road(Vector2(775,550),Vector2(850,1430),130)
 		water(farm.world_outline(farm.SOLID_OUTLINES[8]))
-		# The well occupies the existing blocked footprint beside its interaction point.
-		var p=Vector2(530,915)
-		draw_set_transform_matrix(B.affine_inverse()*Transform2D(0,B*p))
-		draw_circle(Vector2.ZERO,35,Color("827f6e"));draw_circle(Vector2(0,-10),29,Color("b9b7a0"));draw_circle(Vector2(0,-13),21,Color("496a70"))
-		for x in [-29,29]:draw_line(Vector2(x,0),Vector2(x,-75),Color("816343"),7)
-		draw_colored_polygon(PackedVector2Array([Vector2(-48,-68),Vector2(0,-95),Vector2(48,-68)]),Color("867453"))
-		draw_set_transform_matrix(Transform2D.IDENTITY)
+		road(Vector2(1020,620),Vector2(1490,620),100)
 		for plot in farm.plots:draw_rect(Rect2(plot.position-Vector2(34,34),Vector2(68,68)),Color("a78657"))
 	var signs={"farm":[Vector2(1550,240),"Town"],"harbor":[Vector2(1450,580),"Town · East"],"tea":[Vector2(160,600),"Highlands · West"],"historic":[Vector2(1390,1040),"Town"],"mountain":[Vector2(900,1040),"Town · South"],"waterfall":[Vector2(900,1090),"Mountain trail"]}
 	if kind=="mountain":
 		draw_sign(Vector2(1080,1030),"Tea Country")
-		draw_sign(Vector2(1440,710),"Waterfall")
+	if kind=="historic":draw_sign(Vector2(1100,690),"Moonveil Falls")
 	if signs.has(kind):draw_sign(signs[kind][0],signs[kind][1])
 func draw_room():
 	var floor_rect:Rect2=host.FLOOR if kind=="home" else Rect2(110,170,880,620)
@@ -260,13 +294,20 @@ func draw_room():
 	draw_rect(floor_rect,Color(colors.get(name,"c6ad89")))
 	for y in range(int(floor_rect.position.y),int(floor_rect.end.y),42):draw_line(Vector2(floor_rect.position.x,y),Vector2(floor_rect.end.x,y),Color(0.3,.25,.20,.16),2)
 	for x in range(int(floor_rect.position.x),int(floor_rect.end.x),105):draw_line(Vector2(x,floor_rect.position.y),Vector2(x,floor_rect.end.y),Color(0.3,.25,.20,.10),1)
+	if kind=="home":
+		var rug=host.BED.grow(10)
+		draw_rect(rug,Color("8faeae"));draw_rect(rug.grow(-5),Color("c8d4c5"),false,3)
+		var mat=host.TABLE.grow(18)
+		draw_rect(mat,Color("b69a72"));draw_rect(mat.grow(-7),Color("d3be96"),false,3)
 	var rise=B.affine_inverse()*Vector2(0,-100)
 	var a=floor_rect.position;var b=Vector2(floor_rect.end.x,a.y);var c=Vector2(a.x,floor_rect.end.y)
 	draw_colored_polygon(PackedVector2Array([a,b,b+rise,a+rise]),Color("dfd4b9"))
 	draw_colored_polygon(PackedVector2Array([a,c,c+rise,a+rise]),Color("b9b899"))
 	draw_polyline(PackedVector2Array([c+rise,a+rise,b+rise]),Color("6c614f"),8,true)
 	var exit_point:Vector2=host.EXIT if kind=="home" else Vector2(550,780)
-	draw_rect(Rect2(exit_point-Vector2(65,40),Vector2(130,40)),Color("809784"))
+	draw_rect(Rect2(exit_point-Vector2(65,40),Vector2(130,40)),Color("b99965"))
+	draw_rect(Rect2(exit_point-Vector2(65,40),Vector2(130,40)),Color("8c714d"),false,2)
+	for n in range(1,6):draw_line(exit_point+Vector2(-65+n*22,-36),exit_point+Vector2(-65+n*22,-4),Color("c9ad79"),3)
 	if name=="Greenhouse":
 		for bed in preload("res://FarmBuildings.gd").greenhouse(farm):
 			var p=Vector2(bed.position[0],bed.position[1]);draw_rect(Rect2(p-Vector2(43,36),Vector2(86,72)),Color("93704a"))
@@ -274,19 +315,6 @@ func draw_room():
 				draw_circle(p,16,Color("6e9951"))
 				if bed.stage==3:draw_circle(p,10,Color(farm.CROPS[bed.crop].color))
 	if kind=="home":
-		draw_set_transform_matrix(B.affine_inverse()*Transform2D(0,B*Vector2(185,280)))
-		draw_rect(Rect2(-45,-65,90,60),Color("725640"));draw_rect(Rect2(-38,-59,65,45),Color("607f83"))
-		draw_circle(Vector2(-18,-43),10,Color("efd078"));draw_line(Vector2(-42,-5),Vector2(-45,8),Color("493e34"),5)
-		draw_line(Vector2(42,-5),Vector2(45,8),Color("493e34"),5)
-		draw_set_transform_matrix(Transform2D.IDENTITY)
-		var chest:Rect2=host.CHEST
-		var up=B.affine_inverse()*Vector2(0,-28)
-		var corners=PackedVector2Array([chest.position,Vector2(chest.end.x,chest.position.y),chest.end,Vector2(chest.position.x,chest.end.y)])
-		draw_colored_polygon(corners,Color("87623e"))
-		var lid=PackedVector2Array()
-		for p in corners:lid.append(p+up)
-		draw_colored_polygon(lid,Color("b28c59"));lid.append(lid[0]);draw_polyline(lid,Color("755335"),3,true)
-		for x in [chest.position.x+26,chest.end.x-26]:draw_line(Vector2(x,chest.position.y)+up,Vector2(x,chest.end.y)+up,Color("6f725f"),7)
 		for level in range(host.home_level):
 			var x=910+level*220
 			for wall in [Rect2(x,230,10,300),Rect2(x,630,10,90)]:draw_rect(wall,Color("816c50"))

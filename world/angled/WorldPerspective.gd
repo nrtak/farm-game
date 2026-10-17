@@ -1,6 +1,7 @@
 extends Node2D
 # Presentation projection only: physics, saved positions and quest destinations stay in world units.
 const BASIS = Transform2D(Vector2(0.558,-0.207),Vector2(0.378,0.315),Vector2.ZERO)
+const TOWN_ZOOM = 1.9
 var farm
 var layers: Array = []
 var actor_roots: Array = []
@@ -41,7 +42,7 @@ func _process(_delta):
 		var row:int=int(frame/4)
 		var index=(3 if row==1 else row)*4+frame%4
 		index=clampi(index,0,farm.side_offsets.size()-1)
-		var actor_scale=.50 if farm.inside_house or farm.location=="shop" else .35
+		var actor_scale=.50 if farm.inside_house or farm.location=="shop" else .38
 		var offset:Vector2=farm.side_offsets[index]*farm.front_scale*actor_scale
 		if farm.farmer.flip_h:offset.x*=-1
 		farm.farmer.transform=BASIS.affine_inverse()*Transform2D(0,Vector2.ONE*farm.front_scale*actor_scale,0,offset)
@@ -56,7 +57,7 @@ func _process(_delta):
 		farm.farmer.position=farm.side_offsets[index]*farm.front_scale*.35
 		if farm.farmer.flip_h:farm.farmer.position.x*=-1
 		farm.farmer.scale=Vector2.ONE*farm.front_scale*.35
-		if not farm.festival_active:farm.camera.zoom=Vector2.ONE*1.7
+		if not farm.festival_active:farm.camera.zoom=Vector2.ONE*TOWN_ZOOM
 		farm.player.z_index=clampi(int((farm.player.position-farm.TOWN_ORIGIN).y/10),1,4000)
 		farm.camera.force_update_scroll()
 	if farm.item_moment.visible:

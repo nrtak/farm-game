@@ -8,7 +8,7 @@ func run() -> void:
 	f.choose_character("boy")
 	f.interior_progress.story={"intro":true}
 	f.clock_minutes=800
-	f.travel_to("farm",f.SHIPPING_BOX+Vector2(0,100),false)
+	f.travel_to("farm",f.SHIPPING_BOX+Vector2(0,50),false)
 	assert(f.is_walkable(f.player.position),"Shipping approach clear")
 	f.produce.Turnip=2
 	f.ore_basket.Iron=1

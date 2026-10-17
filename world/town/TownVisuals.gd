@@ -62,7 +62,7 @@ func place_building(b:Array):
  if b[0] in ["Library","Vet","Fire"]:
   var material=ShaderMaterial.new();material.shader=preload("res://world/town/AtlasBounds.gdshader")
   material.set_shader_parameter("clipping_shape",{"Library":1,"Vet":2,"Fire":3}[b[0]]);sprite.material=material
- var scale_factor=220.0/a[1].size.x
+ var scale_factor=(300.0 if b[5]=="W" else 250.0)/a[1].size.x
  var anchor:Vector2=a[2]
  if a[3]:sprite.flip_h=true;anchor.x=a[1].size.x-anchor.x
  sprite.scale=Vector2.ONE*scale_factor;sprite.position=G.project(G.door(b))-anchor*scale_factor

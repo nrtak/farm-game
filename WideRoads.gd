@@ -1,10 +1,10 @@
 extends RefCounted
 const ROUTES:={
 "town":[[Vector2(495,1260),Vector2(495,1350)],[Vector2(2105,560),Vector2(2105,800)],[Vector2(330,805),Vector2(1100,805)],[Vector2(1100,940),Vector2(1650,940)],[Vector2(500,1350),Vector2(2080,1350)]],
-"mountain":[[Vector2(960,1090),Vector2(960,760)],[Vector2(830,1080),Vector2(830,540)],[Vector2(600,550),Vector2(1240,550)],[Vector2(830,760),Vector2(1530,760)]],
-"tea":[[Vector2(70,675),Vector2(1520,675)],[Vector2(453,675),Vector2(453,380)],[Vector2(860,720),Vector2(860,1040)],[Vector2(1333,720),Vector2(1333,1010)]],
+"mountain":[[Vector2(960,1090),Vector2(960,760)],[Vector2(830,1080),Vector2(830,540)],[Vector2(600,550),Vector2(1240,550)],[Vector2(830,760),Vector2(1450,760)]],
+"tea":[[Vector2(70,675),Vector2(1520,675)],[Vector2(1280,675),Vector2(1280,350)],[Vector2(860,720),Vector2(860,1040)],[Vector2(1333,720),Vector2(1333,1010)]],
 "harbor":[[Vector2(500,660),Vector2(1540,660)],[Vector2(660,430),Vector2(660,660)],[Vector2(1080,430),Vector2(1080,660)],[Vector2(1480,585),Vector2(1480,660)]],
-"historic":[[Vector2(406,363),Vector2(406,700)],[Vector2(406,700),Vector2(1460,700)],[Vector2(1460,700),Vector2(1460,1100)],[Vector2(1460,1100),Vector2(1550,1100)]],
+"historic":[[Vector2(1050,700),Vector2(1050,540)],[Vector2(406,363),Vector2(406,700)],[Vector2(406,700),Vector2(1460,700)],[Vector2(1460,700),Vector2(1460,1100)],[Vector2(1460,1100),Vector2(1550,1100)]],
 "farm":[[Vector2(1485,240),Vector2(1485,530)],[Vector2(1485,530),Vector2(2400,530)],[Vector2(850,700),Vector2(850,1430)]]}
 static func clearances(kind: String) -> Array[Rect2]:
 	var result: Array[Rect2]=[]

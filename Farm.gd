@@ -3,7 +3,7 @@ extends Node2D
 const WORLD := Vector2(3000, 2000)
 const GROW_SECONDS := 12.0 # Legacy save compatibility only.
 const CROPS := {"Turnip": {"days": 2, "pack": 25, "sale": 20, "color": "e6dac0"}, "Potato": {"days": 3, "pack": 40, "sale": 35, "color": "c39e72"}, "Strawberry": {"days": 4, "pack": 60, "sale": 55, "color": "bf7868"}}
-const SHIPPING_BOX := Vector2(370, 650)
+const SHIPPING_BOX := Vector2(1200, 600)
 const BARN_DOOR := Vector2(2420, 435)
 var resources: Node2D
 var selected_crop := "Turnip"
@@ -51,7 +51,7 @@ var fishing_active := false
 var fishing_elapsed := 0.0
 var fish_catches := 0
 var fishing_quest_stage := 0
-const REGIONAL_ROOMS := {"Onsen Resort":["mountain",Vector2(615,445)],"Mountain Lodge":["mountain",Vector2(1073,480)],"Mountain Carpentry":["mountain",Vector2(1427,715)],"Mine":["mountain",Vector2(1380,205)],"Tea Farmhouse":["tea",Vector2(453,330)],"Tea Processing Shed":["tea",Vector2(1042,630)],"Fishing Shop":["harbor",Vector2(660,430)],"Harbor Homes":["harbor",Vector2(1080,430)],"Shrine Residence":["historic",Vector2(406,363)]}
+const REGIONAL_ROOMS := {"Onsen Resort":["mountain",Vector2(615,445)],"Mountain Lodge":["mountain",Vector2(1073,480)],"Mountain Carpentry":["mountain",Vector2(1427,715)],"Mine":["mountain",Vector2(1380,205)],"Tea Farmhouse":["tea",Vector2(1440,350)],"Tea Processing Shed":["tea",Vector2(1440,650)],"Fishing Shop":["harbor",Vector2(660,430)],"Harbor Homes":["harbor",Vector2(1080,430)],"Shrine Residence":["historic",Vector2(406,363)]}
 var quest_label: Label
 var hud_elapsed := 0.0
 var draw_elapsed := 0.0
@@ -139,7 +139,7 @@ const SOLID_OUTLINES := [
     [Vector2(1435,90),Vector2(1536,90),Vector2(1536,1024),Vector2(1410,1024),Vector2(1430,930),Vector2(1400,720),Vector2(1425,550)],
     [Vector2(0,960),Vector2(1536,960),Vector2(1536,1024),Vector2(0,1024)],
     [Vector2(1140,115),Vector2(1220,60),Vector2(1310,105),Vector2(1310,204),Vector2(1140,204)],
-    [Vector2(225,385),Vector2(290,385),Vector2(295,475),Vector2(225,475)],
+    [Vector2(690,245),Vector2(730,245),Vector2(730,275),Vector2(690,275)],
     [Vector2(1130,795),Vector2(1180,740),Vector2(1330,725),Vector2(1440,770),Vector2(1440,905),Vector2(1290,940),Vector2(1150,915)]
 ]
 const JoystickScript = preload("res://Joystick.gd")
@@ -681,8 +681,8 @@ func _physics_process(delta: float) -> void:
 func interaction_action() -> String:
 	if preload("res://AnimalPasture.gd").nearest(self)>=0: return "pasture_care"
 	if location=="farm" and not inside_house and preload("res://AnimalPasture.gd").BOUNDS.has_point(player.position): return "pasture_board"
-	if location=="waterfall": return "falls"
-	if location=="farm" and not inside_house and player.position.distance_to(SHIPPING_BOX)<210: return "shipping"
+	if preload("res://ShrineFalls.gd").nearby(self): return "falls"
+	if location=="farm" and not inside_house and player.position.distance_to(SHIPPING_BOX)<125 and player.position.y<660: return "shipping"
 	if location == "farm" and interior_progress.get("greenhouse",false) and player.position.distance_to(FarmBuildings.GREENHOUSE_DOOR)<90: return "greenhouse_enter"
 	if inside_house and interior_progress.get("second_story",false) and (player.position-ROOM_ORIGIN).distance_to(FarmBuildings.STAIRS)<75: return "stairs"
 	if location == "shop" and shop_name=="Greenhouse": return "greenhouse_bed"
@@ -705,7 +705,7 @@ func interaction_action() -> String:
 	if location == "harbor":
 		for spot in FISHING_SPOTS:
 			if (player.position - REGION_ORIGINS.harbor).distance_to(spot) < 70: return "fish"
-	if location == "farm" and player.position.distance_to(SHIPPING_BOX) < 170: return "shipping"
+	if location == "farm" and player.position.distance_to(SHIPPING_BOX) < 125 and player.position.y<660: return "shipping"
 	if location == "shop":
 		if shop_name == "Mine":
 			for spot in MINE_SPOTS:
@@ -863,7 +863,7 @@ func refresh_hud() -> void:
 			elif location == "shop": hint = "Approach copper or iron rocks to mine. Walk south toward daylight to leave." if shop_name=="Mine" else "Talk to residents or use the counter. Walk through the south door to leave."
 			elif location == "road": hint = "Town to the north · Farm to the south. Push farther or hold Shift to run."
 			elif location == "town": hint = "Approach a resident to talk, or a shop door to visit."
-			elif location=="waterfall": hint="Moonveil Falls · A quiet clearing. Return south to the mountain trail."
+			elif preload("res://ShrineFalls.gd").nearby(self): hint="Moonveil Falls · Follow the garden path west to the shrine."
 			elif regions.has(location): hint = "Meet the residents or approach a building doorway to visit."
 	if is_rainy_day() and not inside_house and location != "shop": hint = "Rain · " + hint
 	message_label.text = hint if fishing_active else (toast if toast_time > 0 else hint)
@@ -873,7 +873,7 @@ func refresh_hud() -> void:
 	var pinned:String=preload("res://PlayerComfort.gd").settings(self).get("pin","")
 	if not pinned.is_empty():
 		quest_label.text=pinned;quest_label.visible=not dialogue_open
-	if location=="waterfall" and not dialogue_open:
+	if preload("res://ShrineFalls.gd").nearby(self) and not dialogue_open:
 		action_button.text="Listen";action_button.visible=true;action_button.disabled=false
 
 func set_location(indoors: bool, destination: Vector2) -> void:
@@ -1001,7 +1001,7 @@ func interact() -> void:
 		advance_dialogue()
 		return
 	if choosing_character or confirming_sleep or sleep_in_progress or paused_by_player or not window_focused: return
-	if location=="waterfall":
+	if preload("res://ShrineFalls.gd").nearby(self):
 		preload("res://VillageDepth.gd").waterfall(self);return
 	if WeatherLife.forecast(day) == "Hurricane" and interaction_action() != "sleep":
 		say("Hurricane: rest in bed until tomorrow.")
@@ -1435,25 +1435,26 @@ func _draw() -> void:
 	if location != "farm": return
 	if interior_progress.get("greenhouse",false):
 		preload("res://EntrancePaths.gd").draw_path(self,PackedVector2Array([FarmBuildings.GREENHOUSE_DOOR,Vector2(780,1620),Vector2(920,1650)]),120)
-	draw_set_transform(SHIPPING_BOX,0,Vector2.ONE*2.4)
-	crop_oval(Vector2.ZERO + Vector2(0, 32), Vector2(48, 12), Color(0.15, 0.18, 0.12, 0.25))
-	draw_rect(Rect2(Vector2.ZERO + Vector2(-42, -16), Vector2(84, 48)), Color("896748"))
-	draw_colored_polygon(PackedVector2Array([Vector2.ZERO + Vector2(-42, -16), Vector2.ZERO + Vector2(-30, -36), Vector2.ZERO + Vector2(52, -36), Vector2.ZERO + Vector2(42, -16)]), Color("c1a16e"))
-	draw_rect(Rect2(Vector2.ZERO + Vector2(-30, -26), Vector2(58, 7)), Color("594b38"))
-	for x in [-33, 31]: draw_rect(Rect2(Vector2.ZERO + Vector2(x, -15), Vector2(6, 46)), Color("c1a16e"))
-	draw_rect(Rect2(Vector2.ZERO + Vector2(-14, -6), Vector2(28, 26)), Color("e6dac0"))
-	draw_line(Vector2.ZERO + Vector2(-7, 8), Vector2.ZERO + Vector2(7, 8), Color("687e56"), 4)
-	draw_line(Vector2.ZERO + Vector2(2, 2), Vector2.ZERO + Vector2(8, 8), Color("687e56"), 4)
-	var queued := 0
-	for count in shipping_queue.values(): queued += int(count)
-	for count in fish_shipping.values(): queued += int(count)
-	queued += tea_shipping
-	for count in ore_shipping.values(): queued += int(count)
-	if queued > 0: draw_circle(Vector2.ZERO + Vector2(43, -30), 7, Color("e5cb85"))
-	for y in [-3,10,24]: draw_line(Vector2(-30,y),Vector2(30,y),Color("705239"),1.5)
-	draw_style_box(parchment(),Rect2(-42,42,92,22))
-	draw_string(ThemeDB.fallback_font,Vector2(-34,59),"Shipping",HORIZONTAL_ALIGNMENT_LEFT,-1,15,Color("493b2d"))
-	draw_set_transform(Vector2.ZERO,0,Vector2.ONE)
+	if not has_meta("angled_world"):
+		draw_set_transform(SHIPPING_BOX,0,Vector2.ONE*2.4)
+		crop_oval(Vector2.ZERO + Vector2(0, 32), Vector2(48, 12), Color(0.15, 0.18, 0.12, 0.25))
+		draw_rect(Rect2(Vector2.ZERO + Vector2(-42, -16), Vector2(84, 48)), Color("896748"))
+		draw_colored_polygon(PackedVector2Array([Vector2.ZERO + Vector2(-42, -16), Vector2.ZERO + Vector2(-30, -36), Vector2.ZERO + Vector2(52, -36), Vector2.ZERO + Vector2(42, -16)]), Color("c1a16e"))
+		draw_rect(Rect2(Vector2.ZERO + Vector2(-30, -26), Vector2(58, 7)), Color("594b38"))
+		for x in [-33, 31]: draw_rect(Rect2(Vector2.ZERO + Vector2(x, -15), Vector2(6, 46)), Color("c1a16e"))
+		draw_rect(Rect2(Vector2.ZERO + Vector2(-14, -6), Vector2(28, 26)), Color("e6dac0"))
+		draw_line(Vector2.ZERO + Vector2(-7, 8), Vector2.ZERO + Vector2(7, 8), Color("687e56"), 4)
+		draw_line(Vector2.ZERO + Vector2(2, 2), Vector2.ZERO + Vector2(8, 8), Color("687e56"), 4)
+		var queued := 0
+		for count in shipping_queue.values(): queued += int(count)
+		for count in fish_shipping.values(): queued += int(count)
+		queued += tea_shipping
+		for count in ore_shipping.values(): queued += int(count)
+		if queued > 0: draw_circle(Vector2.ZERO + Vector2(43, -30), 7, Color("e5cb85"))
+		for y in [-3,10,24]: draw_line(Vector2(-30,y),Vector2(30,y),Color("705239"),1.5)
+		draw_style_box(parchment(),Rect2(-42,42,92,22))
+		draw_string(ThemeDB.fallback_font,Vector2(-34,59),"Shipping",HORIZONTAL_ALIGNMENT_LEFT,-1,15,Color("493b2d"))
+		draw_set_transform(Vector2.ZERO,0,Vector2.ONE)
 	if interior_progress.has("construction"):
 		draw_rect(Rect2(650,1020,150,65),Color("ead8af"))
 		draw_string(ThemeDB.fallback_font,Vector2(660,1048),"Kenta's work",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color("614b36"))
@@ -1520,6 +1521,9 @@ func travel_to(area: String, point: Vector2, persist: bool = true) -> void:
 	if is_instance_valid(polish): polish.path.clear()
 	clear_item_moment()
 	stop_fishing()
+	# Old waterfall saves and callers migrate into the shared shrine grounds.
+	if area=="waterfall":
+		area="historic";point=preload("res://ShrineFalls.gd").APPROACH
 	# Migrate earlier saves from the removed connecting road.
 	if area == "road":
 		travel_to("town", town.design(Vector2(1200,2000)), persist)
@@ -1560,7 +1564,7 @@ func travel_to(area: String, point: Vector2, persist: bool = true) -> void:
 	joystick.reset_stick()
 	nearest = -1
 	update_walk(0.0, false, Vector2.UP)
-	say("Moonveil Falls. Follow the dry clearing; return south to the mountain trail." if area=="waterfall" else "Town · Shops and neighbors." if area == "town" else ("South Road. Town north, family farm south." if area == "road" else ("Highlands. Tea Country branches east at the southern trail; mine north, onsen west, waterfall east." if area=="mountain" else "Welcome to "+str(area).capitalize()+"." )))
+	say("Shrine Grounds. Follow the garden path east to Moonveil Falls." if area=="historic" else "Town · Shops and neighbors." if area == "town" else ("South Road. Town north, family farm south." if area == "road" else ("Highlands. Tea Country branches east at the southern trail; mine north and onsen west. Moonveil Falls is now beside the shrine." if area=="mountain" else "Welcome to "+str(area).capitalize()+"." )))
 	refresh_hud()
 	queue_redraw()
 	if persist: save_game(false)
@@ -2196,17 +2200,11 @@ func check_walk_exits() -> void:
 			if regions.has(location):
 				var point: Vector2 = player.position - REGION_ORIGINS[location]
 				if location=="mountain" and point.distance_to(Vector2(960,1090))<55:
-					travel_to("tea",Vector2(140,665))
+					travel_to("tea",Vector2(270,675))
 					return
-				if location=="mountain" and point.x>1480 and absf(point.y-760)<65:
-					travel_to("waterfall",Vector2(800,1040))
-					return
-				if location=="waterfall" and point.y>1120 and absf(point.x-800)<150:
-					travel_to("mountain",Vector2(1420,760))
-					return
-				if ((location=="harbor" and point.x>1520 and absf(point.y-585)<120) or (location=="tea" and point.x<75 and absf(point.y-665)<120) or (location=="historic" and point.x>1520 and point.y>1070) or (location=="mountain" and point.y>1120 and absf(point.x-800)<100)):
+				if ((location=="harbor" and point.x>1520 and absf(point.y-585)<120) or (location=="tea" and point.x<180 and absf(point.y-675)<95) or (location=="historic" and point.x>1520 and point.y>1070) or (location=="mountain" and point.y>1120 and absf(point.x-800)<100)):
 					if location=="tea":
-						travel_to("mountain",regions.mountain.safe_point(Vector2(940,1040)))
+						travel_to("mountain",regions.mountain.safe_point(Vector2(960,950)))
 						return
 					travel_to("town", town.arrival(location))
 
@@ -2214,7 +2212,7 @@ func open_map() -> void:
 	if choosing_character or confirming_sleep or sleep_in_progress or dialogue_open: return
 	var column := make_modal("Walking Routes")
 	dialogue_panel.get_child(0).offset_top = -340
-	dialogue_text.text = "Farm → Town walkway → Main Town.\n\nFrom town: north to the Highlands (mountains, tea country, mine, onsen and waterfall); west to the Harbor; northwest through the large torii to Shrine Grounds.\n\nHarbor: return east toward town. Tea Country: return west to the Highlands. Shrine Grounds: return southeast. Mountains: return south; follow the eastern trail to Moonveil Falls. Walk through doors and gateways to change areas automatically. The library is beside Town Hall. Follow the signed tea trail in the Highlands arrival clearing."
+	dialogue_text.text = "Farm → Town walkway → Main Town.\n\nFrom town: north to the Highlands (mountains, tea country, mine and onsen); west to the Harbor; northwest through the large torii to Shrine Grounds and Moonveil Falls.\n\nHarbor: return east toward town. Tea Country: return west to the Highlands. Shrine Grounds: return southeast. Mountains: return south. Moonveil Falls shares the Shrine Grounds; follow the garden path east of the shrine. Walk through doors and gateways to change areas automatically. The library is beside Town Hall. Follow the signed tea trail in the Highlands arrival clearing."
 	column.add_child(make_button("Close", close_dialogue))
 
 func open_guide() -> void:
@@ -2222,7 +2220,7 @@ func open_guide() -> void:
 	var revision: Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://data/build_info.json"))
 	var column := make_modal("Tea Blossom Hills · Build "+str(revision.build)+" · "+str(revision.content))
 	dialogue_panel.get_child(0).offset_top = -380
-	dialogue_text.text = "Move with arrows/WASD or the joystick. Hold Shift, or push the joystick farther, to run.\n\nChoose seeds → Plant → Water daily → Sleep → Harvest → Shipping box. Sleep in the house to recover Health.\n\nWalk onto the Town walkway on the farm to enter town directly. All marked region exits work by walking through them; Routes shows directions. Visit the store for seeds, the forge for an upgrade, and the café for meals.\n\nTown exits: Highlands north (mountains, tea country, mine, onsen and waterfall), harbor west, shrine northwest, farm south. The plaza Events board previews scenes and the festival."
+	dialogue_text.text = "Move with arrows/WASD or the joystick. Hold Shift, or push the joystick farther, to run.\n\nChoose seeds → Plant → Water daily → Sleep → Harvest → Shipping box. Sleep in the house to recover Health.\n\nWalk onto the Town walkway on the farm to enter town directly. All marked region exits work by walking through them; Routes shows directions. Visit the store for seeds, the forge for an upgrade, and the café for meals.\n\nTown exits: Highlands north (mountains, tea country, mine and onsen), harbor west, shrine northwest, farm south. The plaza Events board previews scenes and the festival."
 	dialogue_text.add_theme_font_size_override("font_size", 18)
 	preload("res://PlayerComfort.gd").scroll_text(self,column)
 	column.add_child(make_button("Music & sound",preload("res://GameAudio.gd").menu.bind(self)))

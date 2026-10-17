@@ -39,7 +39,7 @@ func setup(f) -> void:
 	apply_volumes()
 static func theme(f) -> String:
 	if f.inside_house or f.location=="shop": return "interior"
-	if f.location=="waterfall": return "falls"
+	if preload("res://ShrineFalls.gd").nearby(f): return "falls"
 	if f.is_rainy_day(): return "rain"
 	if f.clock_minutes>=1140 or f.clock_minutes<360: return "night"
 	if f.location=="farm": return "farm"

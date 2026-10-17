@@ -81,7 +81,7 @@ static func waterfall(f) -> void:
 static func accept_falls(f) -> void:
 	state(f).falls=2;f.save_game(false);f.close_dialogue();f.say("Request accepted: bring one packet of tea to Moonveil Falls.")
 static func finish_falls(f) -> void:
-	if f.location!="waterfall" or int(state(f).get("falls",0))!=2: return
+	if not preload("res://ShrineFalls.gd").nearby(f) or int(state(f).get("falls",0))!=2: return
 	if f.packed_tea<1: f.dialogue_text.text="Bring one packet of tea. You can pack two handfuls of leaves at the tea shed.";return
 	f.packed_tea-=1;state(f).falls=3;state(f).keepsakes["Spring keeper's charm"]=true
 	f.save_game(false);f.dialogue_text.text="The tea dissolves into a ring of light. 'May your home always welcome life.' A small spring charm rests on the dry shore. It has been added to your keepsakes."

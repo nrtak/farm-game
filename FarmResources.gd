@@ -1,6 +1,6 @@
 extends Node2D
 
-const WELL := Vector2(530, 970)
+const WELL := Vector2(1390, 610)
 const WATER_CAPACITY := 24
 const WOOD_SPOTS := {"farm": [Vector2(350,1400),Vector2(650,1640),Vector2(1950,1640),Vector2(850,700)], "mountain": [Vector2(620,670),Vector2(1030,740),Vector2(880,970)]}
 var farm
@@ -37,7 +37,7 @@ func wood_index() -> int:
 		if farm.player.position.distance_to(origin+WOOD_SPOTS[farm.location][i]) < 90: return i
 	return -1
 func interaction() -> String:
-	if farm.location == "farm" and not farm.inside_house and farm.player.position.distance_to(WELL) < 95: return "refill_water"
+	if farm.location == "farm" and not farm.inside_house and farm.player.position.distance_to(WELL) < 95 and farm.player.position.y<675: return "refill_water"
 	return "chop_wood" if wood_index() >= 0 else ""
 func refill() -> void:
 	state().water = WATER_CAPACITY
