@@ -56,7 +56,7 @@ func _process(_delta):
 		farm.farmer.position=farm.side_offsets[index]*farm.front_scale*.35
 		if farm.farmer.flip_h:farm.farmer.position.x*=-1
 		farm.farmer.scale=Vector2.ONE*farm.front_scale*.35
-		farm.camera.zoom=Vector2.ONE*1.7
+		if not farm.festival_active:farm.camera.zoom=Vector2.ONE*1.7
 		farm.player.z_index=clampi(int((farm.player.position-farm.TOWN_ORIGIN).y/10),1,4000)
 		farm.camera.force_update_scroll()
 	if farm.item_moment.visible:

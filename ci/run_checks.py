@@ -4,7 +4,7 @@ root = Path(__file__).resolve().parents[1]
 override = root / "override.cfg"
 previous = override.read_bytes() if override.exists() else None
 checks = ["town_integration", "town_connected_walk", "world_smoke", "farming_loop", "fishing", "tea", "mining", "item_moment", "backpack", "storage", "upgrades_weather", "calendar", "routines", "ambient", "progression", "stewardship", "polish", "farm_systems", "region_layout", "daily_polish", "walk_feedback", "home_recovery", "runtime_art", "layout_feedback", "movement_recovery", "open_regions", "feedback_release", "tea_tasting", "door_routes", "town_interiors", "town_activities", "player_feedback", "world_comfort", "indoor_clock", "expansion_fifty", "save_soak", "game_audio", "ranch_services", "everyday_life", "year_cycle", "farm_dog", "story_arc", "home_weather", "recipe_book", "home_expansion", "construction_journal", "everyday_controls", "visual_cues"]
-checks[:0] = ["angled_world", "angled_world_regressions", "phone_feedback"]
+checks[:0] = ["deep_review", "angled_world", "angled_world_regressions", "phone_feedback"]
 try:
     start = os.environ.get("FARM_CHECK_START", "")
     if start:

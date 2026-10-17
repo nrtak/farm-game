@@ -25,7 +25,7 @@ func _process(_delta):
 	if action=="talk":npc=f.town.nearest_npc(f.player.position-f.TOWN_ORIGIN)
 	elif action=="talk_region":npc=f.regions[f.location].nearest_npc(f.player.position-f.REGION_ORIGINS[f.location])
 	elif action=="talk_shop":npc=f.shops[f.shop_name].nearest_resident(f.player.position-f.SHOP_ORIGIN)
-	speech.visible=is_instance_valid(npc) and not f.dialogue_open and not f.choosing_character
+	speech.visible=is_instance_valid(npc) and not f.dialogue_open and not f.choosing_character and not f.paused_by_player and not f.sleep_in_progress and f.window_focused
 	if speech.visible:
 		var bounds:Rect2=npc.sprite.get_global_transform_with_canvas()*npc.sprite.get_rect()
 		speech.position=Vector2(bounds.get_center().x-24,bounds.position.y-68)
@@ -35,7 +35,7 @@ func _process(_delta):
 	if action in ["talk","talk_region","talk_shop"] or f.action_button.disabled:f.action_button.hide()
 	var quiet=action in ["","talk","talk_region","talk_shop","service","regional_door","enter","leave","return_town","historic","north","west","east","town","road"]
 	if quiet and f.toast_time<=0 and not f.paused_by_player and f.health>=25:f.message_label.hide()
-	held.visible=not f.held_gift.is_empty() and not f.dialogue_open
+	held.visible=not f.held_gift.is_empty() and not f.dialogue_open and not f.choosing_character and not f.paused_by_player and f.window_focused
 	held.text="Holding: "+f.held_gift+"  ×";held.position=Vector2((f.get_viewport_rect().size.x-230)/2,70);held.size=Vector2(230,42)
 
 	held_art.visible=held.visible

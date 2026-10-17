@@ -995,14 +995,14 @@ func say(text: String) -> void:
 	toast_time = 4.0
 
 func interact() -> void:
-	if location=="waterfall":
-		preload("res://VillageDepth.gd").waterfall(self);return
 	if is_physics_processing() and is_instance_valid(resources) and resources.action_time > 0: return
 	clear_item_moment()
 	if dialogue_open:
 		advance_dialogue()
 		return
-	if choosing_character or confirming_sleep or sleep_in_progress or paused_by_player: return
+	if choosing_character or confirming_sleep or sleep_in_progress or paused_by_player or not window_focused: return
+	if location=="waterfall":
+		preload("res://VillageDepth.gd").waterfall(self);return
 	if WeatherLife.forecast(day) == "Hurricane" and interaction_action() != "sleep":
 		say("Hurricane: rest in bed until tomorrow.")
 		return
@@ -1216,6 +1216,7 @@ func load_game() -> void:
 	if not parsed is Dictionary and FileAccess.file_exists(SAVE_FILE+".daily"): parsed=read_saved_json(SAVE_FILE+".daily")
 	if not parsed is Dictionary: return
 	save_loaded=true
+	held_gift="" # A held selection belongs to the current inventory session.
 	for field in ["friendship", "talked_on_day"]:
 		var values = parsed.get(field, {})
 		if values is Dictionary and values.has("Yoshi"):
@@ -1728,10 +1729,8 @@ func advance_dialogue() -> void:
 	if not is_instance_valid(talking_npc):
 		close_dialogue()
 		return
-	dialogue_index += 1
-	if dialogue_index >= dialogue_lines.size():
-		close_dialogue()
-	else: dialogue_text.text = dialogue_lines[dialogue_index]
+	# Ordinary conversations already display every line in one panel.
+	close_dialogue()
 
 func close_dialogue() -> void:
 	pending_request = ""
@@ -1743,6 +1742,9 @@ func close_dialogue() -> void:
 		actor.position = record.position
 		actor.scale=record.get("scale",Vector2.ONE)
 		actor.paused = record.paused
+		actor.visible=record.get("visible",true)
+		actor.label.visible=record.get("label_visible",true)
+		actor.z_index=record.get("z_index",5)
 		actor.show_frame(record.facing, 1)
 	scene_actors.clear()
 	if is_instance_valid(talking_npc): talking_npc.paused = festival_active or (location == "shop" and shops[shop_name].residents.find(talking_npc) == 0)
@@ -1792,7 +1794,7 @@ func open_service(service: String) -> void:
 		return
 	if service in ["Town Hall", "Police Box", "Fire Station"]:
 		var column := make_modal(service)
-		dialogue_text.text = {"Town Hall": "Welcome to town hall. Akira can tell you about the community. The plaza noticeboard hosts our draft festivals and character scenes.", "Police Box": "Taro keeps watch over the town. Walk over to talk with him. Lost-property quests will come in a future draft.", "Fire Station": "Jiro and Yuta prepare equipment here between calls. Walk over to talk with them. Rescue missions will come in a future draft."}[service]
+		dialogue_text.text = {"Town Hall": "Welcome to town hall. Akira can tell you about the community. The plaza noticeboard lists festivals and community gatherings.", "Police Box": "Taro keeps watch over the town. Walk over to talk with him. Ask him about any lost property that needs returning.", "Fire Station": "Jiro and Yuta prepare equipment here between calls. Walk over to talk with them. Keep the station approach clear for their equipment."}[service]
 		column.add_child(make_button("Close", close_dialogue))
 		return
 	if service == "Clinic":
@@ -1962,7 +1964,7 @@ func start_scene(title: String) -> void:
 	for area in regions.values(): all.append_array(area.npcs)
 	for actor in all:
 		if not names.has(actor.first_name): continue
-		scene_actors.append({"npc": actor, "parent": actor.get_parent(), "position": actor.position, "paused": actor.paused, "facing": actor.facing, "scale":actor.scale})
+		scene_actors.append({"npc": actor, "parent": actor.get_parent(), "position": actor.position, "paused": actor.paused, "facing": actor.facing, "scale":actor.scale,"visible":actor.visible,"label_visible":actor.label.visible,"z_index":actor.z_index})
 		if actor.get_parent() != town: actor.reparent(town, false)
 		actor.visible = true
 		actor.position = town.safe_point(town.design(Vector2(1200,910))+Vector2((names.find(actor.first_name)-(names.size()-1)*0.5)*55,0))

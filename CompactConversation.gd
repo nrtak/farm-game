@@ -19,14 +19,16 @@ func setup(box: PanelContainer, content: VBoxContainer, portrait: Texture2D, dis
 	picture.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	picture.mouse_filter=Control.MOUSE_FILTER_IGNORE
 	anchor.add_child(picture)
-	var close=Button.new();close.text="×";close.size=Vector2(44,44);close.position=Vector2(-50,6);close.pressed.connect(dismiss);anchor.add_child(close)
+	var close=Button.new();close.name="DialogueClose";close.text="×";close.size=Vector2(44,44);close.position=Vector2(-50,6);close.pressed.connect(dismiss);anchor.add_child(close)
 	panel.resized.connect(func(): close.position.x=panel.size.x-50)
 	var row=column.get_parent()
 	var scroll=ScrollContainer.new();scroll.custom_minimum_size.y=210;scroll.size_flags_horizontal=Control.SIZE_EXPAND_FILL;scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED
 	panel.remove_child(row);panel.add_child(scroll);scroll.add_child(row)
+	# Keep the dismiss control above the scrolling content for touch hit-testing.
+	panel.move_child(anchor,panel.get_child_count()-1)
 	row.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	for child in column.get_children():
-		if child is Label:child.add_theme_font_size_override("font_size",17)
+		if child is Label and child==column.get_child(1) and child.get_theme_font_size("font_size")<25:child.add_theme_font_size_override("font_size",17)
 	actions=HBoxContainer.new()
 	actions.add_theme_constant_override("separation",10)
 	column.add_child(actions)
