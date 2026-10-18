@@ -22,7 +22,9 @@ func run():
 		assert((b*f.farmer.transform).y.normalized().dot(Vector2.DOWN)>.999,"Upright farmer")
 		assert(f.get_canvas_transform().affine_inverse()*screen==f.player.position or (f.get_canvas_transform().affine_inverse()*screen).distance_to(f.player.position)<.01)
 	f.travel_to("town",f.town.arrival("farm"),false);await process_frame;f.perspective._process(0)
-	assert(f.camera.enabled and f.perspective.manual_direction(Vector2.RIGHT)==Vector2.RIGHT)
+	assert(not f.camera.enabled and f.perspective.manual_direction(Vector2.RIGHT)==Vector2.RIGHT)
+	var town_screen=f.get_canvas_transform()*f.player.position
+	assert(town_screen.distance_to(f.get_viewport_rect().size/2+Vector2(0,65))<.1,"Town shares the regional camera anchor")
 	assert(f.perspective.movement_velocity(Vector2.RIGHT,145)==Vector2.RIGHT*145,"Town keeps its approved walking pace")
 	assert(f.perspective.movement_velocity(Vector2.ZERO,145)==Vector2.ZERO)
 	for room in f.shops:

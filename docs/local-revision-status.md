@@ -34,6 +34,8 @@ Baseline: 5860f45 (0.3.0 / 202). Existing work preserved.
 
 - October 18 movement pass: normalized regional movement in the projected ground plane, eliminating different visible speeds along different directions. Analog pressure and tap routes retain the same pace; town speed is unchanged. angled_world, movement_recovery, outdoor_flow and walk_feedback passed with isolated saves. This is a movement correction, not completion of seamless travel.
 
+- October 18 shared-camera pass: town and regional views now use one canvas renderer and a common player anchor. Removed Camera2D ownership switching and its separate town offset. Repeated town/region transitions, two viewport sizes, every interior, festival zoom, pickup anchoring and existing deep_review checks passed with isolated saves. Local export plus phone_revision/home_recovery/farm_systems passed; 17 labeled captures refreshed; inspected town and shrine framing. Map geometry still switches and is not yet seamless.
+
 ## Outstanding — not complete
 - True seamless outdoor world/camera travel: maps still switch with a short camera pan.
 - Full all-area visual refinement, additional interior detail/stairs, and natural boundary treatment.

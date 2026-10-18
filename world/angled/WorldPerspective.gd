@@ -48,15 +48,19 @@ func _process(_delta):
 	if farm==null or not is_instance_valid(farm.player):return
 	travel_left=maxf(0,travel_left-_delta)
 	var angled:bool=farm.location!="town"
-	var resuming_town=not angled and not farm.camera.enabled
-	farm.camera.enabled=not angled
+	# One renderer owns the viewport for every area. Camera2D remains only as
+	# compatibility storage for scripted festival zoom; it must never overwrite this transform.
+	farm.camera.enabled=false
+	var zoom=1.8 if not farm.festival_active else .85
+	if not angled:
+		if not farm.festival_active:farm.camera.zoom=Vector2.ONE*TOWN_ZOOM
+		zoom=farm.camera.zoom.x
+	var ground=BASIS if angled else Transform2D.IDENTITY
+	var view=ground.scaled(Vector2.ONE*zoom)
+	view.origin=farm.get_viewport_rect().size/2+Vector2(0,65)-view*farm.player.position
+	if travel_left>0:view.origin+=travel_pan*pow(travel_left/.42,2)
+	farm.get_viewport().canvas_transform=view
 	if angled:
-		var zoom=1.8 if not farm.festival_active else .85
-		var view=BASIS.scaled(Vector2.ONE*zoom)
-		view.origin=farm.get_viewport_rect().size/2+Vector2(0,65)-view*farm.player.position
-		if travel_left>0:
-			view.origin+=travel_pan*pow(travel_left/.42,2)
-		farm.get_viewport().canvas_transform=view
 		# Upright character artwork, independent of the projected ground plane.
 		var frame:int=maxi(0,farm.walk_frame)%100
 		var row:int=int(frame/4)
@@ -77,12 +81,7 @@ func _process(_delta):
 		farm.farmer.position=farm.side_offsets[index]*farm.front_scale*.35
 		if farm.farmer.flip_h:farm.farmer.position.x*=-1
 		farm.farmer.scale=Vector2.ONE*farm.front_scale*.35
-		if not farm.festival_active:farm.camera.zoom=Vector2.ONE*TOWN_ZOOM
 		farm.player.z_index=clampi(int((farm.player.position-farm.TOWN_ORIGIN).y/10),1,4000)
-		if travel_left>0:farm.camera.offset=Vector2(0,-65)-travel_pan*pow(travel_left/.42,2)/TOWN_ZOOM
-		else:farm.camera.offset=Vector2(0,-65)
-		if resuming_town:farm.camera.reset_smoothing()
-		farm.camera.force_update_scroll()
 	if farm.item_moment.visible:
 		var lift=Vector2(0,-98-sin((.9-farm.pickup_time)*PI/.9)*5)
 		farm.item_moment.transform=(BASIS.affine_inverse() if angled else Transform2D.IDENTITY)*Transform2D(0,Vector2.ONE*.7,0,lift)
