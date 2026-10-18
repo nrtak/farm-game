@@ -27,6 +27,9 @@ Baseline: 5860f45 (0.3.0 / 202). Existing work preserved.
 - October 18 continuation: relationship regression passed with isolated saves after rejecting unknown outings and ineligible/out-of-range story chapters. Verified marriage memory persists immediately; removed a redundant save.
 - Visually inspected the latest labeled pier capture: western marina and eastern pier placement are readable, with visible shore attachment and pilings. Pier deck texture remains simpler than adjacent marina artwork and needs refinement.
 
+- October 18 gateway pass: stopped outdoor glide leaking into interiors/direct travel; preserved held touch even at zero velocity; prevented hurricane redirection from restoring outdoor controls. outdoor_flow and angled_world_regressions passed with isolated saves.
+- Fresh local export passed phone_revision, home_recovery and farm_systems and regenerated all 17 labeled screenshots. Inspected tea/highlands approach and school: approach is clear; school still uses unsuitable office desks and needs classroom furniture.
+
 ## Outstanding — not complete
 - True seamless outdoor world/camera travel: maps still switch with a short camera pan.
 - Full all-area visual refinement, additional interior detail/stairs, and natural boundary treatment.

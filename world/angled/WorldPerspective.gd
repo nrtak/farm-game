@@ -6,6 +6,14 @@ var farm
 var layers: Array = []
 var actor_roots: Array = []
 var redraw_clock := 0.0
+var travel_pan := Vector2.ZERO
+var travel_left := 0.0
+func cancel_outdoor_pan():
+	travel_left=0.0
+	travel_pan=Vector2.ZERO
+func begin_outdoor_pan(direction:Vector2):
+	travel_pan=-direction.normalized()*95.0
+	travel_left=.42
 func setup(f):
 	farm=f;process_priority=1000
 	f.set_meta("angled_world",true)
@@ -30,12 +38,16 @@ func manual_direction(direction:Vector2)->Vector2:
 	return (BASIS.affine_inverse()*direction).normalized()*minf(direction.length(),1.0) if direction.length()>0 else direction
 func _process(_delta):
 	if farm==null or not is_instance_valid(farm.player):return
+	travel_left=maxf(0,travel_left-_delta)
 	var angled:bool=farm.location!="town"
+	var resuming_town=not angled and not farm.camera.enabled
 	farm.camera.enabled=not angled
 	if angled:
 		var zoom=1.8 if not farm.festival_active else .85
 		var view=BASIS.scaled(Vector2.ONE*zoom)
 		view.origin=farm.get_viewport_rect().size/2+Vector2(0,65)-view*farm.player.position
+		if travel_left>0:
+			view.origin+=travel_pan*pow(travel_left/.42,2)
 		farm.get_viewport().canvas_transform=view
 		# Upright character artwork, independent of the projected ground plane.
 		var frame:int=maxi(0,farm.walk_frame)%100
@@ -59,6 +71,9 @@ func _process(_delta):
 		farm.farmer.scale=Vector2.ONE*farm.front_scale*.35
 		if not farm.festival_active:farm.camera.zoom=Vector2.ONE*TOWN_ZOOM
 		farm.player.z_index=clampi(int((farm.player.position-farm.TOWN_ORIGIN).y/10),1,4000)
+		if travel_left>0:farm.camera.offset=Vector2(0,-65)-travel_pan*pow(travel_left/.42,2)/TOWN_ZOOM
+		else:farm.camera.offset=Vector2(0,-65)
+		if resuming_town:farm.camera.reset_smoothing()
 		farm.camera.force_update_scroll()
 	if farm.item_moment.visible:
 		var lift=Vector2(0,-98-sin((.9-farm.pickup_time)*PI/.9)*5)
@@ -78,6 +93,7 @@ func _process(_delta):
 			if root==farm.town:
 				if actor.has_meta("ground_projection"):actor.remove_meta("ground_projection")
 				actor.transform=Transform2D(0,Vector2.ONE*size,0,actor.position)
+				actor.z_index=clampi(int(actor.position.y/10),1,215)
 			else:
 				actor.set_meta("ground_projection",BASIS)
 				actor.transform=Transform2D(BASIS.affine_inverse().x*size,BASIS.affine_inverse().y*size,actor.position)
