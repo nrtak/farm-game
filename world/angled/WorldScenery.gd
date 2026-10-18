@@ -25,6 +25,7 @@ func _ready():
 		farm.season_scenery.materials.append(seasonal);seasonal.set_shader_parameter("season",float(int((farm.day-1)/28)%4))
 	farm_props=load("res://world/angled/farm-props-v2.png")
 	build_props()
+	build_yards()
 	build_horizon()
 func active() -> bool:
 	if kind=="home": return farm.inside_house
@@ -185,6 +186,22 @@ func school_desk(foot:Vector2):
 	sprite.transform=B.affine_inverse()*Transform2D(0,Vector2.ONE*ratio,0,B*foot-Vector2(34,dimensions.y*ratio*.97))
 	sprite.z_as_relative=false;sprite.z_index=clampi(int((B*(foot if kind in ["home","room"] else foot+position)).y*.1)+1000,1,4000)
 	add_child(sprite);props.append(sprite)
+func build_yards():
+	if kind in ["tea","harbor","mountain","historic"]:
+		var buildings=Layout.buildings(kind)
+		for r:Rect2 in buildings:
+			var yard_depth=clampi(int((B*(r.get_center()+position)).y*.1)+950,1,4000)
+			# Rear and side beds stay inside already-solid building grounds, away from south-facing doors.
+			for point in [r.position+Vector2(20,24),Vector2(r.end.x-20,r.position.y+24),Vector2(r.position.x+18,r.end.y-28),r.end-Vector2(18,28)]:
+				coastal_prop(2,point,42).z_index=yard_depth
+			var index=11 if kind=="tea" else (6 if kind=="mountain" else 15)
+			prop(furniture,index,4,Vector2(r.get_center().x,r.position.y+22),58).z_index=yard_depth
+	if kind=="tea":
+		# Continue the planted estate on the far side of its eastern boundary fence.
+		for x in [1380,1510,1640]:
+			for y in [775,915,1055]:farm_prop(3,Vector2(x,y),72)
+	if kind=="farm":
+		for point in [Vector2(570,380),Vector2(970,380),Vector2(2250,260),Vector2(2530,260)]:coastal_prop(2,point,65)
 func build_horizon():
 	# Continue the scenery past the navigation bounds; never put new solids in a road.
 	if kind not in ["tea","mountain","historic","waterfall","harbor"]:return
@@ -360,10 +377,7 @@ func _draw():
 		var horizontal=fence.size.x>fence.size.y
 		var start=fence.position;var end=fence.end
 		var rise=B.affine_inverse()*Vector2(0,-26)
-		for level in [.4,.85]:draw_line(start+rise*level,end+rise*level,Color("b0936a"),5,true)
-		draw_line(start+rise*.85,end+rise*.85,Color("e0c298"),1.5,true)
-		for step in range(0,int(start.distance_to(end)),45):
-			var at=start.move_toward(end,step);draw_line(at,at+rise,Color("70543c"),9,true);draw_line(at+Vector2(-2,0),at+rise+Vector2(-2,0),Color("b99a6e"),5,true);draw_circle(at+rise,4,Color("ddc297"))
+		preload("res://world/angled/YardFence.gd").paint(self,start,end,rise*1.25)
 	if kind=="harbor":
 		draw_beach_details()
 
@@ -520,6 +534,7 @@ func coastal_prop(index:int,foot:Vector2,width:float):
 	sprite.transform=B.affine_inverse()*Transform2D(0,Vector2.ONE*ratio,0,B*foot-Vector2(width*.5,size.y*ratio*.94))
 	sprite.z_as_relative=false;sprite.z_index=clampi(int((B*(foot if kind in ["home","room"] else foot+position)).y*.1)+1000,1,4000)
 	add_child(sprite);props.append(sprite)
+	return sprite
 
 func expansion_prop(index:int,foot:Vector2,width:float):
 	var texture=load("res://world/angled/village-expansion-v1.png")

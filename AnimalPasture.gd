@@ -36,11 +36,7 @@ func _draw():
   var rise=Vector2(0,-25)
   if is_instance_valid(farm.perspective):rise=farm.perspective.BASIS.affine_inverse()*Vector2(0,-24)
   var end=rect.position+(Vector2(length,0) if horizontal else Vector2(0,length))
-  for height in [.35,.8]:draw_line(rect.position+rise*height,end+rise*height,Color("b58c59"),5,true)
-  for step in range(0,int(length),65):
-   var p:Vector2=rect.position+(Vector2(step,0) if horizontal else Vector2(0,step))
-   draw_line(p,p+rise,Color("9f794a"),9)
-   draw_circle(p+rise,5,Color("c6a06a"))
+  preload("res://world/angled/YardFence.gd").paint(self,rect.position,end,rise*1.25)
  if not is_instance_valid(farm.perspective):draw_string(ThemeDB.fallback_font,GATE+Vector2(-45,-10),"Pasture",HORIZONTAL_ALIGNMENT_LEFT,-1,21,Color("584631"))
  if not outside(farm): return
  farm.BarnLife.prepare_art()

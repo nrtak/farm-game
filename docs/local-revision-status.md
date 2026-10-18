@@ -96,3 +96,9 @@ Official reference galleries: https://www.stardewvalley.net/media/ and https://m
 
 - Soil refinement: replaced high-contrast multi-octave brown patches with broad continuous periodic gradients between nearby warm-earth shades. Removed the dark segmented bank strokes and softened shoulder opacity. Decorative rendering only; local review rebuild/capture requested.
 - Soft-gradient local export and all three packaged checks passed; packaged screenshots captured successfully. Visually checked Tea Country and Highlands at gameplay zoom. No remote upload.
+
+## Fenced yards and stronger fences
+- Filled non-entry sides of town building footprints with flower planters and building-specific details: café/inn tea seating, shop produce, workshop benches and fire equipment. Added regional rear/side planting, farm corner planters and tea rows beyond the east estate fence. Reused existing painted assets.
+- Reinforced regional and pasture fences with thicker twin timber rails, capped posts, stone footings and fasteners; increased town planted-fence height. Gate gaps/collision outlines remain unchanged.
+- Door routes, photo_revision and angled_world_regressions passed with isolated saves. Local packaged checks/captures passed before a visual correction placing regional yard props behind building artwork; final refreshed export is being checked.
+- Final refreshed package passed all three packaged checks and capture. Visually checked town, Tea Country and pasture; tea entrance prop overlap corrected. No GitHub/TestFlight upload or physical iPhone validation.

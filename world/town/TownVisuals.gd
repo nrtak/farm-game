@@ -26,6 +26,7 @@ func _ready():
  for b in G.layout().buildings:
   place_building(b)
   plant_frontage(b)
+  fill_yard(b)
  place_decoration("garden",Rect2(690,0,564,625),Vector2(282,578),Vector2(680,650),90)
  place_decoration("garden",Rect2(610,640,644,614),Vector2(322,550),Vector2(360,300),140)
  for e in G.EXITS:place_sign(e[0],e[1]+Vector2(38,0))
@@ -124,6 +125,29 @@ func add_garden(a:Vector2,b:Vector2):
   var foot=start.lerp(end,(i+.5)/count)
   var sprite=Sprite2D.new();sprite.texture=texture;sprite.centered=false
   var width=start.distance_to(end)/count+10
-  sprite.scale=Vector2.ONE*width/texture.get_width()
+  sprite.scale=Vector2(1,1.16)*width/texture.get_width()
   sprite.position=foot-Vector2(width*.5,texture.get_height()*sprite.scale.y*.82)
   sprite.z_index=int(foot.y/10);town_layer.add_child(sprite)
+
+func yard_sprite(texture:Texture2D,point:Vector2,width:float):
+ var sprite=Sprite2D.new();sprite.texture=texture;sprite.centered=false
+ sprite.scale=Vector2.ONE*width/texture.get_width()
+ var foot=G.project(point)
+ sprite.position=foot-Vector2(width*.5,texture.get_height()*sprite.scale.y*.94)
+ sprite.z_index=int(foot.y/10);town_layer.add_child(sprite)
+func fill_yard(b:Array):
+ var r=Rect2(b[1]+14,b[2]+14,b[3]-28,b[4]-28)
+ var corners=[r.position,Vector2(r.end.x,r.position.y),r.end,Vector2(r.position.x,r.end.y)]
+ var front={"N":0,"E":1,"S":2,"W":3}[b[5]]
+ # Planters belong inside the existing fenced footprint, not in the public street.
+ for edge in range(4):
+  if edge==front:continue
+  for fraction in [.25,.75]:
+   yard_sprite(preload("res://world/angled/CoastalGardenArt.gd").texture(2),corners[edge].lerp(corners[(edge+1)%4],fraction),32)
+ var back=(front+2)%4
+ var center=corners[back].lerp(corners[(back+1)%4],.5)
+ var regions={"Carpenter":Rect2(655,325,325,295),"Blacksmith":Rect2(655,325,325,295),"Fire":Rect2(680,610,280,300),"Store":Rect2(330,320,320,290),"Restaurant":Rect2(330,320,320,290),"Cafe":Rect2(990,45,310,270),"Inn":Rect2(990,45,310,270)}
+ if regions.has(b[0]):
+  var art=AtlasTexture.new();art.atlas=load("res://world/angled/furniture.png");art.region=regions[b[0]]
+  yard_sprite(art,center,48)
+ else:yard_sprite(preload("res://world/angled/CoastalGardenArt.gd").texture(2),center,42)
