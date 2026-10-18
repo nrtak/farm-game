@@ -32,6 +32,8 @@ Baseline: 5860f45 (0.3.0 / 202). Existing work preserved.
 
 - October 18 classroom pass: replaced four office desks with original transparent pupil desk/chair artwork, books and pencils. Export and phone_revision/home_recovery/farm_systems checks passed; refreshed 17 screenshots and visually inspected Photo 15 for scale and clear aisles. Art prompt and provenance are in docs/school-desk-art.txt.
 
+- October 18 movement pass: normalized regional movement in the projected ground plane, eliminating different visible speeds along different directions. Analog pressure and tap routes retain the same pace; town speed is unchanged. angled_world, movement_recovery, outdoor_flow and walk_feedback passed with isolated saves. This is a movement correction, not completion of seamless travel.
+
 ## Outstanding — not complete
 - True seamless outdoor world/camera travel: maps still switch with a short camera pan.
 - Full all-area visual refinement, additional interior detail/stairs, and natural boundary treatment.

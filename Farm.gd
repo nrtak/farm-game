@@ -637,7 +637,7 @@ func _physics_process(delta: float) -> void:
 	if is_instance_valid(perspective): direction=perspective.manual_direction(direction)
 	direction = polish.direction(direction)
 	running = Input.is_physical_key_pressed(KEY_SHIFT) or (location!="town" and joystick.direction.length() > 0.72)
-	player.velocity = direction.limit_length() * movement_speed()
+	player.velocity = perspective.movement_velocity(direction,movement_speed()) if is_instance_valid(perspective) else direction.limit_length()*movement_speed()
 	if not polish.path.is_empty():
 		player.velocity = player.velocity.limit_length(player.position.distance_to(polish.path[0])/maxf(delta,0.001))
 	var previous_position := player.position

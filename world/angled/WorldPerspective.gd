@@ -36,6 +36,14 @@ func add_layer(host,kind:String,origin:Vector2):
 func manual_direction(direction:Vector2)->Vector2:
 	if farm.location=="town":return direction
 	return (BASIS.affine_inverse()*direction).normalized()*minf(direction.length(),1.0) if direction.length()>0 else direction
+func movement_velocity(direction:Vector2,speed:float)->Vector2:
+	var strength=minf(direction.length(),1.0)
+	if strength<=0.00001:return Vector2.ZERO
+	if farm.location=="town":return direction.normalized()*strength*speed
+	# Normalize in the visible ground plane, not the skewed logical coordinate system.
+	# .5 retains a calm regional pace while removing direction-dependent acceleration.
+	var projected=BASIS*direction.normalized()
+	return direction.normalized()*(speed*.5*strength/projected.length())
 func _process(_delta):
 	if farm==null or not is_instance_valid(farm.player):return
 	travel_left=maxf(0,travel_left-_delta)

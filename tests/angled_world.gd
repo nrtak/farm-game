@@ -10,12 +10,21 @@ func run():
 		f.travel_to(area,p,false);await process_frame;f.perspective._process(0)
 		var screen=f.get_canvas_transform()*f.player.position
 		assert(screen.distance_to(f.get_viewport_rect().size/2+Vector2(0,65))<.1,"Camera tracks logical position")
-		for d in [Vector2.RIGHT,Vector2.LEFT,Vector2.UP,Vector2.DOWN]:
+		for d in [Vector2.RIGHT,Vector2.LEFT,Vector2.UP,Vector2.DOWN,Vector2(1,1).normalized(),Vector2(-1,1).normalized()]:
 			assert((b*f.perspective.manual_direction(d)).normalized().dot(d)>.999,"Screen-aligned control")
+			var velocity:Vector2=f.perspective.movement_velocity(f.perspective.manual_direction(d),200)
+			assert(is_equal_approx((b*velocity).length(),100),"Equal projected walking speed in every direction")
+			var slow:Vector2=f.perspective.movement_velocity(f.perspective.manual_direction(d*.4),200)
+			assert(is_equal_approx((b*slow).length(),40),"Analog pressure still controls walking pace")
+			assert((b*velocity).normalized().dot(d)>.999,"Velocity stays screen-aligned")
+			var path_velocity:Vector2=f.perspective.movement_velocity(d,200)
+			assert(is_equal_approx((b*path_velocity).length(),100),"Tap paths use the same projected pace")
 		assert((b*f.farmer.transform).y.normalized().dot(Vector2.DOWN)>.999,"Upright farmer")
 		assert(f.get_canvas_transform().affine_inverse()*screen==f.player.position or (f.get_canvas_transform().affine_inverse()*screen).distance_to(f.player.position)<.01)
 	f.travel_to("town",f.town.arrival("farm"),false);await process_frame;f.perspective._process(0)
 	assert(f.camera.enabled and f.perspective.manual_direction(Vector2.RIGHT)==Vector2.RIGHT)
+	assert(f.perspective.movement_velocity(Vector2.RIGHT,145)==Vector2.RIGHT*145,"Town keeps its approved walking pace")
+	assert(f.perspective.movement_velocity(Vector2.ZERO,145)==Vector2.ZERO)
 	for room in f.shops:
 		f.enter_shop(room,true);await process_frame
 		var count=0
