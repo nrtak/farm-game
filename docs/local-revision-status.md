@@ -102,3 +102,6 @@ Official reference galleries: https://www.stardewvalley.net/media/ and https://m
 - Reinforced regional and pasture fences with thicker twin timber rails, capped posts, stone footings and fasteners; increased town planted-fence height. Gate gaps/collision outlines remain unchanged.
 - Door routes, photo_revision and angled_world_regressions passed with isolated saves. Local packaged checks/captures passed before a visual correction placing regional yard props behind building artwork; final refreshed export is being checked.
 - Final refreshed package passed all three packaged checks and capture. Visually checked town, Tea Country and pasture; tea entrance prop overlap corrected. No GitHub/TestFlight upload or physical iPhone validation.
+
+## Full gameplay screenshot tour
+- Added a 78-view tour at normal gameplay zoom covering farm, every town building frontage, all outdoor regions, five map connections and all registered interiors. Uses isolated saves and staged in-game camera positions, not a manual full playthrough. Gallery: ../PhoneFeedbackPreview/world-tour-2026-10-18/index.html.
