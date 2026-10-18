@@ -30,6 +30,8 @@ Baseline: 5860f45 (0.3.0 / 202). Existing work preserved.
 - October 18 gateway pass: stopped outdoor glide leaking into interiors/direct travel; preserved held touch even at zero velocity; prevented hurricane redirection from restoring outdoor controls. outdoor_flow and angled_world_regressions passed with isolated saves.
 - Fresh local export passed phone_revision, home_recovery and farm_systems and regenerated all 17 labeled screenshots. Inspected tea/highlands approach and school: approach is clear; school still uses unsuitable office desks and needs classroom furniture.
 
+- October 18 classroom pass: replaced four office desks with original transparent pupil desk/chair artwork, books and pencils. Export and phone_revision/home_recovery/farm_systems checks passed; refreshed 17 screenshots and visually inspected Photo 15 for scale and clear aisles. Art prompt and provenance are in docs/school-desk-art.txt.
+
 ## Outstanding — not complete
 - True seamless outdoor world/camera travel: maps still switch with a short camera pan.
 - Full all-area visual refinement, additional interior detail/stairs, and natural boundary treatment.
