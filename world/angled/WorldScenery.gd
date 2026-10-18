@@ -196,16 +196,34 @@ func build_horizon():
 				if (kind=="tea" and absf(y-675)<180) or (kind=="mountain" and absf(y-760)<180):continue
 				prop(landmarks,11,3,Vector2(x,y),145)
 func road(a: Vector2,b: Vector2,width: float=115):
-	var side=(b-a).normalized().orthogonal()
-	for edge in [-1,1]:
-		for step in range(0,int(a.distance_to(b))+1,17):
-			var p=a.move_toward(b,step)+side*edge*(width*.49+sin(step*.12)*5)
-			draw_circle(p,9+sin(step*.31)*3,Color("c8bd8e"))
-	draw_line(a,b,Color("ddc995"),width,true)
-	draw_circle(a,width*.5,Color("ddc995"));draw_circle(b,width*.5,Color("ddc995"))
-	for i in range(1,int(a.distance_to(b)/45)):
-		var p=a.move_toward(b,i*45)
-		draw_circle(p+Vector2(sin(i*3.1)*width*.3,cos(i*2.7)*width*.2),2,Color("c3af7d"))
+	var direction=(b-a).normalized()
+	if direction==Vector2.ZERO:return
+	var side=direction.orthogonal()
+	var length=a.distance_to(b)
+	var steps=maxi(1,ceili(length/24.0))
+	var outline=PackedVector2Array()
+	# Preserve the full clear lane; irregular shoulders extend outward only.
+	for edge in [1,-1]:
+		for i in range(steps+1):
+			var t=float(i if edge==1 else steps-i)/steps
+			var center=a.lerp(b,t)
+			var shoulder=4.0+3.0*sin(center.x*.041+center.y*.027)+2.0*sin(center.x*.113-center.y*.061)
+			outline.append(center+side*edge*(width*.5+maxf(0,shoulder)))
+		var end=b if edge==1 else a
+		var start=side.angle() if edge==1 else (-side).angle()
+		for i in range(1,13):
+			var angle=start+PI*i/12.0
+			var radius=width*.5+3+2*sin(angle*5+end.x*.03)
+			outline.append(end+Vector2.from_angle(angle)*radius)
+	draw_colored_polygon(outline,Color("d5c28f"))
+	# Fine warm soil flecks replace the repeating scalloped edge and flat fill.
+	for i in range(1,maxi(2,int(length/18))):
+		var center=a.lerp(b,float(i)/maxi(2,int(length/18)))
+		for j in range(3):
+			var phase=i*2.399+j*1.73+a.x*.01
+			var p=center+side*sin(phase)*width*.44
+			draw_line(p,p+direction*(2+posmod(i+j,4)),Color(.60,.48,.28,.16),1.2,true)
+			if (i+j)%3==0:draw_circle(p+side*4,1.4,Color(.97,.89,.65,.25))
 func water(poly: PackedVector2Array):
 	if poly.size()<3:return
 	draw_colored_polygon(poly,Color("70b4bf"))

@@ -40,6 +40,8 @@ Baseline: 5860f45 (0.3.0 / 202). Existing work preserved.
 
 - October 18 interim full regression run: all 58 checks in ci/run_checks.py passed after shared-camera, movement and nature-visit changes. The runner used a separate temporary user directory for every check and restored its override afterward. Coverage included 112 overnight settlements, weekly reloads, Year 2 rollover/vote, eight story chapters, door routes, recovery, inventory, animals, audio and bounded node counts. This is automated regression evidence, not a manual playthrough or completion of the final post-batch audit.
 
+- October 18 path-art pass: replaced repeating scalloped dirt borders with irregular outward shoulders and subtle soil flecks. Preserved clear lane widths; open_regions passed. Screenshot review found overlapping segment outlines, which were removed. Refreshed all 17 labeled images after the correction; local export plus phone_revision/home_recovery/farm_systems passed.
+
 ## Outstanding — not complete
 - True seamless outdoor world/camera travel: maps still switch with a short camera pan.
 - Full all-area visual refinement, additional interior detail/stairs, and natural boundary treatment.
