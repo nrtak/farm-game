@@ -1,7 +1,7 @@
 extends RefCounted
 const ROUTES:={
 "town":[[Vector2(495,1260),Vector2(495,1350)],[Vector2(2105,560),Vector2(2105,800)],[Vector2(330,805),Vector2(1100,805)],[Vector2(1100,940),Vector2(1650,940)],[Vector2(500,1350),Vector2(2080,1350)]],
-"mountain":[[Vector2(960,1090),Vector2(830,1090)],[Vector2(830,1080),Vector2(830,540)],[Vector2(600,550),Vector2(1240,550)],[Vector2(830,760),Vector2(1450,760)]],
+"mountain":[[Vector2(960,1090),Vector2(830,1090)],[Vector2(830,1080),Vector2(830,540)],[Vector2(600,550),Vector2(1240,550)],[Vector2(830,900),Vector2(1600,900)]],
 "tea":[[Vector2(70,675),Vector2(1520,675)],[Vector2(1280,675),Vector2(1280,350)],[Vector2(860,720),Vector2(860,1040)],[Vector2(1333,720),Vector2(1333,1010)]],
 "harbor":[[Vector2(500,585),Vector2(1540,585)],[Vector2(460,310),Vector2(1480,310)],[Vector2(660,200),Vector2(660,585)],[Vector2(1080,200),Vector2(1080,585)],[Vector2(1480,310),Vector2(1480,660)],[Vector2(600,585),Vector2(600,700)]],
 "historic":[[Vector2(1440,363),Vector2(1440,1100)],[Vector2(700,700),Vector2(1440,700)],[Vector2(700,700),Vector2(700,540)],[Vector2(1440,1100),Vector2(1550,1100)]],

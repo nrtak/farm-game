@@ -21,7 +21,7 @@ const FARM_EXIT := Vector2(1485, 140)
 const RegionScript = preload("res://Region.gd")
 const Cast = preload("res://Cast.gd")
 const CharacterScenes = preload("res://CharacterScenes.gd")
-const REGION_ORIGINS := {"tea": Vector2(12000, 0), "harbor": Vector2(15000, 0), "mountain": Vector2(18000, 0), "historic": Vector2(21000, 0), "waterfall":Vector2(24000,0)}
+const REGION_ORIGINS := {"tea": Vector2(19600, -5775), "harbor": Vector2(15000, 0), "mountain": Vector2(18000, -6000), "historic": Vector2(21000, 0), "waterfall":Vector2(24000,0)}
 var regions: Dictionary = {}
 const ShopScript = preload("res://ShopInterior.gd")
 var SHOP_ORIGIN := Vector2(24000, 0)
@@ -59,6 +59,7 @@ var health_fill: StyleBoxFlat
 var scene_steps: Array = []
 var scene_step := 0
 var scene_actors: Array = []
+var relationship_moment: Node
 var active_scene := ""
 var seen_scenes: Array = []
 var interior_progress: Dictionary = {}
@@ -306,6 +307,7 @@ func _ready() -> void:
 	perspective=preload("res://world/angled/WorldPerspective.gd").new();add_child(perspective);perspective.setup(self)
 	var nature=preload("res://NatureFriends.gd").new();add_child(nature);nature.setup(self)
 	var places=preload("res://VillagePlaces.gd").new();add_child(places);places.setup(self)
+	var equipment=preload("res://FarmEquipmentVisual.gd").new();add_child(equipment);equipment.setup(self)
 	var school=preload("res://SchoolLife.gd").new();school.name="SchoolLife";add_child(school);school.setup(self)
 	var phone_ui=preload("res://PhonePresentation.gd").new();add_child(phone_ui);phone_ui.setup(self)
 
@@ -1202,6 +1204,7 @@ func interact() -> void:
 	save_game(false)
 
 func save_game(show_message: bool = true, overnight_checkpoint: bool = false) -> void:
+	if is_instance_valid(relationship_moment): return
 	if choosing_character or not game_ready or (sleep_in_progress and not overnight_checkpoint): return
 	if FileAccess.file_exists(SAVE_FILE):
 		var previous = read_saved_json(SAVE_FILE)
@@ -1214,7 +1217,7 @@ func save_game(show_message: bool = true, overnight_checkpoint: bool = false) ->
 		crop_data.append({"stage": plot.stage, "growth": plot.growth, "crop": plot.crop, "last_growth_day": plot.last_growth_day})
 	var file := FileAccess.open(SAVE_FILE+".pending", FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({"version": 23, "interior_progress": interior_progress, "festival_years": festival_years, "pick_level": pick_level, "harvest_level": harvest_level, "stored_items": stored_items, "backpack_level": backpack_level, "mine_lesson_seen": mine_lesson_seen, "ore_basket": ore_basket, "ore_shipping": ore_shipping, "ore_picked_days": ore_picked_days, "tea_lesson_seen": tea_lesson_seen, "tea_leaves": tea_leaves, "packed_tea": packed_tea, "tea_shipping": tea_shipping, "tea_picked_days": tea_picked_days, "fish_basket": fish_basket, "fish_shipping": fish_shipping, "fish_catches": fish_catches, "fishing_quest_stage": fishing_quest_stage, "tea_delivery_stage": tea_delivery_stage, "selected_crop": selected_crop, "extra_seeds": extra_seeds, "produce": produce, "shipping_queue": shipping_queue, "lost_item_stage": lost_item_stage, "day": day, "clock_minutes": clock_minutes, "health": health, "location": location, "shop_name": shop_name, "character": character_choice, "coins": coins, "seeds": seeds, "tool_level": tool_level, "friendship": friendship, "talked_on_day": talked_on_day, "seen_scenes": seen_scenes, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
+		file.store_string(JSON.stringify({"version": 24, "interior_progress": interior_progress, "festival_years": festival_years, "pick_level": pick_level, "harvest_level": harvest_level, "stored_items": stored_items, "backpack_level": backpack_level, "mine_lesson_seen": mine_lesson_seen, "ore_basket": ore_basket, "ore_shipping": ore_shipping, "ore_picked_days": ore_picked_days, "tea_lesson_seen": tea_lesson_seen, "tea_leaves": tea_leaves, "packed_tea": packed_tea, "tea_shipping": tea_shipping, "tea_picked_days": tea_picked_days, "fish_basket": fish_basket, "fish_shipping": fish_shipping, "fish_catches": fish_catches, "fishing_quest_stage": fishing_quest_stage, "tea_delivery_stage": tea_delivery_stage, "selected_crop": selected_crop, "extra_seeds": extra_seeds, "produce": produce, "shipping_queue": shipping_queue, "lost_item_stage": lost_item_stage, "day": day, "clock_minutes": clock_minutes, "health": health, "location": location, "shop_name": shop_name, "character": character_choice, "coins": coins, "seeds": seeds, "tool_level": tool_level, "friendship": friendship, "talked_on_day": talked_on_day, "seen_scenes": seen_scenes, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
 		file.flush()
 		file.close()
 		if DirAccess.rename_absolute(ProjectSettings.globalize_path(SAVE_FILE+".pending"),ProjectSettings.globalize_path(SAVE_FILE))!=OK:
@@ -1225,6 +1228,7 @@ func save_game(show_message: bool = true, overnight_checkpoint: bool = false) ->
 	elif show_message: say("Could not save. Check storage permissions.")
 
 func load_game() -> void:
+	if is_instance_valid(relationship_moment): close_dialogue()
 	if not FileAccess.file_exists(SAVE_FILE) and not FileAccess.file_exists(SAVE_FILE+".bak") and not FileAccess.file_exists(SAVE_FILE+".daily"): return
 	var parsed = read_saved_json(SAVE_FILE) if FileAccess.file_exists(SAVE_FILE) else null
 	if not parsed is Dictionary and FileAccess.file_exists(SAVE_FILE + ".bak"):
@@ -1338,6 +1342,8 @@ func load_game() -> void:
 		travel_to(saved_area, point if valid else (town.arrival("farm") if saved_area == "town" else Vector2(500, 500)), false)
 	elif regions.has(saved_area):
 		var point := Vector2(float(parsed.get("x", 0)), float(parsed.get("y", 0))) - Vector2(REGION_ORIGINS[saved_area])
+		if int(parsed.get("version",1))<24 and saved_area in ["tea","mountain"]:
+			point=Vector2(float(parsed.get("x",0)),float(parsed.get("y",0)))-Vector2(12000 if saved_area=="tea" else 18000,0)
 		travel_to(saved_area, point if regions[saved_area].is_walkable(point) else Vector2(800, 950), false)
 	if saved_area == "shop" and shops.has(str(parsed.get("shop_name", ""))):
 		enter_shop(str(parsed.shop_name), true)
@@ -1556,7 +1562,7 @@ func travel_to(area: String, point: Vector2, persist: bool = true) -> void:
 		set_location(false, point)
 	else:
 		location = area
-		preload("res://DailyErrands.gd").visit(self,area)
+		if not is_instance_valid(relationship_moment): preload("res://DailyErrands.gd").visit(self,area)
 		inside_house = false
 		outdoor_world.visible = false
 		interior.visible = false
@@ -1756,6 +1762,8 @@ func advance_dialogue() -> void:
 	close_dialogue()
 
 func close_dialogue() -> void:
+	if is_instance_valid(relationship_moment): relationship_moment.finish()
+	if has_node("VillagePlaces"): get_node("VillagePlaces").stand_up()
 	pending_request = ""
 	if is_instance_valid(farm_visitor): farm_visitor.queue_free()
 	farm_visitor = null
@@ -2153,6 +2161,7 @@ func enter_shop(service: String, restoring: bool = false) -> void:
 	save_game(false)
 
 func check_walk_exits() -> void:
+	if preload("res://OutdoorContinuity.gd").cross(self): return
 	if location == "shop":
 		var point := player.position - SHOP_ORIGIN
 		if point.y > 755 and absf(point.x - 550) < 110:
@@ -2224,13 +2233,7 @@ func check_walk_exits() -> void:
 		_:
 			if regions.has(location):
 				var point: Vector2 = player.position - REGION_ORIGINS[location]
-				if location=="mountain" and point.distance_to(Vector2(960,1090))<55:
-					walk_to_area("tea",Vector2(270,675))
-					return
-				if ((location=="harbor" and point.x>1520 and absf(point.y-585)<120) or (location=="tea" and point.x<180 and absf(point.y-675)<95) or (location=="historic" and point.x>1520 and point.y>1070) or (location=="mountain" and point.y>1120 and absf(point.x-800)<100)):
-					if location=="tea":
-						walk_to_area("mountain",regions.mountain.safe_point(Vector2(960,950)))
-						return
+				if ((location=="harbor" and point.x>1520 and absf(point.y-585)<120) or (location=="historic" and point.x>1520 and point.y>1070) or (location=="mountain" and point.y>1120 and absf(point.x-800)<100)):
 					walk_to_area("town", town.arrival(location))
 
 func open_map() -> void:

@@ -127,6 +127,7 @@ static func commit(f,person:String,status:String):
  if status=="interested" and int(f.friendship.get(person,0))<20:return
  if status=="dating" and (s.affection<25 or s.chapter<1):return
  if status=="engaged" and (s.affection<80 or s.chapter<3):return
+ f.close_dialogue()
  s.status=status
 
  load("res://EverydayLife.gd").remember(f,stage(f,person)+" with "+person,"You chose this next step together.")
@@ -134,6 +135,10 @@ static func commit(f,person:String,status:String):
  var c=panel(f,person);f.dialogue_text.text="Yes. Let's see where this takes us, together." if status!="married" else "Beneath the shrine trees, you exchange vows with your neighbors beside you. Tomorrow brings familiar work, and a shared future."
 
  c.add_child(f.make_button("Close",f.close_dialogue))
+
+ if status=="married":
+  var moment=load("res://RelationshipMoment.gd").new()
+  moment.begin(f,person,"Wedding","With our neighbors beside us, we promise to build a life together.")
 
 static func scene(f,person:String):
 
@@ -154,6 +159,7 @@ static func finish_scene(f,person:String,chapter:int):
  if not f.Cast.is_love_interest(person,f.character_choice) or not STORIES.has(person):return
  if chapter<0 or chapter>=STORIES[person].size() or s.chapter!=chapter:return
  if int(f.friendship.get(person,0))<10+chapter*20:return
+ f.close_dialogue()
 
  s.chapter+=1
 
@@ -172,6 +178,7 @@ static func date(f,person:String,outing:String):
  if f.day-int(e.dates.get(person,-100))<7:f.say("Let's plan another outing next week.");return
 
  if outing!="Tea" and f.is_rainy_day():f.say("Let's choose tea indoors while it's raining.");return
+ f.close_dialogue()
 
  e.dates[person]=f.day;e.outings[person]=int(e.outings.get(person,0))+1;f.friendship[person]=mini(100,int(f.friendship[person])+2)
 
@@ -182,6 +189,8 @@ static func date(f,person:String,outing:String):
  load("res://EverydayLife.gd").remember(f,outing+" with "+person,words[outing]);f.save_game(false)
 
  var c=panel(f,person);f.dialogue_text.text=words[outing]+("\nI'm happy we're making time for each other." if s.status!="friends" else "\nIt's good to have a friend to share this with.");c.add_child(f.make_button("Close",f.close_dialogue))
+ var moment=load("res://RelationshipMoment.gd").new()
+ moment.begin(f,person,outing,words[outing]+("\nI'm happy we're making time for each other." if s.status!="friends" else "\nIt's good to have a friend to share this with."))
 
 
 static func greeting(f,person:String)->String:

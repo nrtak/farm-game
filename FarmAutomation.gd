@@ -19,6 +19,7 @@ static func morning(f):
  var s=state(f)
  if int(s.get("morning",-1))>=f.day:return
  s.morning=f.day;var fed=0;var harvested=0
+ s.harvest_route=[]
  if s.get("feeder",false):
   var barn=f.BarnLife.state(f)
   for animal in barn.animals:
@@ -28,5 +29,6 @@ static func morning(f):
    if harvested>=12:break
    if plot.stage!=3 or int(f.stored_items.get(plot.crop,0))>=999:continue
    f.stored_items[plot.crop]=int(f.stored_items.get(plot.crop,0))+1
+   s.harvest_route.append([plot.position.x,plot.position.y])
    plot.stage=0;plot.growth=0;f.harvests+=1;harvested+=1
  s.report="Farm equipment: %d animals fed; %d crops placed in storage." % [fed,harvested]

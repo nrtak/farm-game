@@ -27,6 +27,7 @@ func _ready():
 func active() -> bool:
 	if kind=="home": return farm.inside_house
 	if kind=="room": return farm.location=="shop" and host==farm.shops.get(farm.shop_name)
+	if preload("res://OutdoorContinuity.gd").connected(farm.location,kind):return not farm.inside_house
 	return farm.location==kind and not farm.inside_house
 func prop(texture: Texture2D, index: int, rows: int, foot: Vector2, width: float, caption: String=""):
 	var s=Sprite2D.new();s.texture=texture;s.region_enabled=true
@@ -45,7 +46,8 @@ func prop(texture: Texture2D, index: int, rows: int, foot: Vector2, width: float
 	s.centered=false
 	var ratio=width/cell.x
 	s.transform=B.affine_inverse()*Transform2D(0,Vector2.ONE*ratio,0,B*foot-Vector2(width*.5,cell.y*ratio*.91))
-	s.z_as_relative=false;s.z_index=clampi(int((B*foot).y)+1000,1,4000)
+	var depth_foot=foot+position-farm.REGION_ORIGINS.mountain if kind in ["mountain","tea"] else foot
+	s.z_as_relative=false;s.z_index=clampi(int((B*depth_foot).y)+1000,1,4000)
 	add_child(s);props.append(s)
 	if not caption.is_empty():
 		var sign=Label.new();sign.text=caption;sign.position=cell*Vector2(.20,.74)
@@ -193,7 +195,8 @@ func build_horizon():
 	if kind in ["tea","mountain"]:
 		for y in range(140,1180,170):
 			for x in [-180,1780]:
-				if (kind=="tea" and absf(y-675)<180) or (kind=="mountain" and absf(y-760)<180):continue
+				if (kind=="tea" and x<0) or (kind=="mountain" and x>1600):continue
+				if (kind=="tea" and absf(y-675)<180) or (kind=="mountain" and absf(y-900)<180):continue
 				prop(landmarks,11,3,Vector2(x,y),145)
 func road(a: Vector2,b: Vector2,width: float=115):
 	var direction=(b-a).normalized()
@@ -251,9 +254,12 @@ func _draw():
 	var size=Vector2(3000,2000) if kind=="farm" else Vector2(1600,1200)
 	if kind=="road":size=Vector2(1000,1000)
 	var grass=Color("8eae62")
-	draw_rect(Rect2(Vector2.ZERO,size).grow(1200),grass)
+	var ground_rect=Rect2(Vector2.ZERO,size).grow(1200)
+	if kind=="mountain":ground_rect.size.x=2800
+	elif kind=="tea":ground_rect.position.x=0;ground_rect.size.x=2800
+	draw_rect(ground_rect,grass)
 	draw_rect(Rect2(Vector2.ZERO,size),grass)
-	draw_texture_rect(grass_texture,Rect2(Vector2.ZERO,size).grow(1200),true,Color(.95,.98,.90,.58))
+	draw_texture_rect(grass_texture,ground_rect,true,Color(.95,.98,.90,.58))
 	for y in range(15,int(size.y),48):
 		for x in range(15,int(size.x),53):
 			var p=Vector2(x+sin(y+x)*14,y+cos(x)*10)
@@ -298,7 +304,7 @@ func _draw():
 	if kind!="harbor":
 		for route in Roads.ROUTES.get(kind,[]):road(route[0],route[1],180)
 	# Continue the exit scenery beyond the trigger without advertising an out-of-bounds route.
-	if kind=="tea":road(Vector2(-800,675),Vector2(180,675),180)
+	if kind=="tea":road(Vector2(0,675),Vector2(180,675),180)
 	for door: Vector2 in ([] if kind=="harbor" else Layout.doors(kind).values()):
 		var best=door+Vector2(0,120);var distance=INF
 		for route in Roads.ROUTES.get(kind,[]):
@@ -346,7 +352,7 @@ func _draw():
 		for plot in farm.plots:draw_rect(Rect2(plot.position-Vector2(34,34),Vector2(68,68)),Color("a78657"))
 	var signs={"farm":[Vector2(1550,240),"Town"],"harbor":[Vector2(1450,580),"Town · East"],"tea":[Vector2(160,600),"Highlands · West"],"historic":[Vector2(1390,1040),"Town"],"mountain":[Vector2(900,1040),"Town · South"],"waterfall":[Vector2(900,1090),"Mountain trail"]}
 	if kind=="mountain":
-		draw_sign(Vector2(1080,1030),"Tea Country")
+		draw_sign(Vector2(1510,1000),"Tea Country →")
 	if kind=="historic":draw_sign(Vector2(780,790),"Moonveil Falls")
 	if signs.has(kind):draw_sign(signs[kind][0],signs[kind][1])
 func draw_room():

@@ -8,6 +8,8 @@ var actor_roots: Array = []
 var redraw_clock := 0.0
 var travel_pan := Vector2.ZERO
 var travel_left := 0.0
+func depth_origin()->Vector2:
+	return farm.REGION_ORIGINS.mountain if farm.location in ["mountain","tea"] else farm.polish.area_origin()
 func cancel_outdoor_pan():
 	travel_left=0.0
 	travel_pan=Vector2.ZERO
@@ -46,6 +48,8 @@ func movement_velocity(direction:Vector2,speed:float)->Vector2:
 	return direction.normalized()*(speed*.5*strength/projected.length())
 func _process(_delta):
 	if farm==null or not is_instance_valid(farm.player):return
+	if farm.location in ["mountain","tea"]:
+		farm.regions.mountain.show();farm.regions.tea.show()
 	travel_left=maxf(0,travel_left-_delta)
 	var angled:bool=farm.location!="town"
 	# One renderer owns the viewport for every area. Camera2D remains only as
@@ -70,7 +74,7 @@ func _process(_delta):
 		var offset:Vector2=farm.side_offsets[index]*farm.front_scale*actor_scale
 		if farm.farmer.flip_h:offset.x*=-1
 		farm.farmer.transform=BASIS.affine_inverse()*Transform2D(0,Vector2.ONE*farm.front_scale*actor_scale,0,offset)
-		farm.player.z_index=clampi(int((BASIS*(farm.player.position-farm.polish.area_origin())).y)+1000,1,4000)
+		farm.player.z_index=clampi(int((BASIS*(farm.player.position-depth_origin())).y)+1000,1,4000)
 	else:
 		# Reset the inverse regional basis before drawing in the already projected town.
 		farm.farmer.rotation=0
@@ -105,6 +109,7 @@ func _process(_delta):
 				actor.set_meta("ground_projection",BASIS)
 				actor.transform=Transform2D(BASIS.affine_inverse().x*size,BASIS.affine_inverse().y*size,actor.position)
 				var local_foot:Vector2=actor.position-farm.polish.area_origin() if root==farm else actor.position
+				if farm.location in ["mountain","tea"]:local_foot=actor.global_position-depth_origin()
 				actor.z_index=clampi(int((BASIS*local_foot).y)+1000,1,4000)
 	if farm.has_node("FarmDog"):
 		var dog=farm.get_node("FarmDog")

@@ -1,0 +1,4 @@
+Original asset generated with built-in image_gen on October 18, 2026.
+Saved asset: world/angled/harvest-tractor-v1.png
+Prompt:
+Create ONE original cozy farming game sprite on genuinely transparent background: a small friendly modern autonomous orchard tractor, sage green enamel body, cream trim, warm brass details, chunky dark rubber tires, compact covered cargo crate at the rear, small sensor lantern, no driver and no face. Three-quarter elevated game view, nose pointing toward lower right, matching an illustrated isometric storybook village with warm painted wood, clean readable outlines, gently shaded volumes, polished hand-painted 2D game art. Entire vehicle clearly isolated with transparent margin on all sides, no ground tile, no scenery, no text, no logos, no UI, no cast shadow outside vehicle. One vehicle only, no sheet or alternatives. It should read well at 90 pixels wide.

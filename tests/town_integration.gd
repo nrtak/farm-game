@@ -26,9 +26,9 @@ func run():
  for gate in f.town.G.EXITS:
   f.travel_to("town",f.town.G.project(gate[1]),false);f.check_walk_exits()
   assert(f.location=={"Farm":"farm","Highlands":"mountain","Harbor":"harbor","Shrine":"historic"}[gate[0]],"Actual map: "+gate[0])
- f.travel_to("mountain",Vector2(960,1090),false)
+ f.travel_to("mountain",Vector2(1601,900),false)
  f.check_walk_exits();assert(f.location=="tea","Mountain to tea trail")
- f.player.position=f.REGION_ORIGINS.tea+Vector2(60,665);f.check_walk_exits();assert(f.location=="mountain")
+ f.player.position=f.REGION_ORIGINS.tea+Vector2(-1,665);f.check_walk_exits();assert(f.location=="mountain")
  f.enter_shop("Restaurant",true);f.health=40;f.coins=100;f.open_service("Restaurant");f.purchase_meal();assert(f.coins==70 and f.health==70);f.close_dialogue()
  f.travel_to("town",f.town.arrival("farm"),false);f.coins=321;f.save_game(false);f.coins=0;f.load_game();assert(f.coins==321 and f.location=="town")
  var file=FileAccess.open(f.SAVE_FILE,FileAccess.READ);var save=JSON.parse_string(file.get_as_text());file.close();save.version=22;save.x=7000;save.y=400

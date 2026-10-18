@@ -31,7 +31,7 @@ func run():
 					assert(f.polish.clear_position(origin+p),"Body clearance blocked: %s %s"%[area,p])
 	assert(not f.regions.harbor.is_walkable(Vector2(800,1000)))
 	assert(not f.regions.tea.is_walkable(Vector2(200,850)))
-	f.travel_to("tea",Vector2(60,665),false); f.check_walk_exits()
+	f.travel_to("tea",Vector2(-1,665),false); f.check_walk_exits()
 	assert(f.location=="mountain")
 	f.travel_to("town",f.town.G.project(Vector2(185,910)),false); f.check_walk_exits()
 	assert(f.location=="harbor","Town exits before the shoreline")

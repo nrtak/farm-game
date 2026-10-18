@@ -1,6 +1,6 @@
 extends Node2D
 const PLACES=[
- ["town",Vector2(1630,690),"Library bench","Sit and watch the town","The pages rustle in the breeze. Haruka says every old map has a story."],
+ ["town",Vector2(1300,700),"Library bench","Sit and watch the town","The pages rustle in the breeze. Haruka says every old map has a story."],
  ["town",Vector2(1530,440),"School noticeboard","Read","This week: growing beans, drawing the village, and an afternoon nature walk. Lessons end at two."],
  ["town",Vector2(1120,1240),"Restaurant menu","Read","Today's kitchen uses local vegetables. Ask inside for a warm seasonal meal."],
  ["harbor",Vector2(1310,445),"Harbor bench","Sit and watch the tide","A gull circles the boats while someone sorts a net along the quay."],
@@ -12,6 +12,10 @@ var marks=[]
 var previous=Vector2.ZERO
 var area=""
 var age=0.0
+var seated:Node2D
+func stand_up():
+ if is_instance_valid(seated):seated.finish()
+ seated=null
 func setup(f):farm=f;name="VillagePlaces";z_index=3
 func point(entry:Array)->Vector2:
  return farm.TOWN_ORIGIN+farm.town.G.project(entry[1]) if entry[0]=="town" else farm.REGION_ORIGINS[entry[0]]+entry[1]
@@ -22,7 +26,10 @@ func nearest()->int:
 func interact():
  var i=nearest()
  if i<0:return
- var place=PLACES[i];var c=farm.make_modal(place[2]);farm.dialogue_text.text=place[4]
+ farm.close_dialogue()
+ var place=PLACES[i];var c=farm.make_modal(place[2],true);farm.dialogue_text.text=place[4]
+ if place[3].begins_with("Sit"):
+  seated=load("res://BenchPose.gd").new();farm.add_child(seated);seated.begin(farm,point(place))
  c.add_child(farm.make_button("Stand up" if place[3].begins_with("Sit") else "Close",farm.close_dialogue))
 func _process(delta):
  if farm==null:return

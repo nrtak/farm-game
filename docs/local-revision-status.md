@@ -45,13 +45,19 @@ Baseline: 5860f45 (0.3.0 / 202). Existing work preserved.
 - October 18 checkpoint verification: 21c2704 includes remaining tested source changes and referenced runtime assets. A fresh Git archive in ../checkpoint-validation-21c2704 imported all resources, then passed angled_world and local_expansion with isolated saves. Unrelated draft art/debug files were preserved outside the checkpoint. No remote push or TestFlight upload.
 
 ## Outstanding — not complete
-- True seamless outdoor world/camera travel: maps still switch with a short camera pan.
+- Full seamless outdoor world/camera travel: Highlands–Tea Country now shares physical coordinates and continuous camera travel; town/farm/harbor/shrine connections still switch with a short pan.
 - Full all-area visual refinement, additional interior detail/stairs, and natural boundary treatment.
-- Visually staged dates/wedding; current milestones and outings use dialogue.
-- Nature-friend welcoming garden/keepsakes and additional ambient animation beyond idle bobbing.
-- Benches currently open a quiet-moment panel; seated poses remain to implement.
-- Tractor operation has daily mechanics but no moving vehicle animation.
+- Final visual review of newly staged outings/wedding, seated benches, welcoming garden and tractor animation (implemented in the resumed morning session).
 - Final numbered screenshot approval, movement demo, physical iPhone validation and release.
+
+## Resumed morning session — October 18
+- Outings now stage the player and partner in the café, shore or shrine; weddings include three neighbors. Temporary scenes restore the exact origin and never save staged positions. Rainy weddings use the shrine residence. Isolated tests cover five origin areas, all three outings, save guards, cleanup and wedding reload.
+- All three benches have a seated pose and restore the player on dismissal. Visual review caught a too-large panel and an obscured library bench; panel corrected, bench placement review still in progress.
+- Leader trust unlocks a wildflower welcoming garden. Each nature friend awards a single cosmetic keepsake at 20 friendship; garden and keepsakes persist. Creatures still do no chores.
+- Original tractor artwork is integrated with a visible morning-job route, yielding to the player and pausing with the game. Animation never repeats the already-settled crop rewards. Isolated regression passed; generated art provenance is in tractor-art.txt.
+- New labeled gameplay captures 18–24 exist in ../PhoneFeedbackPreview/moment-*.png. These are interim views, not evidence that the full revision batch or seamless travel is finished.
+- All 61 checks passed before the continuous-region change. The revised library bench was subsequently moved to the open lane and nature-friend panels use the compact layout.
+- Highlands and Tea Country now form one physical outdoor stretch with both landscapes rendered together, a clear connecting lane, preserved player position/velocity and no camera switch. Save schema 24 migrates old mountain/tea coordinates. New bidirectional physics/camera/migration regression and phone_revision passed. Full 62-check rerun underway; the other connections are not yet converted.
 
 ## Reference standard approved by user
 Use Harvest Moon (especially Back to Nature), Story of Seasons and Stardew Valley as polish references when making routine design decisions. Preserve original artwork, characters and story.

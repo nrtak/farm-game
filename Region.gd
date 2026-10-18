@@ -54,7 +54,13 @@ func setup(area: String, people: Array) -> void:
 		var shape := CircleShape2D.new()
 		shape.radius=circle[1]; collider.shape=shape
 		body.add_child(collider); add_child(body)
-	for rect in [Rect2(-24, -24, 1648, 24), Rect2(-24, 1200, 1648, 24), Rect2(-24, 0, 24, 1200), Rect2(1600, 0, 24, 1200)]: obstacle(rect)
+	for rect in [Rect2(-24, -24, 1648, 24), Rect2(-24, 1200, 1648, 24)]: obstacle(rect)
+	if kind=="tea":
+		obstacle(Rect2(-24,0,24,585));obstacle(Rect2(-24,765,24,435))
+	else:obstacle(Rect2(-24,0,24,1200))
+	if kind=="mountain":
+		obstacle(Rect2(1600,0,24,810));obstacle(Rect2(1600,990,24,210))
+	else:obstacle(Rect2(1600,0,24,1200))
 	for i in range(people.size()):
 		var person: String = people[i]
 		var npc := NpcScript.new()
@@ -115,6 +121,7 @@ func nearest_npc(point: Vector2) -> Node2D:
 	return result
 
 func is_walkable(point: Vector2) -> bool:
+	if preload("res://OutdoorContinuity.gd").corridor(kind,point):return true
 	for offset in [Vector2.ZERO,Vector2(12,0),Vector2(-12,0),Vector2(0,12),Vector2(0,-12)]:
 		var foot: Vector2=point+offset
 		if not walk_outline.is_empty() and not Geometry2D.is_point_in_polygon(foot,walk_outline): return false
