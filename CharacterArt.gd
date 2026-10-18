@@ -28,6 +28,7 @@ static func walk(person: String) -> Texture2D:
 	return texture
 
 static func portrait(person: String) -> Texture2D:
+	if person in ["Nao","Sota","Rin","Jun"]:return preload("res://SchoolLife.gd").portrait(person)
 	person = canonical_name(person)
 	if portrait_cache.has(person): return portrait_cache[person]
 	if person in ["Mika","Seira"]:

@@ -20,12 +20,19 @@ var town_layer:Node2D
 func _ready():
  town_layer=self
  add_child(preload("res://world/town/TownGround.gd").new())
- for b in G.layout().buildings:place_building(b)
+ for b in G.layout().buildings:
+  place_building(b)
+  plant_frontage(b)
  place_decoration("garden",Rect2(690,0,564,625),Vector2(282,578),Vector2(680,650),90)
  place_decoration("garden",Rect2(610,640,644,614),Vector2(322,550),Vector2(360,395),140)
  for e in G.EXITS:place_sign(e[0],e[1]+Vector2(38,0))
  place_sign("Festival Square",Vector2(850,625))
  place_sign("Events",Vector2(930,710))
+ for segment in [[Vector2(1900,610),Vector2(1900,780)],[Vector2(1900,890),Vector2(1900,1060)],[Vector2(1900,1170),Vector2(1900,1340)]]:add_garden(segment[0],segment[1])
+ var texture=load("res://world/angled/village-expansion-v1.png");var cell=texture.get_size()/2.0
+ var playground=Sprite2D.new();var a=AtlasTexture.new();a.atlas=texture;a.region=Rect2(665,25,589,610)
+ playground.texture=a;playground.centered=false;playground.scale=Vector2.ONE*(195.0/cell.x)
+ var foot=G.project(Vector2(900,350));playground.position=foot-Vector2(97,145);playground.z_index=int(foot.y/10)-1;add_child(playground)
 func follow_player(point:Vector2):
  for sprite in building_sprites:
   var bounds=Rect2(sprite.position,sprite.texture.get_size()*sprite.scale)
@@ -39,6 +46,15 @@ func atlas(name:String,region:Rect2)->Texture2D:
  if not art_cache.has(name):art_cache[name]=load("res://world/town/"+name+"-atlas.png")
  var a=AtlasTexture.new();a.atlas=art_cache[name];a.region=region;return a
 func place_building(b:Array):
+ if b[0]=="School":
+  var texture=load("res://world/angled/village-expansion-v1.png")
+  var cell=texture.get_size()/2.0
+  var a=AtlasTexture.new();a.atlas=texture;a.region=Rect2(0,0,665,620)
+  var sprite=Sprite2D.new();sprite.texture=a;sprite.centered=false
+  sprite.scale=Vector2.ONE*(260.0/cell.x)
+  var foot=G.project(G.door(b));sprite.position=foot-Vector2(130,230)
+  sprite.z_index=int(foot.y/10)-1;town_layer.add_child(sprite);building_sprites.append(sprite)
+  return
  if b[5] in ["N","E"] and b[0] not in ["Police","Carpenter"]:
   var names=["Inn","Restaurant","Store","Cafe","Ranch","Vet","Police","Carpenter"]
   var index=names.find(b[0])
@@ -79,3 +95,29 @@ func place_sign(text:String,point:Vector2):
  sign.add_theme_stylebox_override("normal",style);town_layer.add_child(sign)
  return sign
 
+
+func plant_frontage(b:Array):
+ var r=Rect2(b[1]+4,b[2]+4,b[3]-8,b[4]-8)
+ var corners=[r.position,Vector2(r.end.x,r.position.y),r.end,Vector2(r.position.x,r.end.y)]
+ for i in range(4):
+  var start:Vector2=corners[i];var end:Vector2=corners[(i+1)%4]
+  # Keep a generous opening on the actual entrance face.
+  var front=(i==2 and b[5]=="S") or (i==3 and b[5]=="W") or (i==0 and b[5]=="N") or (i==1 and b[5]=="E")
+  if front:
+   if start.distance_to(end)<140:continue
+   add_garden(start,start.lerp(end,.22));add_garden(start.lerp(end,.78),end)
+  else:add_garden(start,end)
+ # A tree behind each block softens the non-entry side without hiding its street.
+ var p=Vector2(r.position.x+25,r.position.y+18)
+ place_decoration("garden",Rect2(0,655,600,599),Vector2(300,575),p,65)
+func add_garden(a:Vector2,b:Vector2):
+ var start=G.project(a);var end=G.project(b)
+ var count=maxi(1,int(ceil(start.distance_to(end)/90)))
+ var texture=preload("res://world/angled/CoastalGardenArt.gd").texture(0 if (end.x-start.x)*(end.y-start.y)<0 else 1)
+ for i in range(count):
+  var foot=start.lerp(end,(i+.5)/count)
+  var sprite=Sprite2D.new();sprite.texture=texture;sprite.centered=false
+  var width=start.distance_to(end)/count+10
+  sprite.scale=Vector2.ONE*width/texture.get_width()
+  sprite.position=foot-Vector2(width*.5,texture.get_height()*sprite.scale.y*.82)
+  sprite.z_index=int(foot.y/10);town_layer.add_child(sprite)

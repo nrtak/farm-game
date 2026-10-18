@@ -32,9 +32,13 @@ func setup(service: String) -> void:
 	if preload("res://InteriorArtwork.gd").ROOMS.has(kind): solids=preload("res://InteriorArtwork.gd").furnishings(kind)
 	if kind in preload("res://InteriorPlan.gd").ROOMS and not preload("res://InteriorArtwork.gd").ROOMS.has(kind): solids=preload("res://InteriorPlan.gd").furnishings(kind)
 	if kind=="Restaurant": solids.assign(preload("res://world/town/RestaurantLayout.gd").SOLIDS)
+	if kind=="School": solids=[Rect2(150,185,160,90),Rect2(790,185,160,90),Rect2(330,330,120,70),Rect2(650,330,120,70),Rect2(330,480,120,70),Rect2(650,480,120,70)]
 	for rect in [Rect2(90, 150, 920, 20), Rect2(90, 790, 920, 20), Rect2(90, 170, 20, 620), Rect2(990, 170, 20, 620)]: obstacle(rect)
 	for rect in solids: obstacle(rect)
-	var people: Array = {"Restaurant": ["Hana"], "General Store": ["Keiko", "Seira"], "Blacksmith": ["Gen", "Shohei"], "Café": ["Naomi", "Keiko", "Akira"], "Inn": ["Yumi", "Hana"], "Clinic": ["Kenji", "Aya"], "Town Hall": ["Akira"], "Police Box": ["Taro"], "Fire Station": ["Jiro", "Yuta"], "Archive": ["Haruka"], "Shrine Residence": ["Rei"], "Mountain Lodge": ["Emi", "Hiro"], "Tea Farmhouse": ["Sachiko", "Mika"], "Tea Processing Shed": ["Sachiko"], "Harbor Homes": ["Ken", "Masao"], "Fishing Shop": ["Masao"], "Hiro Cabin": ["Hiro"], "Mine": [], "Carpentry":["Kenta"], "Mountain Carpentry":["Kenta"], "Onsen Resort":[],"Barn":[],"Greenhouse":[],"Upper Floor":[],"Ranch":[],"Veterinarian":[]}[kind]
+	var people: Array = {"School": [], "Restaurant": ["Hana"], "General Store": ["Keiko", "Seira"], "Blacksmith": ["Gen", "Shohei"], "Café": ["Naomi", "Keiko", "Akira"], "Inn": ["Yumi", "Hana"], "Clinic": ["Kenji", "Aya"], "Town Hall": ["Akira"], "Police Box": ["Taro"], "Fire Station": ["Jiro", "Yuta"], "Archive": ["Haruka"], "Shrine Residence": ["Rei"], "Mountain Lodge": ["Emi", "Hiro"], "Tea Farmhouse": ["Sachiko", "Mika"], "Tea Processing Shed": ["Sachiko"], "Harbor Homes": ["Ken", "Masao"], "Fishing Shop": ["Masao"], "Hiro Cabin": ["Hiro"], "Mine": [], "Carpentry":["Kenta"], "Mountain Carpentry":["Kenta"], "Onsen Resort":[],"Barn":[],"Greenhouse":[],"Upper Floor":[],"Ranch":[],"Veterinarian":[]}[kind]
+	var regular_count=people.size()
+	for person in preload("res://ResidentRoutine.gd").extra_people(kind):
+		if not people.has(person): people.append(person)
 	for i in range(people.size()):
 		var person: String = people[i]
 		var keeper = preload("res://Npc.gd").new()
@@ -44,6 +48,7 @@ func setup(service: String) -> void:
 		if kind in preload("res://InteriorPlan.gd").ROOMS: keeper.position=Vector2(650,410+i*150)
 		if preload("res://TownInteriorLayout.gd").FURNITURE.has(kind): keeper.position=[Vector2(730,410),Vector2(375,480),Vector2(710,650)][i%3]
 		keeper.position=safe_point(keeper.position)
+		if i>=regular_count: keeper.position=extra_resident_point()
 		keeper.paused = i == 0
 		if i > 0: keeper.set_route([])
 		keeper.show_frame(0, 1)
@@ -306,3 +311,14 @@ func safe_point(preferred: Vector2) -> Vector2:
 			var candidate:=preferred+Vector2.from_angle(step*TAU/24)*radius
 			if is_walkable(candidate): return candidate
 	return ENTRY
+
+func extra_resident_point()->Vector2:
+	for y in [610,680,540]:
+		for x in [480,620,760,340]:
+			var point=Vector2(x,y)
+			if not is_walkable(point):continue
+			var clear=true
+			for npc in residents:
+				if npc.position.distance_to(point)<100:clear=false;break
+			if clear:return point
+	return safe_point(Vector2(550,600))

@@ -1,6 +1,6 @@
 extends Node2D
 
-const WELL := Vector2(1390, 610)
+const WELL := Vector2(1860, 370)
 const WATER_CAPACITY := 24
 const WOOD_SPOTS := {"farm": [Vector2(350,1400),Vector2(650,1640),Vector2(1950,1640),Vector2(850,700)], "mountain": [Vector2(620,670),Vector2(1030,740),Vector2(880,970)]}
 var farm

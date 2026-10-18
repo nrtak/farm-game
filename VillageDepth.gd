@@ -1,5 +1,5 @@
 extends RefCounted
-const LIKES := {"Seira":"Strawberry","Shohei":"Copper","Akira":"Tea packets","Taro":"Potato","Aya":"Tea packets","Hana":"Milk","Mika":"Tea leaves","Yuta":"Egg","Ken":"Sardine","Hiro":"Turnip","Keiko":"Potato","Kenji":"Tea packets","Gen":"Iron","Yumi":"Tea packets","Jiro":"Milk","Naomi":"Egg","Sachiko":"Tea leaves","Kenta":"Turnip","Haruka":"Tea packets","Rei":"Strawberry","Masao":"Mackerel","Emi":"Potato","Ren":"Tea packets","Chanel":"Milk","David":"Egg","Renji":"Copper","Midori":"Turnip"}
+const LIKES := {"Nao":"Tea packets","Sota":"Turnip","Rin":"Strawberry","Jun":"Milk","Seira":"Strawberry","Shohei":"Copper","Akira":"Tea packets","Taro":"Potato","Aya":"Tea packets","Hana":"Milk","Mika":"Tea leaves","Yuta":"Egg","Ken":"Sardine","Hiro":"Turnip","Keiko":"Potato","Kenji":"Tea packets","Gen":"Iron","Yumi":"Tea packets","Jiro":"Milk","Naomi":"Egg","Sachiko":"Tea leaves","Kenta":"Turnip","Haruka":"Tea packets","Rei":"Strawberry","Masao":"Mackerel","Emi":"Potato","Ren":"Tea packets","Chanel":"Milk","David":"Egg","Renji":"Copper","Midori":"Turnip"}
 static func state(f) -> Dictionary:
 	if not f.interior_progress.get("village_depth") is Dictionary: f.interior_progress.village_depth={}
 	var s:Dictionary=f.interior_progress.village_depth
@@ -7,9 +7,9 @@ static func state(f) -> Dictionary:
 		if not s.get(key) is Dictionary: s[key]={}
 	return s
 static func conversation(f,person:String) -> void:
-	var season:int=int((f.day-1)/28)%4
-	f.dialogue_lines.append(["The spring fields are waking up. I like seeing what everyone decides to grow.","On warm summer days I take my breaks in the shade. Remember to rest, too.","The autumn colors make the walk home feel different every week.","A warm room and a cup of tea are especially welcome this winter."][season])
-	if f.is_rainy_day(): f.dialogue_lines.append("I'm keeping dry today. Try the library, a warm meal, or a visit to your neighbors indoors.")
+	var greeting=load("res://Relationships.gd").greeting(f,person)
+	if greeting!="":f.dialogue_lines.append(greeting)
+	f.dialogue_lines.append(preload("res://ResidentRoutine.gd").words(f,person))
 	if LIKES.has(person):
 		preload("res://EverydayLife.gd").state(f).learned_gifts[person]=LIKES[person]
 		f.dialogue_lines.append("A little %s always makes my day." % LIKES[person].to_lower())

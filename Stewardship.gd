@@ -41,7 +41,9 @@ static func check_visit(farm) -> bool:
 		words = "That reclaimed patch is looking good. I'll be at the carpentry workshop on the southwest edge of town. We can expand the house next—first a storage room, then a kitchen wing."
 	if key.is_empty():
 		if preload("res://FarmDog.gd").maybe_visit(farm): return true
-		return preload("res://StoryArc.gd").maybe_visit(farm)
+		if preload("res://StoryArc.gd").maybe_visit(farm): return true
+		if load("res://Relationships.gd").maybe_visit(farm):return true
+		return preload("res://ResidentRoutine.gd").maybe_visit(farm)
 	state[key] = true
 	farm.interior_progress["story"] = state
 	var visitor = preload("res://Npc.gd").new()

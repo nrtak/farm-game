@@ -31,6 +31,7 @@ static func open_manager(farm) -> void:
 	farm.close_dialogue()
 	var data := state(farm)
 	var column = farm.make_modal("Town Ranch · Renji" if farm.shop_name=="Ranch" else "Barn care")
+	if farm.location=="shop" and farm.shop_name=="Ranch":column.add_child(farm.make_button("Automatic feeder",preload("res://FarmAutomation.gd").menu.bind(farm,"feeder")))
 	if farm.shop_name!="Ranch":
 		preload("res://EverydayLife.gd").care_board(farm);return
 	farm.dialogue_panel.get_child(0).offset_top = -minf(440,farm.get_viewport_rect().size.y-32)

@@ -1,6 +1,7 @@
 extends Node2D
-const BOUNDS:=Rect2(1030,1590,940,190)
-const FENCES:=[Rect2(1030,1590,330,8),Rect2(1550,1590,420,8),Rect2(1030,1590,8,190),Rect2(1962,1590,8,190),Rect2(1030,1772,940,8)]
+const BOUNDS:=Rect2(1700,480,940,190)
+const GATE:=Vector2(2420,480)
+const FENCES:=[Rect2(1700,480,625,8),Rect2(2515,480,125,8),Rect2(1700,480,8,190),Rect2(2632,480,8,190),Rect2(1700,662,940,8)]
 var farm
 var elapsed:=0.0
 var redraw_clock:=0.0
@@ -10,7 +11,7 @@ func setup(f):
 static func outside(f) -> bool:
  return bool(f.BarnLife.state(f).get("pasture",false)) and f.clock_minutes>=540 and f.clock_minutes<1020 and preload("res://WeatherLife.gd").forecast(f.day)=="Normal"
 static func point(index:int) -> Vector2:
- return Vector2(1120+(index%4)*230,1660+int(index/4)*72)
+ return Vector2(1790+(index%4)*230,550+int(index/4)*72)
 static func nearest(f) -> int:
  if f.location!="farm" or f.inside_house or not outside(f): return -1
  var index:=-1;var distance:=78.0
@@ -40,7 +41,7 @@ func _draw():
    var p:Vector2=rect.position+(Vector2(step,0) if horizontal else Vector2(0,step))
    draw_line(p,p+rise,Color("9f794a"),9)
    draw_circle(p+rise,5,Color("c6a06a"))
- if not is_instance_valid(farm.perspective):draw_string(ThemeDB.fallback_font,Vector2(1380,1580),"Pasture",HORIZONTAL_ALIGNMENT_LEFT,-1,21,Color("584631"))
+ if not is_instance_valid(farm.perspective):draw_string(ThemeDB.fallback_font,GATE+Vector2(-45,-10),"Pasture",HORIZONTAL_ALIGNMENT_LEFT,-1,21,Color("584631"))
  if not outside(farm): return
  farm.BarnLife.prepare_art()
  var animals:Array=farm.BarnLife.state(farm).animals

@@ -9,10 +9,10 @@ func run():
 	assert(f.Cast.is_love_interest("Ken","girl") and not f.Cast.is_love_interest("Ken","boy"))
 	assert(not f.Cast.is_love_interest("Akira","girl"))
 	var column=f.make_modal("Mika",true)
-	assert("Love interest" in column.get_child(0).text)
+	assert(column.get_child(0).get_child_count()==1,"Eligible resident has a heart")
 	f.character_choice="girl";column=f.make_modal("Mika",true)
-	assert("Love interest" not in column.get_child(0).text)
-	column=f.make_modal("Ken",true);assert("Love interest" in column.get_child(0).text)
+	assert(column.get_child(0).get_child_count()==0,"Ineligible resident has no heart")
+	column=f.make_modal("Ken",true);assert(column.get_child(0).get_child_count()==1,"Eligible resident has a heart")
 	for text in ["Turnip seeds","Buy Cow","Buy 10 feed","Enjoy a meal","12-item backpack","Copper pick"]:
 		var button=f.make_button(text,func(): pass)
 		assert(button.has_meta("item_art"),text)

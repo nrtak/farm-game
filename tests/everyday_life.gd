@@ -31,7 +31,10 @@ func run():
  assert(f.interaction_action()=="pasture_care")
  f.interact();f.BarnLife.care(f,0,"pet");assert(f.BarnLife.state(f).animals[0].petted==f.day)
  assert(not f.is_walkable(yard.FENCES[0].get_center()))
- assert(f.is_walkable(Vector2(1460,1590)),"Pasture gate stays open")
+ assert(f.is_walkable(yard.GATE),"Pasture gate stays open")
+ assert(yard.GATE.distance_to(f.BARN_DOOR)<100,"Pasture gate beside barn")
+ for step in range(0,101,10): assert(f.is_walkable(f.BARN_DOOR+Vector2(0,step)),"Clear barn-to-pasture route")
+ for plot in f.plots: assert(not yard.BOUNDS.grow(20).has_point(plot.position),"Pasture does not cover crops")
  f.BarnLife.state(f).pasture=false
  f.friendship.Seira=20;Life.invite(f,"Seira");Life.date_scene(f,"Seira");Life.date_scene(f,"Seira")
  assert(f.friendship.Seira==22,"Outing rewards once per week")

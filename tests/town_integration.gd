@@ -3,7 +3,7 @@ func _initialize():call_deferred("run")
 func run():
  var f=load("res://Main.tscn").instantiate();root.add_child(f);await process_frame
  f.set_physics_process(false);f.choose_character("boy");f.interior_progress.story={"intro":true};f.close_dialogue();f.clock_minutes=800
- assert(f.town.BUILDINGS.size()==13 and f.shops.has("Restaurant"))
+ assert(f.town.BUILDINGS.size()==14 and f.shops.has("Restaurant") and f.shops.has("School"))
  f.travel_to("town",f.town.arrival("farm"),false);await physics_frame
  for b in f.town.BUILDINGS:
   assert(f.town.is_walkable(b.door),"Clear doorway: "+b.name)

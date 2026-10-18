@@ -14,11 +14,20 @@ func setup(f):
 func _process(_delta):
 	if farm==null:return
 	var f=farm
-	f.date_label.text="%s %d · Year %d" % [f.SEASONS[int((f.day-1)/28)%4],(f.day-1)%28+1,int((f.day-1)/112)+1]
-	f.date_label.size=Vector2(225,40)
-	clock.text=("Ⅱ " if f.inside_house or f.location=="shop" else "")+f.clock_text()
-	clock.position=Vector2((f.get_viewport_rect().size.x-135)/2,24);clock.size=Vector2(135,36)
-	f.weather_icon.position=f.date_label.position+Vector2(230,8)
+	f.date_label.text="%s %d · Year %d\n%s%s" % [f.SEASONS[int((f.day-1)/28)%4],(f.day-1)%28+1,int((f.day-1)/112)+1,"Ⅱ " if f.inside_house or f.location=="shop" else "",f.clock_text()]
+	var font=f.date_label.get_theme_font("font")
+	var text_width=font.get_string_size(f.date_label.text.split("\n")[0],HORIZONTAL_ALIGNMENT_LEFT,-1,f.date_label.get_theme_font_size("font_size")).x
+	f.date_label.size=Vector2(text_width+28,64)
+	clock.hide()
+	f.weather_icon.position=f.date_label.position+Vector2(text_width+36,10)
+	f.health_bar.position=f.date_label.position+Vector2(0,70)
+	f.health_bar.size=Vector2(145,18)
+	var bag=f.hud.get_node("CharacterButton")
+	f.pocket_label.position=bag.position+Vector2(-85,13)
+	f.pocket_label.size=Vector2(80,25)
+	var map=f.hud.get_node("MapButton")
+	map.position=Vector2(f.date_label.position.x,150)
+	map.text="";map.size=Vector2(48,48);map.custom_minimum_size=Vector2(48,48)
 	f.quest_label.hide()
 	var action:String=f.interaction_action()
 	var npc

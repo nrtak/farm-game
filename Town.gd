@@ -87,14 +87,18 @@ func add_label(text: String, where: Vector2, dimensions: Vector2) -> void:
     add_child(label)
 
 func update_schedules(minute:float)->void:
- var period=int(minute/360)
- for i in range(npcs.size()):
-  var npc=npcs[i]
+ var period=int(minute/180)
+ for npc in npcs:
   if npc.period==period:continue
+  var initial=npc.period<0
   npc.period=period
-  var spots=[Vector2(980,800),Vector2(1790,1170),Vector2(850,800),Vector2(1790,630),Vector2(990,1170),Vector2(1500,900),Vector2(1590,900),Vector2(990,1450),Vector2(1590,1450),Vector2(990,620),Vector2(1500,620),Vector2(1790,900),Vector2(850,920),Vector2(600,910),Vector2(460,800),Vector2(990,900)]
-  npc.position=safe_npc_point(G.project(spots[(i+period)%spots.size()]))
-  npc.scale=Vector2.ONE*.35;npc.set_route([])
+  var destination=preload("res://ResidentRoutine.gd").street_target(self,npc.first_name,minute)
+  npc.scale=Vector2.ONE*.35
+  npc.speed=52.0
+  if initial or not npc.visible:
+   npc.position=destination;npc.set_route([])
+  else:
+   npc.set_route(walk_route(npc.position,[destination]))
 
 func add_supporting_cast() -> void:
     for person in Cast.HOMES:
@@ -111,8 +115,48 @@ func add_supporting_cast() -> void:
 
 func update_supporting_routes(minute:float)->void:update_schedules(minute)
 func walk_route(start:Vector2,destinations:Array)->Array:
- # Residents remain at their safe scheduled station; never cut through buildings.
- return [safe_npc_point(start)]
+ # Cardinal grid with sampled edges: no diagonal corner-cutting through frontages.
+ if navigation.region.size==Vector2i.ZERO:
+  navigation.region=Rect2i(4,7,43,32)
+  navigation.cell_size=Vector2(40,40)
+  navigation.diagonal_mode=AStarGrid2D.DIAGONAL_MODE_NEVER
+  navigation.update()
+  for y in range(7,39):
+   for x in range(4,47):
+    navigation.set_point_solid(Vector2i(x,y),not is_npc_walkable(G.project(Vector2(x,y)*40)))
+ var result=[]
+ var cursor=start
+ for destination in destinations:
+  var from_id=nearest_route_cell(cursor)
+  var to_id=nearest_route_cell(destination)
+  var ids=navigation.get_id_path(from_id,to_id)
+  if ids.is_empty():continue
+  var segment=[]
+  var previous=cursor
+  var safe=true
+  for id in ids:
+   var point=G.project(Vector2(id)*40)
+   if not route_edge_clear(previous,point):safe=false;break
+   segment.append(point);previous=point
+  if safe and route_edge_clear(previous,destination):
+   segment.append(destination);result.append_array(segment);cursor=destination
+ return result
+func nearest_route_cell(point:Vector2)->Vector2i:
+ var best=Vector2i(25,23)
+ var distance=INF
+ for y in range(7,39):
+  for x in range(4,47):
+   var id=Vector2i(x,y)
+   if navigation.is_point_solid(id):continue
+   var candidate=G.project(Vector2(id)*40)
+   var d=point.distance_squared_to(candidate)
+   if d<distance and route_edge_clear(point,candidate):best=id;distance=d
+ return best
+func route_edge_clear(a:Vector2,b:Vector2)->bool:
+ var count=maxi(1,int(ceil(a.distance_to(b)/6.0)))
+ for i in range(count+1):
+  if not is_npc_walkable(a.lerp(b,float(i)/count)):return false
+ return true
 func settle_on_road(npc)->void:npc.position=safe_npc_point(npc.position)
 
 func tick(delta: float, minute: float, rainy: bool = false) -> void:

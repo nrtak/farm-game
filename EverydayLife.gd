@@ -160,6 +160,8 @@ static func neighbors(f) -> void:
   grid.add_child(f.make_button(person,relationship.bind(f,person)))
  c.add_child(f.make_button("Back",journal.bind(f)))
 static func relationship(f,person:String) -> void:
+ if f.Cast.is_love_interest(person,f.character_choice):
+  preload("res://Relationships.gd").menu(f,person);return
  var favorite:String=state(f).learned_gifts.get(person,"Not learned yet")
  var points:int=f.friendship.get(person,0)
  var c=panel(f,person,"Friendship: %d / 100\nFavorite gift: %s\nBirthday: %s\n%s" % [points,favorite,birthday_label(f,person),"Romance eligible · %d outings together" % int(state(f).outings.get(person,0)) if f.Cast.is_love_interest(person,f.character_choice) else "Friendship"])
@@ -210,12 +212,8 @@ static func invite(f,person:String) -> void:
   c.add_child(f.make_button("Invite for tea",date_scene.bind(f,person)))
  c.add_child(f.make_button("Maybe later",f.close_dialogue))
 static func date_scene(f,person:String) -> void:
- if not f.Cast.is_love_interest(person,f.character_choice) or int(f.friendship.get(person,0))<20 or f.day-int(state(f).dates.get(person,-100))<7: return
- state(f).dates[person]=f.day;f.friendship[person]=mini(100,int(f.friendship[person])+2)
- state(f).outings[person]=int(state(f).outings.get(person,0))+1
- remember(f,"Tea with "+person,"You shared a quiet afternoon and talked about life in the village.")
- var c=f.make_modal(person,true);f.dialogue_text.text="I'd like that. Let's sit by the window and watch the village go by. I'm glad you asked me."
- c.add_child(f.make_button("Enjoy the moment",f.close_dialogue))
+ preload("res://Relationships.gd").date(f,person,"Tea")
+
 static func decorate(f) -> void:
  var c=panel(f,"Home colors","Choose a bedside rug color. These decorations are free and saved with your farm.")
  for entry in [["Sage","7d9b83"],["Ocean","739ab2"],["Lavender","a98cb5"],["Sunflower","c4aa60"]]:

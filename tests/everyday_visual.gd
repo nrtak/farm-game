@@ -11,7 +11,7 @@ func run():
  f.enter_shop("Ranch",true)
  for species in f.BarnLife.SPECIES: f.BarnLife.purchase(f,species)
  f.close_dialogue();f.BarnLife.state(f).pasture=true
- f.travel_to("farm",Vector2(1450,1660),false);await capture(f,"everyday-pasture")
+ f.travel_to("farm",preload("res://AnimalPasture.gd").GATE+Vector2(0,90),false);await capture(f,"everyday-pasture")
  Life.care_board(f);await capture(f,"everyday-care")
  f.close_dialogue();f.travel_to("town",Vector2(1200,950),false)
  Life.town_map(f);await capture(f,"everyday-map")

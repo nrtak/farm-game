@@ -37,7 +37,7 @@ func setup(area: String, people: Array) -> void:
 	for point in spec.get("pond",[]): pond_outline.append(Vector2(point[0],point[1]))
 	var dock: Array=spec.get("pier",spec.get("dock",[]))
 	if dock.size()==4: pier_area=Rect2(dock[0],dock[1],dock[2],dock[3])
-	for rect in preload("res://ApprovedMapLayout.gd").buildings(kind)+preload("res://ApprovedMapLayout.gd").scenery(kind):
+	for rect in preload("res://ApprovedMapLayout.gd").buildings(kind)+preload("res://ApprovedMapLayout.gd").scenery(kind)+preload("res://RegionBorders.gd").rects(kind):
 		solids.append(rect)
 		obstacle(rect)
 	scenery_polygons=[]
@@ -59,7 +59,7 @@ func setup(area: String, people: Array) -> void:
 		var person: String = people[i]
 		var npc := NpcScript.new()
 		add_child(npc)
-		var posts := {"Mika":Vector2(1200,400),"Sachiko":Vector2(1200,570),"Ken":Vector2(770,470),"Masao":Vector2(1230,480),"Emi":Vector2(470,520),"Hiro":Vector2(1210,530),"Haruka":Vector2(470,520),"Rei":Vector2(1290,810)}
+		var posts := {"Mika":Vector2(1200,400),"Sachiko":Vector2(1200,570),"Ken":Vector2(770,470),"Masao":Vector2(1230,480),"Emi":Vector2(470,520),"Hiro":Vector2(1210,530),"Haruka":Vector2(1260,550),"Rei":Vector2(950,750)}
 		npc.position = safe_npc_point(posts.get(person,Vector2(800,600)))
 		var index := Cast.index_of(person)
 		var walk_path := "res://assets/npc-%s-walk.png" % person.to_lower()

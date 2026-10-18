@@ -7,7 +7,7 @@ func run():
 	f.set_physics_process(false); f.choose_character("boy")
 	f.interior_progress.story={"intro":true}
 	var routes={
-		"farm":[[Vector2(1485,180),Vector2(1485,530)],[Vector2(1485,530),Vector2(2420,530)],[Vector2(850,650),Vector2(850,1450)],[Vector2(700,580),Vector2(1400,580)],[Vector2(630,970),Vector2(850,970)],[Vector2(850,1460),Vector2(2000,1460)]],
+		"farm":[[Vector2(1485,180),Vector2(1485,530)],[Vector2(1485,440),Vector2(2420,440)],[Vector2(850,650),Vector2(850,1450)],[Vector2(700,580),Vector2(1400,580)],[Vector2(630,970),Vector2(850,970)],[Vector2(850,1460),Vector2(2000,1460)]],
 		"town":[[Vector2(350,820),Vector2(820,820)],[Vector2(1150,940),Vector2(1640,940)],[Vector2(500,1350),Vector2(2050,1350)]],
 		"mountain":[[Vector2(830,1080),Vector2(830,540)],[Vector2(620,540),Vector2(1260,540)],[Vector2(830,760),Vector2(1450,760)]],
 		"historic":[[Vector2(420,550),Vector2(1050,550)],[Vector2(420,700),Vector2(1050,700)],[Vector2(406,363),Vector2(406,600)]],
