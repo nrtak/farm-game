@@ -42,6 +42,8 @@ Baseline: 5860f45 (0.3.0 / 202). Existing work preserved.
 
 - October 18 path-art pass: replaced repeating scalloped dirt borders with irregular outward shoulders and subtle soil flecks. Preserved clear lane widths; open_regions passed. Screenshot review found overlapping segment outlines, which were removed. Refreshed all 17 labeled images after the correction; local export plus phone_revision/home_recovery/farm_systems passed.
 
+- October 18 checkpoint verification: 21c2704 includes remaining tested source changes and referenced runtime assets. A fresh Git archive in ../checkpoint-validation-21c2704 imported all resources, then passed angled_world and local_expansion with isolated saves. Unrelated draft art/debug files were preserved outside the checkpoint. No remote push or TestFlight upload.
+
 ## Outstanding — not complete
 - True seamless outdoor world/camera travel: maps still switch with a short camera pan.
 - Full all-area visual refinement, additional interior detail/stairs, and natural boundary treatment.
