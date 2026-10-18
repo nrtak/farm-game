@@ -15,13 +15,13 @@ const RUN_SPEED := 340.0
 var SAVE_FILE := "user://draft_save.json"
 const TownScript = preload("res://Town.gd")
 const RoadScript = preload("res://SouthRoad.gd")
-const TOWN_ORIGIN := Vector2(6000, 0)
+const TOWN_ORIGIN := Vector2(-528.31845, -2277.64101)
 const ROAD_ORIGIN := Vector2(9000, 0)
 const FARM_EXIT := Vector2(1485, 140)
 const RegionScript = preload("res://Region.gd")
 const Cast = preload("res://Cast.gd")
 const CharacterScenes = preload("res://CharacterScenes.gd")
-const REGION_ORIGINS := {"tea": Vector2(19600, -5775), "harbor": Vector2(15000, 0), "mountain": Vector2(18000, -6000), "historic": Vector2(21000, 0), "waterfall":Vector2(24000,0)}
+const REGION_ORIGINS := {"tea": Vector2(2278.50198,-2835.46060), "harbor": Vector2(-1869.26587,-1473.35884), "mountain": Vector2(678.50198,-3060.46060), "historic": Vector2(-1411.59722,-3058.46230), "waterfall":Vector2(24000,0)}
 var regions: Dictionary = {}
 const ShopScript = preload("res://ShopInterior.gd")
 var SHOP_ORIGIN := Vector2(24000, 0)
@@ -1217,7 +1217,7 @@ func save_game(show_message: bool = true, overnight_checkpoint: bool = false) ->
 		crop_data.append({"stage": plot.stage, "growth": plot.growth, "crop": plot.crop, "last_growth_day": plot.last_growth_day})
 	var file := FileAccess.open(SAVE_FILE+".pending", FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({"version": 24, "interior_progress": interior_progress, "festival_years": festival_years, "pick_level": pick_level, "harvest_level": harvest_level, "stored_items": stored_items, "backpack_level": backpack_level, "mine_lesson_seen": mine_lesson_seen, "ore_basket": ore_basket, "ore_shipping": ore_shipping, "ore_picked_days": ore_picked_days, "tea_lesson_seen": tea_lesson_seen, "tea_leaves": tea_leaves, "packed_tea": packed_tea, "tea_shipping": tea_shipping, "tea_picked_days": tea_picked_days, "fish_basket": fish_basket, "fish_shipping": fish_shipping, "fish_catches": fish_catches, "fishing_quest_stage": fishing_quest_stage, "tea_delivery_stage": tea_delivery_stage, "selected_crop": selected_crop, "extra_seeds": extra_seeds, "produce": produce, "shipping_queue": shipping_queue, "lost_item_stage": lost_item_stage, "day": day, "clock_minutes": clock_minutes, "health": health, "location": location, "shop_name": shop_name, "character": character_choice, "coins": coins, "seeds": seeds, "tool_level": tool_level, "friendship": friendship, "talked_on_day": talked_on_day, "seen_scenes": seen_scenes, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
+		file.store_string(JSON.stringify({"version": 25, "interior_progress": interior_progress, "festival_years": festival_years, "pick_level": pick_level, "harvest_level": harvest_level, "stored_items": stored_items, "backpack_level": backpack_level, "mine_lesson_seen": mine_lesson_seen, "ore_basket": ore_basket, "ore_shipping": ore_shipping, "ore_picked_days": ore_picked_days, "tea_lesson_seen": tea_lesson_seen, "tea_leaves": tea_leaves, "packed_tea": packed_tea, "tea_shipping": tea_shipping, "tea_picked_days": tea_picked_days, "fish_basket": fish_basket, "fish_shipping": fish_shipping, "fish_catches": fish_catches, "fishing_quest_stage": fishing_quest_stage, "tea_delivery_stage": tea_delivery_stage, "selected_crop": selected_crop, "extra_seeds": extra_seeds, "produce": produce, "shipping_queue": shipping_queue, "lost_item_stage": lost_item_stage, "day": day, "clock_minutes": clock_minutes, "health": health, "location": location, "shop_name": shop_name, "character": character_choice, "coins": coins, "seeds": seeds, "tool_level": tool_level, "friendship": friendship, "talked_on_day": talked_on_day, "seen_scenes": seen_scenes, "harvests": harvests, "x": player.position.x, "y": player.position.y, "plots": crop_data}))
 		file.flush()
 		file.close()
 		if DirAccess.rename_absolute(ProjectSettings.globalize_path(SAVE_FILE+".pending"),ProjectSettings.globalize_path(SAVE_FILE))!=OK:
@@ -1338,12 +1338,15 @@ func load_game() -> void:
 		var origin := TOWN_ORIGIN if saved_area == "town" else ROAD_ORIGIN
 		var point := Vector2(float(parsed.get("x", origin.x + 500)), float(parsed.get("y", 500))) - origin
 		if saved_area=="town" and int(parsed.get("version",1))<23: point=town.arrival("farm")
+		elif saved_area=="town" and int(parsed.get("version",1))<25: point=town.G.B.affine_inverse()*(Vector2(float(parsed.get("x",6000)),float(parsed.get("y",0)))-Vector2(6000,0)-town.G.ORIGIN)
 		var valid: bool = town.is_walkable(point) if saved_area == "town" else Rect2(Vector2(30, 90), Vector2(940, 820)).has_point(point)
 		travel_to(saved_area, point if valid else (town.arrival("farm") if saved_area == "town" else Vector2(500, 500)), false)
 	elif regions.has(saved_area):
 		var point := Vector2(float(parsed.get("x", 0)), float(parsed.get("y", 0))) - Vector2(REGION_ORIGINS[saved_area])
-		if int(parsed.get("version",1))<24 and saved_area in ["tea","mountain"]:
-			point=Vector2(float(parsed.get("x",0)),float(parsed.get("y",0)))-Vector2(12000 if saved_area=="tea" else 18000,0)
+		if int(parsed.get("version",1))<25:
+			var old_origins={"tea":Vector2(19600,-5775),"mountain":Vector2(18000,-6000),"harbor":Vector2(15000,0),"historic":Vector2(21000,0),"waterfall":Vector2(24000,0)}
+			if int(parsed.get("version",1))<24:old_origins.tea=Vector2(12000,0);old_origins.mountain=Vector2(18000,0)
+			point=Vector2(float(parsed.get("x",0)),float(parsed.get("y",0)))-old_origins[saved_area]
 		travel_to(saved_area, point if regions[saved_area].is_walkable(point) else Vector2(800, 950), false)
 	if saved_area == "shop" and shops.has(str(parsed.get("shop_name", ""))):
 		enter_shop(str(parsed.shop_name), true)
@@ -1355,7 +1358,7 @@ func read_saved_json(path: String) -> Variant:
 	return parser.data
 
 func update_walk(delta: float, moving: bool, direction: Vector2 = Vector2.ZERO, travel: float = -1.0) -> void:
-	if is_instance_valid(perspective) and location!="town": direction=perspective.BASIS*direction
+	if is_instance_valid(perspective): direction=perspective.BASIS*direction
 	if direction.length() > 0.15:
 		facing_direction = posmod(int(round((direction.angle()-PI/2)/(PI/4))),8)
 	walk_distance = walk_distance+(travel if travel>=0 else delta*SPEED) if moving else 0.0
@@ -2211,36 +2214,18 @@ func check_walk_exits() -> void:
 			if player.position.distance_to(BARN_DOOR) < 55:
 				enter_shop("Barn")
 				return
-			if player.position.distance_to(FARM_EXIT) < 55:
-				walk_to_area("town", town.design(Vector2(1200,2000)))
+
 		"road":
 			var point := player.position - ROAD_ORIGIN
 			if point.y < 70 and absf(point.x - 500) < 170:
 				walk_to_area("town", town.design(Vector2(1200,2000)))
 			elif point.y > 930 and absf(point.x - 500) < 170:
 				walk_to_area("farm", FARM_EXIT + Vector2(0, 100))
-		"town":
-			var point := player.position-TOWN_ORIGIN
-			for gate in town.G.EXITS:
-				if not polish.path.is_empty() and polish.path[-1].distance_to(TOWN_ORIGIN+town.G.project(gate[1]))>40:continue
-				if point.distance_to(town.G.project(gate[1]))<24:
-					match gate[0]:
-						"Farm":walk_to_area("farm",FARM_EXIT+Vector2(0,100))
-						"Highlands":walk_to_area("mountain",Vector2(800,1050))
-						"Harbor":walk_to_area("harbor",Vector2(1480,585))
-						"Shrine":walk_to_area("historic",Vector2(1440,1060))
-					return
-		_:
-			if regions.has(location):
-				var point: Vector2 = player.position - REGION_ORIGINS[location]
-				if ((location=="harbor" and point.x>1520 and absf(point.y-585)<120) or (location=="historic" and point.x>1520 and point.y>1070) or (location=="mountain" and point.y>1120 and absf(point.x-800)<100)):
-					walk_to_area("town", town.arrival(location))
-
 func open_map() -> void:
 	if choosing_character or confirming_sleep or sleep_in_progress or dialogue_open: return
 	var column := make_modal("Walking Routes")
 	dialogue_panel.get_child(0).offset_top = -340
-	dialogue_text.text = "Farm → Town walkway → Main Town.\n\nFrom town: north to the Highlands (mountains, tea country, mine and onsen); west to the Harbor; northwest through the large torii to Shrine Grounds and Moonveil Falls.\n\nHarbor: return east toward town. Tea Country: return west to the Highlands. Shrine Grounds: return southeast. Mountains: return south. Moonveil Falls shares the Shrine Grounds; follow the garden path left of the shrine. Walk through doors and gateways to change areas automatically. The library is beside Town Hall. Follow the signed tea trail in the Highlands arrival clearing."
+	dialogue_text.text = "Farm → Town walkway → Main Town.\n\nFrom town: north to the Highlands (mountains, tea country, mine and onsen); west to the Harbor; northwest through the large torii to Shrine Grounds and Moonveil Falls.\n\nHarbor: return east toward town. Tea Country: return west to the Highlands. Shrine Grounds: return south. Mountains: return south. Moonveil Falls shares the Shrine Grounds; follow the garden path left of the shrine. Outdoor paths stay continuous as the camera follows you; doors lead indoors. The library is beside Town Hall. Follow the signed tea trail in the Highlands arrival clearing."
 	column.add_child(make_button("Close", close_dialogue))
 
 func open_guide() -> void:
@@ -2737,7 +2722,7 @@ func walk_to_area(area:String,point:Vector2):
 	var finger:int=joystick.finger
 	var knob:Vector2=joystick.knob
 	var motion:Vector2=player.velocity
-	var screen_motion:Vector2=motion if location=="town" else perspective.BASIS*motion
+	var screen_motion:Vector2=perspective.BASIS*motion
 	var outdoors=not inside_house and location!="shop" and area!="shop"
 	travel_to(area,point)
 	if outdoors and not inside_house and location==area and is_instance_valid(perspective):

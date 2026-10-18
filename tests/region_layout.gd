@@ -26,7 +26,7 @@ func run() -> void:
 		assert(f.polish.path[-1].distance_to(f.REGION_ORIGINS.harbor+spot)<45)
 	assert(not f.regions.harbor.is_walkable(Vector2(285,940)),"Removed pier is water")
 	assert(not f.regions.harbor.is_walkable(Vector2(800,950)),"No road across ocean")
-	f.travel_to("harbor",Vector2(1540,610),false); f.check_walk_exits()
+	f.travel_to("harbor",Vector2(1601,585),false); f.check_walk_exits()
 	assert(f.location=="town","Harbor east exit returns automatically")
 	for minute in [480,800,1140]:
 		f.town.ambient_period=-1

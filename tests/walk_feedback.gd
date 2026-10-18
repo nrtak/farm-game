@@ -27,9 +27,9 @@ func run():
 	f.player.position=f.ROOM_ORIGIN+f.interior.EXIT
 	f.check_walk_exits(); assert(not f.inside_house)
 	f.check_walk_exits(); assert(not f.inside_house)
-	f.travel_to("town",f.town.G.project(Vector2(360,390)),false)
+	f.travel_to("town",f.town.G.project(Vector2(360,274)),false)
 	f.check_walk_exits(); assert(f.location=="historic")
-	f.player.position=f.REGION_ORIGINS.historic+Vector2(1540,1100)
+	f.player.position=f.REGION_ORIGINS.historic+Vector2(1440,1201)
 	f.check_walk_exits(); assert(f.location=="town")
 	assert(not f.REGIONAL_ROOMS.has("Archive"))
 	assert(f.service_door("Archive").x>1400)

@@ -1,6 +1,7 @@
 extends Node2D
 var farm
 var path: Array[Vector2] = []
+var crossing_target:Variant=null
 var grids := {}
 var marker := Vector2.ZERO
 var marker_time := 0.0
@@ -51,8 +52,20 @@ func tap(screen: Vector2) -> void:
 	var world: Vector2 = farm.get_canvas_transform().affine_inverse() * screen
 	plan(world)
 	get_viewport().set_input_as_handled()
-func plan(world: Vector2) -> void:
+func resume_crossing():
+	if crossing_target==null or path.is_empty():crossing_target=null;return
+	var target:Vector2=crossing_target
+	plan(target)
+func plan(world: Vector2, local_only:bool=false) -> void:
 	path.clear()
+	if not local_only:
+		crossing_target=null
+		if not farm.inside_house and farm.location in preload("res://OutdoorContinuity.gd").AREAS:
+			var route=preload("res://OutdoorContinuity.gd").route(farm,world)
+			if not route.is_empty():
+				plan(route[0],true)
+				if not path.is_empty():path.append(route[1]);crossing_target=world;marker=world
+				return
 	var area = area_node()
 	var origin := area_origin()
 	var dimensions: Vector2 = farm.WORLD if area == farm else area.SIZE
@@ -143,7 +156,7 @@ func nearest_cell(grid: AStarGrid2D, cell: Vector2i) -> Vector2i:
 		if distance < float(radius*radius): return nearest
 	return nearest
 func direction(manual: Vector2) -> Vector2:
-	if manual.length() > 0.1: path.clear(); return manual
+	if manual.length() > 0.1: path.clear();crossing_target=null; return manual
 	while not path.is_empty() and farm.player.position.distance_to(path[0]) < 0.5: path.pop_front()
 	return (path[0]-farm.player.position).normalized() if not path.is_empty() else Vector2.ZERO
 func nearest_pet():

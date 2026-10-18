@@ -1,5 +1,5 @@
 extends Node2D
-const G=preload("res://world/town/TownGeometry.gd")
+const G=preload("res://world/town/TownDisplayGeometry.gd")
 const ART={
  "Town Hall":["civic",Rect2(0,0,632,662),Vector2(435,598),false],
  "Library":["civic",Rect2(640,0,614,675),Vector2(342,620),false],
@@ -18,13 +18,16 @@ var art_cache={}
 var building_sprites:Array[Sprite2D]=[]
 var town_layer:Node2D
 func _ready():
+ var basis=Transform2D(Vector2(.558,-.207),Vector2(.378,.315),Vector2.ZERO)
+ transform=basis.affine_inverse()*Transform2D(0,-G.ORIGIN)
  town_layer=self
+ z_index=1000+int((basis*get_parent().position-G.ORIGIN).y/10)
  add_child(preload("res://world/town/TownGround.gd").new())
  for b in G.layout().buildings:
   place_building(b)
   plant_frontage(b)
  place_decoration("garden",Rect2(690,0,564,625),Vector2(282,578),Vector2(680,650),90)
- place_decoration("garden",Rect2(610,640,644,614),Vector2(322,550),Vector2(360,395),140)
+ place_decoration("garden",Rect2(610,640,644,614),Vector2(322,550),Vector2(360,300),140)
  for e in G.EXITS:place_sign(e[0],e[1]+Vector2(38,0))
  place_sign("Festival Square",Vector2(850,625))
  place_sign("Events",Vector2(930,710))
@@ -34,13 +37,16 @@ func _ready():
  playground.texture=a;playground.centered=false;playground.scale=Vector2.ONE*(195.0/cell.x)
  var foot=G.project(Vector2(900,350));playground.position=foot-Vector2(97,145);playground.z_index=int(foot.y/10)-1;add_child(playground)
 func follow_player(point:Vector2):
+ var basis=Transform2D(Vector2(.558,-.207),Vector2(.378,.315),Vector2.ZERO)
+ point=basis*point+G.ORIGIN
  for sprite in building_sprites:
   var bounds=Rect2(sprite.position,sprite.texture.get_size()*sprite.scale)
   var obscures_actor=bounds.intersects(Rect2(point-Vector2(18,65),Vector2(36,65))) and sprite.z_index>int(point.y/10)
   # A nearby conversation partner deserves the same roof fade as the farmer.
   for npc in get_parent().npcs:
-   if not npc.visible or npc.position.distance_to(point)>150:continue
-   if sprite.z_index>npc.z_index and bounds.intersects(Rect2(npc.position-Vector2(18,65),Vector2(36,65))):obscures_actor=true
+   var foot=basis*npc.position+G.ORIGIN
+   if not npc.visible or foot.distance_to(point)>150:continue
+   if sprite.z_index>int(foot.y/10) and bounds.intersects(Rect2(foot-Vector2(18,65),Vector2(36,65))):obscures_actor=true
   sprite.modulate.a=.3 if obscures_actor else 1.0
 func atlas(name:String,region:Rect2)->Texture2D:
  if not art_cache.has(name):art_cache[name]=load("res://world/town/"+name+"-atlas.png")

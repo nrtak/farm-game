@@ -1,13 +1,14 @@
 extends RefCounted
+const B=Transform2D(Vector2(.558,-.207),Vector2(.378,.315),Vector2.ZERO)
 const ORIGIN=Vector2(120,1050)
 const AXIS_X=Vector2(.86,-.32)
 const AXIS_Y=Vector2(.58,.48)
 const WORLD=Rect2(165,275,1735,1310)
 const ALIASES={"Library":"Archive","Police":"Police Box","Fire":"Fire Station","Hospital":"Clinic","Store":"General Store","Cafe":"Caf\u00e9","Carpenter":"Carpentry","Vet":"Veterinarian"}
-const EXITS=[["Highlands",Vector2(1300,300),Vector2(1300,365)],["Harbor",Vector2(185,910),Vector2(260,910)],["Shrine",Vector2(360,390),Vector2(360,470)],["Farm",Vector2(1300,1550),Vector2(1300,1480)]]
-static func project(p:Vector2)->Vector2:return ORIGIN+AXIS_X*p.x+AXIS_Y*p.y
+const EXITS=[["Highlands",Vector2(1300,274),Vector2(1300,365)],["Harbor",Vector2(164,910),Vector2(260,910)],["Shrine",Vector2(360,274),Vector2(360,470)],["Farm",Vector2(1300,1586),Vector2(1300,1480)]]
+static func project(p:Vector2)->Vector2:return B.affine_inverse()*(AXIS_X*p.x+AXIS_Y*p.y)
 static func unproject(p:Vector2)->Vector2:
- var v=p-ORIGIN;var det=AXIS_X.x*AXIS_Y.y-AXIS_Y.x*AXIS_X.y
+ var v=B*p;var det=AXIS_X.x*AXIS_Y.y-AXIS_Y.x*AXIS_X.y
  return Vector2((v.x*AXIS_Y.y-v.y*AXIS_Y.x)/det,(v.y*AXIS_X.x-v.x*AXIS_X.y)/det)
 static func polygon(r:Rect2)->PackedVector2Array:
  return PackedVector2Array([project(r.position),project(r.position+Vector2(r.size.x,0)),project(r.end),project(r.position+Vector2(0,r.size.y))])

@@ -1,6 +1,6 @@
 extends Node2D
 const PLACES=[
- ["town",Vector2(1300,700),"Library bench","Sit and watch the town","The pages rustle in the breeze. Haruka says every old map has a story."],
+ ["town",Vector2(1300,570),"Library bench","Sit and watch the town","The pages rustle in the breeze. Haruka says every old map has a story."],
  ["town",Vector2(1530,440),"School noticeboard","Read","This week: growing beans, drawing the village, and an afternoon nature walk. Lessons end at two."],
  ["town",Vector2(1120,1240),"Restaurant menu","Read","Today's kitchen uses local vegetables. Ask inside for a warm seasonal meal."],
  ["harbor",Vector2(1310,445),"Harbor bench","Sit and watch the tide","A gull circles the boats while someone sorts a net along the quay."],
@@ -47,7 +47,7 @@ func _draw():
   draw_circle(mark[0]+Vector2(5,8),3,Color(.55,.43,.29,.35*(1-(age-mark[1])/15)))
  for p in PLACES:
   if farm.location!=p[0]:continue
-  var at=point(p);var b=farm.perspective.BASIS if farm.location!="town" else Transform2D.IDENTITY
+  var at=point(p);var b=farm.perspective.BASIS
   draw_set_transform_matrix(b.affine_inverse()*Transform2D(0,b*at))
   if "bench" in p[2]:
    for x in [-25,25]:draw_line(Vector2(x,0),Vector2(x,-18),Color("76553a"),4)

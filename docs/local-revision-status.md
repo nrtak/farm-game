@@ -44,20 +44,19 @@ Baseline: 5860f45 (0.3.0 / 202). Existing work preserved.
 
 - October 18 checkpoint verification: 21c2704 includes remaining tested source changes and referenced runtime assets. A fresh Git archive in ../checkpoint-validation-21c2704 imported all resources, then passed angled_world and local_expansion with isolated saves. Unrelated draft art/debug files were preserved outside the checkpoint. No remote push or TestFlight upload.
 
-## Outstanding — not complete
-- Full seamless outdoor world/camera travel: Highlands–Tea Country now shares physical coordinates and continuous camera travel; town/farm/harbor/shrine connections still switch with a short pan.
-- Full all-area visual refinement, additional interior detail/stairs, and natural boundary treatment.
-- Final visual review of newly staged outings/wedding, seated benches, welcoming garden and tractor animation (implemented in the resumed morning session).
-- Final numbered screenshot approval, movement demo, physical iPhone validation and release.
+## Review build status — Connected World Edition, 0.4.0 / 300
+- Local implementation and regression pass completed for this revision batch. All six outdoor areas share physical coordinates, projection and camera; both joystick and tap routes cross the five connections.
+- Numbered screenshots 01–29 and a moving gameplay capture are available from the final local export for user review.
+- Remaining release gates: user screenshot/playability review, physical iPhone validation, and explicit approval before GitHub/TestFlight upload. No remote upload has occurred.
 
 ## Resumed morning session — October 18
-- Outings now stage the player and partner in the café, shore or shrine; weddings include three neighbors. Temporary scenes restore the exact origin and never save staged positions. Rainy weddings use the shrine residence. Isolated tests cover five origin areas, all three outings, save guards, cleanup and wedding reload.
+- Outings now stage the player and partner in the cafÃ©, shore or shrine; weddings include three neighbors. Temporary scenes restore the exact origin and never save staged positions. Rainy weddings use the shrine residence. Isolated tests cover five origin areas, all three outings, save guards, cleanup and wedding reload.
 - All three benches have a seated pose and restore the player on dismissal. Visual review caught a too-large panel and an obscured library bench; panel corrected, bench placement review still in progress.
 - Leader trust unlocks a wildflower welcoming garden. Each nature friend awards a single cosmetic keepsake at 20 friendship; garden and keepsakes persist. Creatures still do no chores.
 - Original tractor artwork is integrated with a visible morning-job route, yielding to the player and pausing with the game. Animation never repeats the already-settled crop rewards. Isolated regression passed; generated art provenance is in tractor-art.txt.
 - New labeled gameplay captures 18–24 exist in ../PhoneFeedbackPreview/moment-*.png. These are interim views, not evidence that the full revision batch or seamless travel is finished.
 - All 61 checks passed before the continuous-region change. The revised library bench was subsequently moved to the open lane and nature-friend panels use the compact layout.
-- Highlands and Tea Country now form one physical outdoor stretch with both landscapes rendered together, a clear connecting lane, preserved player position/velocity and no camera switch. Save schema 24 migrates old mountain/tea coordinates. New bidirectional physics/camera/migration regression and phone_revision passed. Full 62-check rerun underway; the other connections are not yet converted.
+- Highlands and Tea Country now form one physical outdoor stretch with both landscapes rendered together, a clear connecting lane, preserved player position/velocity and no camera switch. Save schema 24 migrates old mountain/tea coordinates. New bidirectional physics/camera/migration regression and phone_revision passed. The 62-check run passed at that checkpoint; the remaining connections were subsequently converted in build 300.
 
 ## Reference standard approved by user
 Use Harvest Moon (especially Back to Nature), Story of Seasons and Stardew Valley as polish references when making routine design decisions. Preserve original artwork, characters and story.
@@ -66,3 +65,13 @@ Use Harvest Moon (especially Back to Nature), Story of Seasons and Stardew Valle
 - Inspect moving gameplay as well as still images; screenshots cannot establish collision quality, responsiveness, save correctness or progression balance.
 - Do not equate passing automated checks with comparable production polish.
 Official reference galleries: https://www.stardewvalley.net/media/ and https://marvelousgames.com/games/story-of-seasons-friends-of-mineral-town
+
+## Final morning completion pass
+- Unified town physics with the shared projection while preserving rendered storefront proportions. Connected farm/town, town/Highlands, town/shrine, town/harbor and Highlands/tea without teleporting the player or changing camera scale.
+- Save schema 25 migrates old outdoor coordinates. Audit covers all five relocated maps in versions 23, 24 and 25, preserved friendship and repeated save/reload.
+- Cross-map tap paths route through clear gates; manual movement cancels them. Nearby scenery is rendered together, distant regions are culled, and rooms remain isolated.
+- Cleared horizon trees from neighboring gateways, matched terrain at joins, added wall windows/joinery and pier plank grain/fasteners. Repositioned wedding staging on dry ground and updated roof fading during seated dialogue.
+- Deep audit found and fixed missing festival cleanup on continuous exits and hardened missing-coordinate legacy saves. Updated obsolete teleport-boundary tests to physical boundary positions; their navigation assertions remain.
+- All 64 checks passed in the complete regression run. The additional festival-exit audit passed after its fix. Automated coverage includes 112 overnight settlements, eight story chapters, Year 2 vote, interactions, inventory, relationship scenes, save recovery, movement and rendering isolation. This is not physical iPhone testing or a manual full playthrough.
+
+- Final local export passed phone_revision, home_recovery and farm_systems. Packaged social-scene and connection captures passed. The final bench relocation also passed its seating/restoration regression. No GitHub or TestFlight upload.

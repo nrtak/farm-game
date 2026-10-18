@@ -33,7 +33,7 @@ func run():
 	assert(not f.regions.tea.is_walkable(Vector2(200,850)))
 	f.travel_to("tea",Vector2(-1,665),false); f.check_walk_exits()
 	assert(f.location=="mountain")
-	f.travel_to("town",f.town.G.project(Vector2(185,910)),false); f.check_walk_exits()
+	f.travel_to("town",f.town.G.project(Vector2(164,910)),false); f.check_walk_exits()
 	assert(f.location=="harbor","Town exits before the shoreline")
 	assert(not f.town.is_walkable(f.town.G.project(Vector2(90,800))),"Removed town pier stays ocean")
 	print("PASS: wide farm, town, mountain, shrine, harbor and tea routes have body clearance; shore transition and water boundaries work")

@@ -16,7 +16,9 @@ func run():
 			assert(f.is_walkable(Vector2(x,y)),"Soil bed can be reached")
 	assert(not f.interior.is_walkable(Vector2(650,210)),"House wall is blocked")
 	assert(f.interior.is_walkable(f.interior.ENTRY),"House entry remains open")
-	assert(is_equal_approx(f.town.SIZE.x/f.town.SIZE.y,1.5),"Town preserves artwork proportions")
+	var basis=f.perspective.BASIS
+	for raw in [Vector2(360,300),Vector2(1300,910),Vector2(1700,1300)]:
+		assert((basis*f.town.G.project(raw)+f.town.G.ORIGIN).distance_to(preload("res://world/town/TownDisplayGeometry.gd").project(raw))<.01,"Town preserves rendered artwork proportions in shared coordinates")
 	for npc in f.regions.tea.npcs:
 		assert(f.regions.tea.is_walkable(npc.position),"Tea residents stand on ground")
 	for name in preload("res://InteriorPlan.gd").ROOMS:

@@ -54,12 +54,18 @@ func setup(area: String, people: Array) -> void:
 		var shape := CircleShape2D.new()
 		shape.radius=circle[1]; collider.shape=shape
 		body.add_child(collider); add_child(body)
-	for rect in [Rect2(-24, -24, 1648, 24), Rect2(-24, 1200, 1648, 24)]: obstacle(rect)
+	obstacle(Rect2(-24,-24,1648,24))
+	if kind in ["mountain","historic"]:
+		var gate=800 if kind=="mountain" else 1440
+		obstacle(Rect2(-24,1200,gate-66,24));obstacle(Rect2(gate+90,1200,1624-gate-90,24))
+	else:obstacle(Rect2(-24,1200,1648,24))
 	if kind=="tea":
 		obstacle(Rect2(-24,0,24,585));obstacle(Rect2(-24,765,24,435))
 	else:obstacle(Rect2(-24,0,24,1200))
 	if kind=="mountain":
 		obstacle(Rect2(1600,0,24,810));obstacle(Rect2(1600,990,24,210))
+	elif kind=="harbor":
+		obstacle(Rect2(1600,0,24,495));obstacle(Rect2(1600,675,24,525))
 	else:obstacle(Rect2(1600,0,24,1200))
 	for i in range(people.size()):
 		var person: String = people[i]

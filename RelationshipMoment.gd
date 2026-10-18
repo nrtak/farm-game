@@ -20,7 +20,7 @@ func begin(f,person:String,occasion:String,words:String):
   f.enter_shop("Shrine Residence",true)
   f.player.position=f.SHOP_ORIGIN+Vector2(550,440)
  else:
-  f.travel_to("harbor" if occasion=="Beach walk" else "historic",Vector2(1070,700) if occasion=="Beach walk" else Vector2(1410,520),false)
+  f.travel_to("harbor" if occasion=="Beach walk" else "historic",Vector2(1070,700) if occasion=="Beach walk" else Vector2(1410,650),false)
  # Hide only residents in the scene's host, leaving their schedules intact.
  for host in f.perspective.actor_roots:
   for child in host.get_children():
@@ -41,7 +41,9 @@ func _process(_delta):
 func add_actor(person:String,foot:Vector2):
  var actor=load("res://Npc.gd").new()
  farm.add_child(actor);actor.setup(person,load("res://CharacterArt.gd").walk(person))
- actor.position=foot;actor.paused=true;actor.face_player(farm.player.position)
+ var host=farm.polish.area_node();var offset=farm.polish.area_origin()
+ actor.position=offset+host.safe_point(foot-offset) if host.has_method("safe_point") else foot
+ actor.paused=true;actor.face_player(farm.player.position)
  actors.append(actor)
 func finish():
  if finished:return

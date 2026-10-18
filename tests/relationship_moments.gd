@@ -28,6 +28,7 @@ func run():
  var s=R.state(f,"Seira");s.status="engaged";s.affection=90;s.chapter=3
  R.commit(f,"Seira","married")
  assert(f.relationship_moment.actors.size()==4,"Wedding includes partner and neighbors")
+ for actor in f.relationship_moment.actors:assert(f.polish.area_node().is_walkable(actor.position-f.polish.area_origin()),"Wedding guests stand on clear dry ground")
  f.load_game();await process_frame
  assert(R.state(f,"Seira").status=="married" and f.location=="tea","Reload keeps vows and origin, never staged location")
  print("PASS: staged outings/wedding restore five origins, preserve saves and clean up actors")

@@ -1,5 +1,5 @@
 extends Node2D
-const G=preload("res://world/town/TownGeometry.gd")
+const G=preload("res://world/town/TownDisplayGeometry.gd")
 var data:Dictionary
 var grass:Texture2D
 func _ready():
@@ -7,11 +7,14 @@ func _ready():
 func quad(r:Rect2,c:Color):draw_colored_polygon(G.polygon(r),c)
 func _draw():
  if data==null or data.is_empty():return
- quad(Rect2(-200,-250,2800,2100),Color("5ba8bf"))
- quad(Rect2(130,-2500,6000,6000),Color("d8c391"))
- quad(Rect2(165,-2500,6000,6000),Color("83b960"))
  var rng=RandomNumberGenerator.new();rng.seed=817
- draw_polygon(G.polygon(Rect2(165,-2500,6000,6000)),PackedColorArray([Color.WHITE]),PackedVector2Array([Vector2(0,0),Vector2(20,0),Vector2(20,20),Vector2(0,20)]),grass)
+ quad(G.WORLD,Color("8eae62"))
+ var vertices=G.polygon(G.WORLD)
+ var uv=PackedVector2Array()
+ var basis=preload("res://world/angled/WorldPerspective.gd").BASIS
+ for vertex in vertices:uv.append((basis.affine_inverse()*(vertex-G.ORIGIN)+get_parent().get_parent().position)/grass.get_size())
+ draw_polygon(vertices,PackedColorArray([Color(.95,.98,.90,.58)]),uv,grass)
+ quad(Rect2(310,275,100,195),Color("d9c8a3"))
  # Low planting beds occupy the unused backs of the blocks, never the streets.
  for row in [500,780,1060,1340]:
   for x in [1080,1430,1770]:
@@ -30,5 +33,3 @@ func _draw():
     var colors=[Color("e9d8b5"),Color("decaa4"),Color("d3c5a6"),Color("efe0c1")]
     var tone=colors[rng.randi_range(0,3)]
     quad(Rect2(p,Vector2(20,12)),tone)
- # Coast stays open, and the inland river never runs through the town.
- for y in range(-80,1600,48):draw_line(G.project(Vector2(105,y)),G.project(Vector2(115,y+22)),Color("c9eef0"),3,true)

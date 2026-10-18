@@ -35,7 +35,7 @@ func run():
  f.end_festival();assert(f.coins==coins_before+50,"Repeated festival exit cannot repeat rewards")
  assert(not f.festival_active and is_equal_approx(f.camera.zoom.x,1.45))
  for name in ["mountain","harbor","historic"]:
-  var exits={"mountain":Vector2(800,1140),"harbor":Vector2(1540,585),"historic":Vector2(1540,1100)}
+  var exits={"mountain":Vector2(800,1201),"harbor":Vector2(1601,585),"historic":Vector2(1440,1201)}
   f.travel_to(name,exits[name],false);f.player.position=f.REGION_ORIGINS[name]+exits[name];f.check_walk_exits()
   assert(f.location=="town" and f.town.is_walkable(f.player.position-f.TOWN_ORIGIN),"Return from "+name)
  print("PASS: continuous physics walking to every town building, no accidental doors, festival at new square, neighboring map returns")

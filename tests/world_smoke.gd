@@ -52,7 +52,7 @@ func run() -> void:
 		farm.player.position = farm.REGION_ORIGINS[area_name] + Vector2(800, 1100)
 		if area_name=="waterfall":
 			farm.close_dialogue()
-			farm.player.position=farm.REGION_ORIGINS.historic+Vector2(1540,1100)
+			farm.player.position=farm.REGION_ORIGINS.historic+Vector2(1440,1201)
 			farm.check_walk_exits()
 			assert(farm.location=="town","Shrine falls return to town")
 			farm.travel_to("town",Vector2(1100,940),false)
@@ -163,23 +163,23 @@ func run() -> void:
 	assert(farm.clock_text() == "7:00 AM")
 	farm.clock_minutes = 450
 	assert(farm.clock_text() == "7:30 AM")
-	var exits := {"mountain":Vector2(1300,300),"harbor":Vector2(185,910),"historic":Vector2(360,390)}
+	var exits := {"mountain":Vector2(1300,274),"harbor":Vector2(164,910),"historic":Vector2(360,274)}
 	for area in exits:
 		farm.travel_to("town", farm.town.G.project(exits[area]), false)
 		farm._physics_process(0.016)
 		assert(farm.location == area, "Walk into " + area)
 		farm._physics_process(0.016)
 		assert(farm.location == area, "Arrival does not bounce back")
-		var returns := {"harbor":Vector2(1540,585),"tea":Vector2(-1,665),"historic":Vector2(1540,1100),"mountain":Vector2(800,1130)}
+		var returns := {"harbor":Vector2(1601,585),"tea":Vector2(-1,665),"historic":Vector2(1440,1201),"mountain":Vector2(800,1201)}
 		farm.player.position = farm.REGION_ORIGINS[area] + returns[area]
 		farm._physics_process(0.016)
 		assert(farm.location == "town", "Walk back from " + area)
 		farm._physics_process(0.016)
 		assert(farm.location == "town", "Town arrival remains in town")
-	farm.travel_to("town", farm.town.G.project(Vector2(1300,1550)), false)
+	farm.travel_to("town", farm.town.G.project(Vector2(1300,1586)), false)
 	farm._physics_process(0.016)
 	assert(farm.location == "farm", "Town south directly reaches farm")
-	farm.player.position = farm.FARM_EXIT
+	farm.player.position = farm.FARM_EXIT+Vector2(0,-1)
 	farm._physics_process(0.016)
 	assert(farm.location == "town", "Farm walkway automatically enters town")
 	farm.open_guide()

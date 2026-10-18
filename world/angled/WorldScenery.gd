@@ -46,8 +46,8 @@ func prop(texture: Texture2D, index: int, rows: int, foot: Vector2, width: float
 	s.centered=false
 	var ratio=width/cell.x
 	s.transform=B.affine_inverse()*Transform2D(0,Vector2.ONE*ratio,0,B*foot-Vector2(width*.5,cell.y*ratio*.91))
-	var depth_foot=foot+position-farm.REGION_ORIGINS.mountain if kind in ["mountain","tea"] else foot
-	s.z_as_relative=false;s.z_index=clampi(int((B*depth_foot).y)+1000,1,4000)
+	var depth_foot=foot if kind in ["home","room"] else foot+position
+	s.z_as_relative=false;s.z_index=clampi(int((B*depth_foot).y*.1)+1000,1,4000)
 	add_child(s);props.append(s)
 	if not caption.is_empty():
 		var sign=Label.new();sign.text=caption;sign.position=cell*Vector2(.20,.74)
@@ -62,7 +62,7 @@ func farm_prop(index:int,foot:Vector2,width:float):
 	var sprite=Sprite2D.new();sprite.texture=farm_props;sprite.region_enabled=true;sprite.region_filter_clip_enabled=true;sprite.region_rect=region;sprite.centered=false
 	var ratio=width/region.size.x
 	sprite.transform=B.affine_inverse()*Transform2D(0,Vector2.ONE*ratio,0,B*foot-Vector2(width*.5,region.size.y*ratio*.96))
-	sprite.z_as_relative=false;sprite.z_index=clampi(int((B*foot).y)+1000,1,4000)
+	sprite.z_as_relative=false;sprite.z_index=clampi(int((B*(foot if kind in ["home","room"] else foot+position)).y*.1)+1000,1,4000)
 	add_child(sprite);props.append(sprite)
 	return sprite
 func refresh_props():
@@ -86,7 +86,7 @@ func home_prop(index:int,foot:Vector2,width:float):
 	var sprite=Sprite2D.new();sprite.texture=texture;sprite.region_enabled=true;sprite.region_filter_clip_enabled=true;sprite.region_rect=region;sprite.centered=false
 	var ratio=width/region.size.x
 	sprite.transform=B.affine_inverse()*Transform2D(0,Vector2.ONE*ratio,0,B*foot-Vector2(width*.5,region.size.y*ratio*.94))
-	sprite.z_as_relative=false;sprite.z_index=clampi(int((B*foot).y)+1000,1,4000)
+	sprite.z_as_relative=false;sprite.z_index=clampi(int((B*(foot if kind in ["home","room"] else foot+position)).y*.1)+1000,1,4000)
 	add_child(sprite);props.append(sprite)
 func build_props():
 	if kind=="farm":
@@ -134,7 +134,7 @@ func build_props():
 			for y in range(90,1200,145):
 				for x in range(90,1600,145):
 					var point=Vector2(x,y)
-					if x<210 or Rect2(400,0,1200,600).has_point(point):continue
+					if x<210 or Rect2(400,0,1200,600).has_point(point) or (point.y>900 and absf(point.x-1440)<300):continue
 					if Geometry2D.is_point_in_polygon(point,host.walk_outline):continue
 					var beside_path=false
 					for i in range(host.walk_outline.size()):
@@ -181,23 +181,32 @@ func school_desk(foot:Vector2):
 	var ratio=68.0/dimensions.x
 	sprite.centered=false
 	sprite.transform=B.affine_inverse()*Transform2D(0,Vector2.ONE*ratio,0,B*foot-Vector2(34,dimensions.y*ratio*.97))
-	sprite.z_as_relative=false;sprite.z_index=clampi(int((B*foot).y)+1000,1,4000)
+	sprite.z_as_relative=false;sprite.z_index=clampi(int((B*(foot if kind in ["home","room"] else foot+position)).y*.1)+1000,1,4000)
 	add_child(sprite);props.append(sprite)
 func build_horizon():
 	# Continue the scenery past the navigation bounds; never put new solids in a road.
 	if kind not in ["tea","mountain","historic","waterfall","harbor"]:return
 	for y in [-380,-230,-80,1280,1430]:
 		for x in range(-260,1900,150):
+			if not horizon_clear(Vector2(x,y)):continue
 			if kind=="harbor" and (y>0 or x<250):continue
-			if y>1200 and absf(x-800)<180:continue
+			if y>1200:continue
 			if kind=="historic" and (x<220 or (y>1200 and x>1300)):continue
 			prop(landmarks,11,3,Vector2(x,y),120+posmod(x,31))
 	if kind in ["tea","mountain"]:
 		for y in range(140,1180,170):
 			for x in [-180,1780]:
+				if not horizon_clear(Vector2(x,y)):continue
 				if (kind=="tea" and x<0) or (kind=="mountain" and x>1600):continue
 				if (kind=="tea" and absf(y-675)<180) or (kind=="mountain" and absf(y-900)<180):continue
 				prop(landmarks,11,3,Vector2(x,y),145)
+func horizon_clear(point:Vector2)->bool:
+	var world=point+position
+	if kind!="farm" and Rect2(Vector2.ZERO,Vector2(3000,2000)).grow(120).has_point(world):return false
+	if kind!="town" and Rect2(farm.TOWN_ORIGIN,farm.town.SIZE).grow(120).has_point(world):return false
+	for area in ["tea","mountain","historic","harbor"]:
+		if area!=kind and Rect2(farm.REGION_ORIGINS[area],Vector2(1600,1200)).grow(120).has_point(world):return false
+	return true
 func road(a: Vector2,b: Vector2,width: float=115):
 	var direction=(b-a).normalized()
 	if direction==Vector2.ZERO:return
@@ -254,22 +263,23 @@ func _draw():
 	var size=Vector2(3000,2000) if kind=="farm" else Vector2(1600,1200)
 	if kind=="road":size=Vector2(1000,1000)
 	var grass=Color("8eae62")
-	var ground_rect=Rect2(Vector2.ZERO,size).grow(1200)
-	if kind=="mountain":ground_rect.size.x=2800
-	elif kind=="tea":ground_rect.position.x=0;ground_rect.size.x=2800
+	var ground_rect=Rect2(Vector2.ZERO,size)
 	draw_rect(ground_rect,grass)
 	draw_rect(Rect2(Vector2.ZERO,size),grass)
-	draw_texture_rect(grass_texture,ground_rect,true,Color(.95,.98,.90,.58))
+	var vertices=PackedVector2Array([ground_rect.position,Vector2(ground_rect.end.x,ground_rect.position.y),ground_rect.end,Vector2(ground_rect.position.x,ground_rect.end.y)])
+	var uv=PackedVector2Array()
+	for vertex in vertices:uv.append((vertex+position)/grass_texture.get_size())
+	draw_polygon(vertices,PackedColorArray([Color(.95,.98,.90,.58)]),uv,grass_texture)
 	for y in range(15,int(size.y),48):
 		for x in range(15,int(size.x),53):
 			var p=Vector2(x+sin(y+x)*14,y+cos(x)*10)
 			draw_line(p,p+Vector2(3,-6),Color(.34,.49,.25,.23),2)
 	if kind=="harbor":
-		draw_rect(Rect2(Vector2.ZERO,size).grow(1200),Color("70b4bf"))
+		draw_rect(Rect2(Vector2.ZERO,size),Color("70b4bf"))
 		var coast:PackedVector2Array=host.land_outline.duplicate()
 		coast.remove_at(coast.size()-1)
-		coast.insert(0,Vector2(80,-1600));coast.append(Vector2(3200,1450))
-		var land=coast.duplicate();land.append(Vector2(3200,-1600))
+		coast.insert(0,Vector2(80,0))
+		var land=coast.duplicate();land.append(Vector2(1600,0))
 		draw_colored_polygon(land,Color("dfd1a2"))
 		draw_polyline(coast,Color("d1e9da"),10,true)
 	elif kind=="tea":water(host.pond_outline)
@@ -283,16 +293,9 @@ func _draw():
 			draw_set_transform_matrix(Transform2D.IDENTITY)
 	elif kind=="historic":
 		for poly in host.water_polygons:water(poly)
-		draw_texture_rect(grass_texture,Rect2(Vector2.ZERO,size).grow(900),true)
-		for poly in host.water_polygons:water(poly)
-		# The walkable clearing is grass, with clear stone approaches rather than a polygon slab.
-		draw_set_transform_matrix(B.affine_inverse()*Transform2D(0,B*Vector2(1450,1080)))
-		for x in [-68,68]:draw_line(Vector2(x,0),Vector2(x,-120),Color("a64030"),12)
-		draw_line(Vector2(-95,-124),Vector2(95,-124),Color("384f48"),14)
-		draw_line(Vector2(-84,-94),Vector2(84,-94),Color("b54c38"),10)
-		draw_set_transform_matrix(Transform2D.IDENTITY)
+
 	elif kind=="waterfall":
-		draw_texture_rect(grass_texture,Rect2(Vector2.ZERO,size).grow(900),true)
+		draw_texture_rect(grass_texture,Rect2(Vector2.ZERO,size),true)
 		water(PackedVector2Array([Vector2(-1400,-1400),Vector2(2800,-1400),Vector2(2800,360),Vector2(1380,460),Vector2(1050,485),Vector2(550,485),Vector2(220,520),Vector2(-1400,440)]))
 
 		for i in range(90):
@@ -327,7 +330,13 @@ func _draw():
 					draw_line(Vector2(-2,4),Vector2(-2,24),Color("a58153"),2)
 					draw_set_transform_matrix(Transform2D.IDENTITY)
 		draw_rect(host.pier_area,Color("94734b"))
-		for y in range(int(host.pier_area.position.y),int(host.pier_area.end.y),18):draw_line(Vector2(host.pier_area.position.x,y),Vector2(host.pier_area.end.x,y),Color("c3a278"),3)
+		for y in range(int(host.pier_area.position.y),int(host.pier_area.end.y),18):
+			var left=host.pier_area.position.x;var right=host.pier_area.end.x
+			draw_rect(Rect2(left,y,right-left,16),Color("a78355") if y%36==0 else Color("967347"))
+			draw_line(Vector2(left,y),Vector2(right,y),Color("cfb181"),2)
+			for x in range(int(left)+8,int(right)-5,29):
+				draw_line(Vector2(x,y+7),Vector2(minf(x+22,right-4),y+9),Color(.34,.23,.12,.25),1,true)
+			for x in [left+7,right-7]:draw_circle(Vector2(x,y+8),1.4,Color("625842"))
 	for fence in preload("res://RegionBorders.gd").rects(kind):
 		var horizontal=fence.size.x>fence.size.y
 		var start=fence.position;var end=fence.end
@@ -374,6 +383,21 @@ func draw_room():
 	var d=floor_rect.end
 	draw_colored_polygon(PackedVector2Array([b,d,d+rise,b+rise]),Color("d8cbb0"))
 	draw_polyline(PackedVector2Array([a+rise,b+rise,d+rise]),Color("82715b"),6,true)
+	# Shared joinery keeps the two walls coherent; windows sit in the wall plane.
+	draw_polyline(PackedVector2Array([a,b,d]),Color("a58b65"),5,true)
+	draw_polyline(PackedVector2Array([a+rise*.22,b+rise*.22,d+rise*.22]),Color("c5b18c"),3,true)
+	if name!="Mine":
+		for fraction in [.24,.72]:
+			var center=a.lerp(b,fraction)
+			var left=center-Vector2(43,0)+rise*.37
+			var right=center+Vector2(43,0)+rise*.37
+			var top=rise*.43
+			var frame=PackedVector2Array([left,right,right+top,left+top])
+			draw_colored_polygon(frame,Color("9dbdc0"))
+			draw_polyline(PackedVector2Array([left,right,right+top,left+top,left]),Color("98734e"),5,true)
+			draw_line((left+right)*.5,(left+right)*.5+top,Color("e8d4aa"),3,true)
+			draw_line(left+top*.5,right+top*.5,Color("e8d4aa"),3,true)
+			draw_line(left-Vector2(7,0),right+Vector2(7,0),Color("b89467"),6,true)
 	var exit_point:Vector2=host.EXIT if kind=="home" else Vector2(550,780)
 	draw_rect(Rect2(exit_point-Vector2(65,40),Vector2(130,40)),Color("b99965"))
 	draw_rect(Rect2(exit_point-Vector2(65,40),Vector2(130,40)),Color("8c714d"),false,2)
@@ -450,7 +474,7 @@ func coastal_prop(index:int,foot:Vector2,width:float):
 	var sprite=Sprite2D.new();sprite.texture=preload("res://world/angled/CoastalGardenArt.gd").texture(index);sprite.centered=false
 	var size=sprite.texture.get_size();var ratio=width/size.x
 	sprite.transform=B.affine_inverse()*Transform2D(0,Vector2.ONE*ratio,0,B*foot-Vector2(width*.5,size.y*ratio*.94))
-	sprite.z_as_relative=false;sprite.z_index=clampi(int((B*foot).y)+1000,1,4000)
+	sprite.z_as_relative=false;sprite.z_index=clampi(int((B*(foot if kind in ["home","room"] else foot+position)).y*.1)+1000,1,4000)
 	add_child(sprite);props.append(sprite)
 
 func expansion_prop(index:int,foot:Vector2,width:float):
@@ -461,5 +485,5 @@ func expansion_prop(index:int,foot:Vector2,width:float):
 	cell=sprite.region_rect.size
 	var ratio=width/cell.x
 	sprite.transform=B.affine_inverse()*Transform2D(0,Vector2.ONE*ratio,0,B*foot-Vector2(width*.5,cell.y*ratio*.91))
-	sprite.z_as_relative=false;sprite.z_index=clampi(int((B*foot).y)+1000,1,4000)
+	sprite.z_as_relative=false;sprite.z_index=clampi(int((B*(foot if kind in ["home","room"] else foot+position)).y*.1)+1000,1,4000)
 	add_child(sprite);props.append(sprite)

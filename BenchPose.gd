@@ -10,10 +10,10 @@ func begin(f,foot:Vector2):
  body.region_rect=Rect2(region.position,Vector2(region.size.x,region.size.y*.66))
  body.scale=Vector2.ONE*(43.0/body.region_rect.size.y)
  body.position=Vector2(0,-35);add_child(body)
- var basis=Transform2D.IDENTITY if f.location=="town" else f.perspective.BASIS
+ var basis=f.perspective.BASIS
  transform=basis.affine_inverse()*Transform2D(0,basis*foot)
  z_as_relative=false
- z_index=clampi(int((foot-f.TOWN_ORIGIN).y/10)+1,1,4000) if f.location=="town" else clampi(int((basis*(foot-f.polish.area_origin())).y)+1001,1,4000)
+ z_index=f.perspective.depth(foot)+1
  f.farmer.hide()
 func finish():
  if is_instance_valid(farm):farm.farmer.visible=original_visible

@@ -25,7 +25,7 @@ func run():
 	assert(not f.regions.historic.is_walkable(Vector2(700,400)),"Pool cannot be walked on")
 	for y in range(540,701,20): assert(f.regions.historic.is_walkable(Vector2(700,y)))
 	f.save_game(false);f.load_game();assert(f.location=="historic")
-	f.player.position=f.REGION_ORIGINS.historic+Vector2(1540,1100);f.check_walk_exits()
+	f.player.position=f.REGION_ORIGINS.historic+Vector2(1440,1201);f.check_walk_exits()
 	assert(f.location=="town")
 	f.clock_minutes=850
 	for d in range(1,40):

@@ -34,4 +34,4 @@ func _process(delta):
  var b=farm.perspective.BASIS
  var ratio=100.0/sprite.texture.get_width()
  sprite.transform=b.affine_inverse()*Transform2D(0,Vector2.ONE*ratio,0,b*foot+Vector2(0,-sprite.texture.get_height()*ratio*.39+(sin(elapsed*16)*.5 if moving else 0)))
- sprite.z_as_relative=false;sprite.z_index=clampi(int((b*foot).y)+1000,1,4000)
+ sprite.z_as_relative=false;sprite.z_index=farm.perspective.depth(foot)

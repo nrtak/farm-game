@@ -2,7 +2,7 @@ config_version=5
 
 [application]
 config/name="Tea Blossom Hills"
-config/version="0.3.0"
+config/version="0.4.0"
 config/description="World Rebuild Edition · Build 200"
 config/icon="res://assets/tea-blossom-hills-icon.png"
 run/main_scene="res://Main.tscn"

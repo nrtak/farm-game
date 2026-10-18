@@ -6,7 +6,7 @@ func run():
 	f.set_physics_process(false);f.choose_character("boy");f.close_dialogue()
 	f.travel_to("harbor",Vector2(800,650),false);await process_frame
 	f.travel_to("town",f.town.arrival("farm"),false);await process_frame
-	assert(absf(f.farmer.rotation)<.001 and absf(f.farmer.skew)<.001,"Town return keeps farmer upright")
+	assert((f.perspective.BASIS*f.farmer.transform).y.normalized().dot(Vector2.DOWN)>.999,"Town return keeps farmer upright on screen")
 	assert(f.farmer.scale.x<1,"Town return preserves character size")
 	for area in f.regions:
 		for title in preload("res://ApprovedMapLayout.gd").doors(area):

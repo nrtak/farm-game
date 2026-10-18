@@ -1,7 +1,7 @@
 extends Node2D
 var festival_decorated := false
 
-const SIZE := Vector2(3000, 2000)
+const SIZE := Vector2(3200, 2600)
 const ART_SCALE := 1.0
 const NpcScript = preload("res://Npc.gd")
 const Cast = preload("res://Cast.gd")
@@ -181,6 +181,7 @@ func tick(delta: float, minute: float, rainy: bool = false) -> void:
             if not second.paused and is_walkable(second.position - push): second.position -= push
 
 func is_walkable(point:Vector2)->bool:
+ if preload("res://OutdoorContinuity.gd").corridor("town",G.unproject(point)):return true
  for offset in [Vector2.ZERO,Vector2(13,0),Vector2(-13,0),Vector2(0,13),Vector2(0,-13)]:
   var p=G.unproject(point+offset)
   if not G.WORLD.has_point(p):return false

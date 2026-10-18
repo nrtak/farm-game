@@ -15,9 +15,9 @@ func run():
 	for point in f.polish.path: assert(f.is_walkable(point))
 	f.polish.direction(Vector2.RIGHT)
 	assert(f.polish.path.is_empty(),"Manual movement cancels a tap route")
-	f.player.position = f.FARM_EXIT
+	f.player.position = f.FARM_EXIT+Vector2(0,-1)
 	f.check_walk_exits()
-	assert(f.location == "town","Town entrance changes screen automatically")
+	assert(f.location == "town","Town boundary changes area ownership automatically")
 	f.town.tick_ambient(0.1,600,false,f.shops,f.regions)
 	assert(f.town.visitors[1].get_parent() == f.shops["Onsen Resort"])
 	assert(f.town.visitors[3].get_parent() == f.shops["Ranch"])
