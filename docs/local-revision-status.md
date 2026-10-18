@@ -87,3 +87,7 @@ Official reference galleries: https://www.stardewvalley.net/media/ and https://m
 
 - All 67 regression checks passed across the initial run and resumptions after the lake-clearance fix and updated pasture-position assertion. Local export succeeded; packaged checks/capture are running.
 - Packaged phone_revision, home_recovery and farm_systems passed; fresh packaged gameplay screenshots captured. Source social scenes and connection captures passed. Gallery contains 30 labeled views; older motion GIF is explicitly labeled as predating this revision. Remaining visual review includes directional sign overlap at the shrine join and eastern tea panorama visibility.
+
+## World terrain finish — October 18
+- Shared TerrainFinish painter adds cached seamless low-frequency green/earth tone variation, rounded path outlines, feathered shoulders and small irregular dirt intrusions. Applied to farm, outdoor regions, town ground/aprons and inter-region connections; harbor sand also gains tonal variation. Stone street tiles retain their readable grid.
+- Geometry/collisions and route centers are unchanged. open_regions and angled_world_regressions passed using isolated saves; source screenshot suites passed. Inspected Tea Country at gameplay zoom. Local package refresh follows; no upload.

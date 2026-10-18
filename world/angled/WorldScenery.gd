@@ -226,7 +226,7 @@ func road(a: Vector2,b: Vector2,width: float=115):
 		for i in range(steps+1):
 			var t=float(i if edge==1 else steps-i)/steps
 			var center=a.lerp(b,t)
-			var shoulder=4.0+3.0*sin(center.x*.041+center.y*.027)+2.0*sin(center.x*.113-center.y*.061)
+			var shoulder=7.0+6.0*sin(center.x*.041+center.y*.027)+3.0*sin(center.x*.113-center.y*.061)
 			outline.append(center+side*edge*(width*.5+maxf(0,shoulder)))
 	road_polygons.append(outline)
 func flush_roads():
@@ -242,17 +242,8 @@ func flush_roads():
 						current=union[0];merged_roads.remove_at(i);changed=true;break
 			merged_roads.append(current)
 	for polygon in merged_roads:
-		var smooth=polygon
-		for iteration in range(2):
-			var next=PackedVector2Array()
-			for i in range(smooth.size()):
-				var a=smooth[i];var b=smooth[(i+1)%smooth.size()]
-				var amount=minf(.15,12.0/maxf(1,a.distance_to(b)))
-				next.append(a.lerp(b,amount));next.append(a.lerp(b,1-amount))
-			smooth=next
-		var edge=smooth.duplicate();edge.append(smooth[0])
-		draw_polyline(edge,Color(.66,.65,.42,.20),16,true)
-		draw_colored_polygon(smooth,Color("d5c28f"))
+		var smooth=preload("res://world/angled/TerrainFinish.gd").rounded(polygon)
+		preload("res://world/angled/TerrainFinish.gd").dirt(self,smooth,position)
 		var bounds=Rect2(smooth[0],Vector2.ZERO)
 		for point in smooth:bounds=bounds.expand(point)
 		for x in range(int(bounds.position.x),int(bounds.end.x),32):
@@ -294,6 +285,7 @@ func _draw():
 	var uv=PackedVector2Array()
 	for vertex in vertices:uv.append((vertex+position)/grass_texture.get_size())
 	draw_polygon(vertices,PackedColorArray([Color(.95,.98,.90,.58)]),uv,grass_texture)
+	preload("res://world/angled/TerrainFinish.gd").shade(self,vertices,position)
 	for y in range(15,int(size.y),48):
 		for x in range(15,int(size.x),53):
 			var p=Vector2(x+sin(y+x)*14,y+cos(x)*10)
@@ -305,6 +297,7 @@ func _draw():
 		coast.insert(0,Vector2(80,0))
 		var land=coast.duplicate();land.append(Vector2(1600,0))
 		draw_colored_polygon(land,Color("dfd1a2"))
+		preload("res://world/angled/TerrainFinish.gd").shade(self,land,position)
 		draw_polyline(coast,Color("d1e9da"),10,true)
 	elif kind=="tea":water(host.pond_outline)
 	elif kind=="mountain":

@@ -14,8 +14,9 @@ func _draw():
  var basis=preload("res://world/angled/WorldPerspective.gd").BASIS
  for vertex in vertices:uv.append((basis.affine_inverse()*(vertex-G.ORIGIN)+get_parent().get_parent().position)/grass.get_size())
  draw_polygon(vertices,PackedColorArray([Color(.95,.98,.90,.58)]),uv,grass)
- quad(Rect2(310,275,100,195),Color("d9c8a3"))
- quad(Rect2(850,350,100,260),Color("d9c8a3"))
+ preload("res://world/angled/TerrainFinish.gd").shade(self,vertices)
+ for apron in [Rect2(310,275,100,195),Rect2(850,350,100,260)]:
+  preload("res://world/angled/TerrainFinish.gd").dirt(self,preload("res://world/angled/TerrainFinish.gd").rounded(G.polygon(apron)))
  # Low planting beds occupy the unused backs of the blocks, never the streets.
  for row in [500,780,1060,1340]:
   for x in [1080,1430,1770]:
@@ -26,7 +27,8 @@ func _draw():
     var flower=G.project(Vector2(x+8+n*13,row-49))
     draw_circle(flower,3.5,Color("4f713c"))
     draw_circle(flower+Vector2(0,-2),1.8,Color("efd0a0") if n%2==0 else Color("dca0b4"))
- for a in data.roads+data.aprons+[data.plaza]:quad(G.rect(a).grow(5),Color("c0b091"));quad(G.rect(a),Color("d9c8a3"))
+ for a in data.roads+data.aprons+[data.plaza]:
+  preload("res://world/angled/TerrainFinish.gd").dirt(self,preload("res://world/angled/TerrainFinish.gd").rounded(G.polygon(G.rect(a).grow(5))))
  for y in range(280,1590,14):
   for x in range(165,2170,22):
    var p=Vector2(x+(11 if y%28==0 else 0),y)

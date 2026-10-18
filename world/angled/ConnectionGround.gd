@@ -1,13 +1,15 @@
 extends Node2D
 var farm
-func _ready():z_index=-900
+func _ready():
+ z_index=-900;texture_repeat=CanvasItem.TEXTURE_REPEAT_ENABLED
 func _process(_delta):
  visible=not farm.inside_house and farm.location in preload("res://OutdoorContinuity.gd").AREAS
 func lane(a:Vector2,b:Vector2,width:float):
  var side=(b-a).normalized().orthogonal()*width*.5
  var poly=PackedVector2Array([a-side,b-side,b+side,a+side,a-side])
- draw_polyline(poly,Color(.65,.64,.40,.20),22,true)
- draw_colored_polygon(poly,Color("d5c28f"))
+ poly.remove_at(poly.size()-1)
+ poly=preload("res://world/angled/TerrainFinish.gd").rounded(poly)
+ preload("res://world/angled/TerrainFinish.gd").dirt(self,poly)
  var count=maxi(1,int(a.distance_to(b)/20))
  for i in range(count):
   var p=a.lerp(b,float(i)/count)
