@@ -12,6 +12,8 @@ var farm_props: Texture2D
 var grass_texture: Texture2D
 var props: Array = []
 var built_level := -1
+var road_polygons:Array=[]
+var merged_roads:Array=[]
 func _ready():
 	z_index=-1000
 	landmarks=load("res://world/angled/landmarks.png")
@@ -122,7 +124,7 @@ func build_props():
 		if kind=="harbor":
 			for p in [Vector2(470,180),Vector2(1430,170)]:coastal_prop(3,p,110)
 			coastal_prop(4,Vector2(1210,800),115)
-			expansion_prop(3,Vector2(280,740),260)
+			expansion_prop(3,Vector2(120,700),260)
 			coastal_prop(6,Vector2(540,800),42)
 			coastal_prop(6,Vector2(657,965),42)
 			coastal_prop(7,Vector2(1310,445),80)
@@ -141,8 +143,8 @@ func build_props():
 						if point.distance_to(Geometry2D.get_closest_point_to_segment(point,host.walk_outline[i],host.walk_outline[(i+1)%host.walk_outline.size()]))<65:beside_path=true
 					if not beside_path and not Rect2(1200,0,400,480).has_point(point):prop(landmarks,11,3,point,130)
 		if kind=="tea":
-			for x in [760,970,1180]:
-				for y in [815,925,1035]:
+			for x in [500,710,920]:
+				for y in [360,455,550]:
 					var p=Vector2(x,y)
 					if not farm.TEA_SPOTS.has(p):farm_prop(3,p,78)
 			for i in range(farm.TEA_SPOTS.size()):farm_prop(3,farm.TEA_SPOTS[i],78).set_meta("tea_index",i)
@@ -193,6 +195,11 @@ func build_horizon():
 			if y>1200:continue
 			if kind=="historic" and (x<220 or (y>1200 and x>1300)):continue
 			prop(landmarks,11,3,Vector2(x,y),120+posmod(x,31))
+	if kind=="tea":
+		var hills=Sprite2D.new();hills.texture=load("res://world/angled/tea-hills-v2.png");hills.centered=false
+		var width=850.0;var scale=width/hills.texture.get_width();var foot=Vector2(2030,860)
+		hills.transform=B.affine_inverse()*Transform2D(0,Vector2.ONE*scale,0,B*foot-Vector2(width*.5,hills.texture.get_height()*scale*.93))
+		hills.z_as_relative=false;hills.z_index=-950;add_child(hills)
 	if kind in ["tea","mountain"]:
 		for y in range(140,1180,170):
 			for x in [-180,1780]:
@@ -221,21 +228,37 @@ func road(a: Vector2,b: Vector2,width: float=115):
 			var center=a.lerp(b,t)
 			var shoulder=4.0+3.0*sin(center.x*.041+center.y*.027)+2.0*sin(center.x*.113-center.y*.061)
 			outline.append(center+side*edge*(width*.5+maxf(0,shoulder)))
-		var end=b if edge==1 else a
-		var start=side.angle() if edge==1 else (-side).angle()
-		for i in range(1,13):
-			var angle=start+PI*i/12.0
-			var radius=width*.5+3+2*sin(angle*5+end.x*.03)
-			outline.append(end+Vector2.from_angle(angle)*radius)
-	draw_colored_polygon(outline,Color("d5c28f"))
-	# Fine warm soil flecks replace the repeating scalloped edge and flat fill.
-	for i in range(1,maxi(2,int(length/18))):
-		var center=a.lerp(b,float(i)/maxi(2,int(length/18)))
-		for j in range(3):
-			var phase=i*2.399+j*1.73+a.x*.01
-			var p=center+side*sin(phase)*width*.44
-			draw_line(p,p+direction*(2+posmod(i+j,4)),Color(.60,.48,.28,.16),1.2,true)
-			if (i+j)%3==0:draw_circle(p+side*4,1.4,Color(.97,.89,.65,.25))
+	road_polygons.append(outline)
+func flush_roads():
+	if merged_roads.is_empty():
+		for polygon in road_polygons:
+			var current=polygon
+			var changed=true
+			while changed:
+				changed=false
+				for i in range(merged_roads.size()):
+					var union=Geometry2D.merge_polygons(current,merged_roads[i])
+					if union.size()==1:
+						current=union[0];merged_roads.remove_at(i);changed=true;break
+			merged_roads.append(current)
+	for polygon in merged_roads:
+		var smooth=polygon
+		for iteration in range(2):
+			var next=PackedVector2Array()
+			for i in range(smooth.size()):
+				var a=smooth[i];var b=smooth[(i+1)%smooth.size()]
+				var amount=minf(.15,12.0/maxf(1,a.distance_to(b)))
+				next.append(a.lerp(b,amount));next.append(a.lerp(b,1-amount))
+			smooth=next
+		var edge=smooth.duplicate();edge.append(smooth[0])
+		draw_polyline(edge,Color(.66,.65,.42,.20),16,true)
+		draw_colored_polygon(smooth,Color("d5c28f"))
+		var bounds=Rect2(smooth[0],Vector2.ZERO)
+		for point in smooth:bounds=bounds.expand(point)
+		for x in range(int(bounds.position.x),int(bounds.end.x),32):
+			for y in range(int(bounds.position.y),int(bounds.end.y),32):
+				var p=Vector2(x+sin(y)*9,y+cos(x)*9)
+				if Geometry2D.is_point_in_polygon(p,smooth):draw_line(p,p+Vector2(3,1),Color(.55,.45,.27,.18),1,true)
 func water(poly: PackedVector2Array):
 	if poly.size()<3:return
 	draw_colored_polygon(poly,Color("70b4bf"))
@@ -260,6 +283,7 @@ func _draw():
 	if not active():return
 	if kind in ["home","room"]:
 		draw_room();return
+	road_polygons.clear()
 	var size=Vector2(3000,2000) if kind=="farm" else Vector2(1600,1200)
 	if kind=="road":size=Vector2(1000,1000)
 	var grass=Color("8eae62")
@@ -285,7 +309,9 @@ func _draw():
 	elif kind=="tea":water(host.pond_outline)
 	elif kind=="mountain":
 		for poly in host.water_polygons:water(poly)
-		road(Vector2(615,550),Vector2(540,620),95)
+		road(Vector2(830,550),Vector2(520,550),140)
+		for i in range(5):
+			draw_rect(Rect2(500+i*20,535,18,40),Color("b5ac91"));draw_rect(Rect2(500+i*20,535,18,40),Color("d3c9ae"),false,2)
 		for i in range(6):
 			var lift=fmod(Time.get_ticks_msec()*.018+i*13,70)
 			draw_set_transform_matrix(B.affine_inverse()*Transform2D(0,B*Vector2(490+i*12,570)))
@@ -342,11 +368,12 @@ func _draw():
 		var start=fence.position;var end=fence.end
 		var rise=B.affine_inverse()*Vector2(0,-26)
 		for level in [.4,.85]:draw_line(start+rise*level,end+rise*level,Color("b0936a"),5,true)
-		for step in range(0,int(start.distance_to(end)),35):
-			var at=start.move_toward(end,step);draw_line(at,at+rise,Color("947650"),5,true)
+		draw_line(start+rise*.85,end+rise*.85,Color("e0c298"),1.5,true)
+		for step in range(0,int(start.distance_to(end)),45):
+			var at=start.move_toward(end,step);draw_line(at,at+rise,Color("70543c"),9,true);draw_line(at+Vector2(-2,0),at+rise+Vector2(-2,0),Color("b99a6e"),5,true);draw_circle(at+rise,4,Color("ddc297"))
 	if kind=="harbor":
 		draw_beach_details()
-		for spot in farm.FISHING_SPOTS:draw_circle(spot,22,Color("c7af7d"),false,3)
+
 		if host.fishing_state>0:
 			var bob:Vector2=fishing_float()
 			draw_line(host.fishing_spot,bob,Color("f1ead2"),2)
@@ -359,7 +386,11 @@ func _draw():
 		water(farm.world_outline(farm.SOLID_OUTLINES[8]))
 		road(Vector2(1020,620),Vector2(1490,620),100)
 		for plot in farm.plots:draw_rect(Rect2(plot.position-Vector2(34,34),Vector2(68,68)),Color("a78657"))
-	var signs={"farm":[Vector2(1550,240),"Town"],"harbor":[Vector2(1450,580),"Town · East"],"tea":[Vector2(160,600),"Highlands · West"],"historic":[Vector2(1390,1040),"Town"],"mountain":[Vector2(900,1040),"Town · South"],"waterfall":[Vector2(900,1090),"Mountain trail"]}
+	flush_roads()
+	if kind=="mountain":
+		for i in range(5):
+			draw_rect(Rect2(500+i*20,535,18,40),Color("b5ac91"));draw_rect(Rect2(500+i*20,535,18,40),Color("d3c9ae"),false,2)
+	var signs={"farm":[Vector2(1550,240),"Town"],"harbor":[Vector2(1450,580),"Town · East"],"tea":[Vector2(160,600),"← Highlands · Town south"],"historic":[Vector2(1390,1040),"Town"],"mountain":[Vector2(900,1040),"Town · South"],"waterfall":[Vector2(900,1090),"Mountain trail"]}
 	if kind=="mountain":
 		draw_sign(Vector2(1510,1000),"Tea Country →")
 	if kind=="historic":draw_sign(Vector2(780,790),"Moonveil Falls")
@@ -373,10 +404,11 @@ func draw_room():
 	for y in range(int(floor_rect.position.y),int(floor_rect.end.y),42):draw_line(Vector2(floor_rect.position.x,y),Vector2(floor_rect.end.x,y),Color(0.3,.25,.20,.16),2)
 	for x in range(int(floor_rect.position.x),int(floor_rect.end.x),105):draw_line(Vector2(x,floor_rect.position.y),Vector2(x,floor_rect.end.y),Color(0.3,.25,.20,.10),1)
 	if kind=="home":
-		var rug=host.BED.grow(10)
-		draw_rect(rug,Color("8faeae"));draw_rect(rug.grow(-5),Color("c8d4c5"),false,3)
-		var mat=host.TABLE.grow(18)
-		draw_rect(mat,Color("b69a72"));draw_rect(mat.grow(-7),Color("d3be96"),false,3)
+		var rug=Rect2(host.BED.position+Vector2(-25,20),host.BED.size+Vector2(50,45))
+		draw_rect(rug,Color("849fa7"));draw_rect(rug.grow(-5),Color("dfcda7"),false,3)
+		var mat=host.TABLE.grow(8)
+		draw_rect(mat,Color("ad785a"));draw_rect(mat.grow(-7),Color("e0c798"),false,3)
+		for y in range(int(mat.position.y)+12,int(mat.end.y)-10,12):draw_line(Vector2(mat.position.x+10,y),Vector2(mat.end.x-10,y),Color(.95,.85,.66,.25),1)
 	var rise=B.affine_inverse()*Vector2(0,-100)
 	var a=floor_rect.position;var b=Vector2(floor_rect.end.x,a.y);var c=Vector2(a.x,floor_rect.end.y)
 	draw_colored_polygon(PackedVector2Array([a,b,b+rise,a+rise]),Color("dfd4b9"))
@@ -398,6 +430,18 @@ func draw_room():
 			draw_line((left+right)*.5,(left+right)*.5+top,Color("e8d4aa"),3,true)
 			draw_line(left+top*.5,right+top*.5,Color("e8d4aa"),3,true)
 			draw_line(left-Vector2(7,0),right+Vector2(7,0),Color("b89467"),6,true)
+	if name!="Mine":
+		for edge in [[a,b],[b,d]]:
+			var direction=(edge[1]-edge[0]).normalized()
+			for n in range(20,int(edge[0].distance_to(edge[1])),54):
+				var base=edge[0]+direction*n
+				draw_line(base,base+rise*.25,Color("bc9a72"),2,true)
+			var center=edge[0].lerp(edge[1],.49)+rise*.48
+			var span=direction*34;var top=rise*.30
+			draw_colored_polygon(PackedVector2Array([center-span,center+span,center+span+top,center-span+top]),Color("8b6748"))
+			draw_colored_polygon(PackedVector2Array([center-span*.82+top*.1,center+span*.82+top*.1,center+span*.82+top*.9,center-span*.82+top*.9]),Color("a3b89a"))
+			draw_line(center-span*.65+top*.3,center+top*.65,Color("63836b"),6,true)
+			draw_line(center+top*.65,center+span*.65+top*.3,Color("63836b"),6,true)
 	var exit_point:Vector2=host.EXIT if kind=="home" else Vector2(550,780)
 	draw_rect(Rect2(exit_point-Vector2(65,40),Vector2(130,40)),Color("b99965"))
 	draw_rect(Rect2(exit_point-Vector2(65,40),Vector2(130,40)),Color("8c714d"),false,2)
@@ -452,7 +496,7 @@ func draw_beach_details():
 		wave.x+=sin(Time.get_ticks_msec()*.0007+i)*6
 		draw_line(wave,wave+Vector2(18+i%13,0),Color(.83,.95,.94,.5),2,true)
 	# Sand flecks and shells follow dry land, keeping the promenade unobstructed.
-	for i in range(240):
+	for i in range(700):
 		var p=Vector2(350+posmod(i*137,1200),430+posmod(i*83,490))
 		if not Geometry2D.is_point_in_polygon(p,host.land_outline):continue
 		draw_circle(p,1.5 if i%4 else 2.5,Color("c8b77d"))
@@ -469,6 +513,13 @@ func draw_beach_details():
 			draw_set_transform_matrix(B.affine_inverse()*Transform2D(0,B*foot))
 			draw_line(Vector2.ZERO,Vector2(0,-27),Color("765239"),5)
 			draw_circle(Vector2(0,-28),4,Color("c8a16a"))
+			for band in [-9,-12,-15]:draw_line(Vector2(-4,band),Vector2(4,band),Color("d6ba84"),2,true)
+			if y<950:
+				var next=B*Vector2(0,72)
+				var rope=PackedVector2Array()
+				for step in range(13):
+					var t=step/12.0;rope.append(Vector2(0,-18)+next*t+Vector2(0,sin(t*PI)*7))
+				draw_polyline(rope,Color("d8bd86"),2,true)
 			draw_set_transform_matrix(Transform2D.IDENTITY)
 func coastal_prop(index:int,foot:Vector2,width:float):
 	var sprite=Sprite2D.new();sprite.texture=preload("res://world/angled/CoastalGardenArt.gd").texture(index);sprite.centered=false

@@ -15,5 +15,5 @@ func run():
   assert(f.player.position==original,"Sitting never moves the saved collision body")
   f.close_dialogue();await process_frame
   assert(not is_instance_valid(places.seated) and f.farmer.visible and f.player.position==original)
- print("PASS: all three benches seat and restore the player without changing position")
+ print("PASS: remaining harbor bench seat and restore the player without changing position")
  quit()

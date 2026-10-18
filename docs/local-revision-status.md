@@ -75,3 +75,15 @@ Official reference galleries: https://www.stardewvalley.net/media/ and https://m
 - All 64 checks passed in the complete regression run. The additional festival-exit audit passed after its fix. Automated coverage includes 112 overnight settlements, eight story chapters, Year 2 vote, interactions, inventory, relationship scenes, save recovery, movement and rendering isolation. This is not physical iPhone testing or a manual full playthrough.
 
 - Final local export passed phone_revision, home_recovery and farm_systems. Packaged social-scene and connection captures passed. The final bench relocation also passed its seating/restoration regression. No GitHub or TestFlight upload.
+
+## Screenshot feedback revision 2 (local, October 18)
+- Added a translucent live world mini-map that opens an expanded map, and grouped the player portrait, Bag, money and health. Date and time share a compact panel. Dialogue hides the money panel and separates relationship name/status.
+- Moved farm utilities beside the field and pasture east/south of the barn; removed obstructing tea/library benches; shortened Tea Country frontage by 260 world units. Added an open playground, northern tea rows, expanded scenery, interior wall trim/pictures and coordinated rugs, shoreline/pier detail and continuous connection ground.
+- Moved wedding staging into the village square; reduced nature friend size; enlarged dialogue portraits and removed redundant Return controls.
+- Deep audit fixed short-distance cross-boundary tap routing, stale friendship/expanded crop beds on reload, tractor storage-capacity mismatch and duplicate door audio. New isolated regression coverage reproduces those cases.
+- Regression caught insufficient body clearance beside the revised shrine lake; shoreline pulled back while preserving the waterfall connection. Legacy tea route checks now follow the shorter frontage within the eastern fence.
+- Fresh source screenshots include Photo 30 (expanded map). Package refresh and final regression completion are pending at this checkpoint. No upload, physical iPhone test or manual full playthrough.
+- Visual follow-up: inspect eastern tea panorama visibility and all five joins in motion; do not infer finished polish from passing tests.
+
+- All 67 regression checks passed across the initial run and resumptions after the lake-clearance fix and updated pasture-position assertion. Local export succeeded; packaged checks/capture are running.
+- Packaged phone_revision, home_recovery and farm_systems passed; fresh packaged gameplay screenshots captured. Source social scenes and connection captures passed. Gallery contains 30 labeled views; older motion GIF is explicitly labeled as predating this revision. Remaining visual review includes directional sign overlap at the shrine join and eastern tea panorama visibility.

@@ -1,6 +1,6 @@
 extends SceneTree
 func _initialize():call_deferred("run")
-const PHOTO_LABELS={"town":"01 | TOWN - CIVIC STREET", "home":"02 | FARMHOUSE INTERIOR", "farm":"03 | FARM - FIELD UTILITIES", "tea":"04 | TEA COUNTRY", "tea-exit":"05 | TEA / HIGHLANDS CONNECTION", "pasture":"06 | FARM - PASTURE", "inn":"07 | INN INTERIOR", "harbor":"08 | HARBOR BEACH", "pier":"09 | FISHING PIER", "historic":"10 | SHRINE & MOONVEIL FALLS", "mountain":"11 | HIGHLANDS", "waterfall":"12 | WATERFALL CLOSE-UP", "conversation":"13 | CONVERSATION", "weekend-archive":"14 | WEEKEND - ARCHIVE", "school":"15 | VILLAGE SCHOOL", "playground":"16 | LIBRARY PLAYGROUND", "nature":"17 | NATURE FRIENDS"}
+const PHOTO_LABELS={"town":"01 | TOWN - CIVIC STREET", "home":"02 | FARMHOUSE INTERIOR", "farm":"03 | FARM - FIELD UTILITIES", "tea":"04 | TEA COUNTRY", "tea-exit":"05 | TEA / HIGHLANDS CONNECTION", "pasture":"06 | FARM - PASTURE", "inn":"07 | INN INTERIOR", "harbor":"08 | HARBOR BEACH", "pier":"09 | FISHING PIER", "historic":"10 | SHRINE & MOONVEIL FALLS", "mountain":"11 | HIGHLANDS", "waterfall":"12 | WATERFALL CLOSE-UP", "conversation":"13 | CONVERSATION", "weekend-archive":"14 | WEEKEND - ARCHIVE", "school":"15 | VILLAGE SCHOOL", "playground":"16 | LIBRARY PLAYGROUND", "nature":"17 | NATURE FRIENDS", "world-map":"30 | EXPANDED WORLD MAP"}
 var review_label:Label
 func shot(name):
 	if not is_instance_valid(review_label):
@@ -20,10 +20,10 @@ func run():
 		if area=="town":p=f.town.G.project(Vector2(1660,960))
 		elif area=="harbor":p=Vector2(850,500)
 		elif area=="historic":p=Vector2(1100,365)
-		elif area=="tea":p=Vector2(1250,710)
+		elif area=="tea":p=Vector2(990,710)
 		f.travel_to(area,p,false);f.update_walk(0,false,Vector2.DOWN);f.toast_time=0;f.refresh_hud();await shot(area)
 	f.travel_to("harbor",Vector2(600,865),false);f.toast_time=0;f.refresh_hud();await shot("pier")
-	f.travel_to("farm",Vector2(2050,430),false);f.toast_time=0;await shot("farm")
+	f.travel_to("farm",f.SHIPPING_BOX+Vector2(0,90),false);f.toast_time=0;await shot("farm")
 	f.travel_to("farm",preload("res://AnimalPasture.gd").GATE+Vector2(0,90),false);f.toast_time=0;await shot("pasture")
 	f.enter_house();f.player.position=f.ROOM_ORIGIN+Vector2(500,470);f.toast_time=0;await shot("home")
 	f.travel_to("tea",Vector2(270,675),false);f.toast_time=0;await shot("tea-exit")
@@ -33,4 +33,5 @@ func run():
 	f.close_dialogue();f.day=2;f.clock_minutes=660;f.enter_shop("School",true);f.toast_time=0;await shot("school")
 	f.close_dialogue();f.clock_minutes=900;f.travel_to("town",f.town.G.project(Vector2(900,450)),false);f.toast_time=0;await shot("playground")
 	f.travel_to("historic",Vector2(1170,880),false);f.toast_time=0;await shot("nature")
+	f.close_dialogue();f.open_map();await shot("world-map")
 	print("PASS: phone proportion feedback screenshots captured");quit()

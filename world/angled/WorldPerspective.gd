@@ -28,6 +28,7 @@ func setup(f):
 	farm=f;process_priority=1000
 	f.set_meta("angled_world",true)
 	var backdrop=preload("res://world/angled/WorldBackdrop.gd").new();backdrop.farm=f;f.add_child(backdrop)
+	var connections=preload("res://world/angled/ConnectionGround.gd").new();connections.farm=f;f.add_child(connections)
 	f.outdoor_world.get_node("Environment").hide()
 	f.farmhouse.get_node("Artwork").hide()
 	add_layer(f,"farm",Vector2.ZERO)

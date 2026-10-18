@@ -3,7 +3,7 @@ extends Node2D
 const WORLD := Vector2(3000, 2000)
 const GROW_SECONDS := 12.0 # Legacy save compatibility only.
 const CROPS := {"Turnip": {"days": 2, "pack": 25, "sale": 20, "color": "e6dac0"}, "Potato": {"days": 3, "pack": 40, "sale": 35, "color": "c39e72"}, "Strawberry": {"days": 4, "pack": 60, "sale": 55, "color": "bf7868"}}
-const SHIPPING_BOX := Vector2(2050, 370)
+const SHIPPING_BOX := Vector2(1940, 640)
 const BARN_DOOR := Vector2(2420, 435)
 var resources: Node2D
 var selected_crop := "Turnip"
@@ -42,7 +42,7 @@ var tea_leaves := 0
 var packed_tea := 0
 var tea_shipping := 0
 var tea_picked_days := [0, 0, 0]
-const TEA_SPOTS := [Vector2(760,815),Vector2(970,925),Vector2(1180,1035)]
+const TEA_SPOTS := [Vector2(500,550),Vector2(710,550),Vector2(920,550)]
 const FISH := {"Sardine": 12, "Mackerel": 25, "Sea Bream": 40}
 const FISHING_SPOTS := [Vector2(600,865),Vector2(600,965)]
 var fish_basket := {"Sardine": 0, "Mackerel": 0, "Sea Bream": 0}
@@ -51,7 +51,7 @@ var fishing_active := false
 var fishing_elapsed := 0.0
 var fish_catches := 0
 var fishing_quest_stage := 0
-const REGIONAL_ROOMS := {"Onsen Resort":["mountain",Vector2(615,445)],"Mountain Lodge":["mountain",Vector2(1073,480)],"Mountain Carpentry":["mountain",Vector2(1427,715)],"Mine":["mountain",Vector2(1380,205)],"Tea Farmhouse":["tea",Vector2(1440,350)],"Tea Processing Shed":["tea",Vector2(1440,650)],"Fishing Shop":["harbor",Vector2(660,200)],"Harbor Homes":["harbor",Vector2(1080,200)],"Shrine Residence":["historic",Vector2(1440,363)]}
+const REGIONAL_ROOMS := {"Onsen Resort":["mountain",Vector2(615,445)],"Mountain Lodge":["mountain",Vector2(1073,480)],"Mountain Carpentry":["mountain",Vector2(1427,715)],"Mine":["mountain",Vector2(1380,205)],"Tea Farmhouse":["tea",Vector2(1180,350)],"Tea Processing Shed":["tea",Vector2(1180,650)],"Fishing Shop":["harbor",Vector2(660,200)],"Harbor Homes":["harbor",Vector2(1080,200)],"Shrine Residence":["historic",Vector2(1440,363)]}
 var quest_label: Label
 var hud_elapsed := 0.0
 var draw_elapsed := 0.0
@@ -687,7 +687,7 @@ func interaction_action() -> String:
 	if preload("res://AnimalPasture.gd").nearest(self)>=0: return "pasture_care"
 	if location=="farm" and not inside_house and preload("res://AnimalPasture.gd").BOUNDS.has_point(player.position): return "pasture_board"
 	if preload("res://ShrineFalls.gd").nearby(self): return "falls"
-	if location=="farm" and not inside_house and player.position.distance_to(SHIPPING_BOX)<125 and player.position.y<660: return "shipping"
+	if location=="farm" and not inside_house and player.position.distance_to(SHIPPING_BOX)<125 and player.position.y<745: return "shipping"
 	if location == "farm" and interior_progress.get("greenhouse",false) and player.position.distance_to(FarmBuildings.GREENHOUSE_DOOR)<90: return "greenhouse_enter"
 	if inside_house and interior_progress.get("second_story",false) and (player.position-ROOM_ORIGIN).distance_to(FarmBuildings.STAIRS)<75: return "stairs"
 	if location == "shop" and shop_name=="Greenhouse": return "greenhouse_bed"
@@ -710,7 +710,7 @@ func interaction_action() -> String:
 	if location == "harbor":
 		for spot in FISHING_SPOTS:
 			if (player.position - REGION_ORIGINS.harbor).distance_to(spot) < 70: return "fish"
-	if location == "farm" and player.position.distance_to(SHIPPING_BOX) < 125 and player.position.y<660: return "shipping"
+	if location == "farm" and player.position.distance_to(SHIPPING_BOX) < 125 and player.position.y<745: return "shipping"
 	if location == "shop":
 		if shop_name == "Mine":
 			for spot in MINE_SPOTS:
@@ -893,7 +893,6 @@ func set_location(indoors: bool, destination: Vector2) -> void:
 	if is_instance_valid(perspective): perspective.cancel_outdoor_pan()
 	if is_instance_valid(sound) and inside_house!=indoors: sound.play_effect("door")
 	if is_instance_valid(polish): polish.path.clear()
-	if is_instance_valid(sound): sound.play_effect("door")
 	for room in shops.values():
 		room.visible = false
 		RenderingServer.canvas_item_clear(room.get_canvas_item())
@@ -1236,6 +1235,7 @@ func load_game() -> void:
 	if not parsed is Dictionary and FileAccess.file_exists(SAVE_FILE+".daily"): parsed=read_saved_json(SAVE_FILE+".daily")
 	if not parsed is Dictionary: return
 	save_loaded=true
+	if is_instance_valid(polish):polish.grids.clear();polish.crossing_target=null
 	held_gift="" # A held selection belongs to the current inventory session.
 	for field in ["friendship", "talked_on_day"]:
 		var values = parsed.get(field, {})
@@ -1273,15 +1273,16 @@ func load_game() -> void:
 	pick_level = clampi(int(parsed.get("pick_level", 0)), 0, 1)
 	harvest_level = clampi(int(parsed.get("harvest_level", 0)), 0, 1)
 	tool_level = clampi(int(parsed.get("tool_level", 0)), 0, 1)
+	friendship = {"Seira":0,"Shohei":0,"Akira":0,"Taro":0}
 	var stored = parsed.get("friendship", {})
 	if stored is Dictionary:
 		for person in stored:
 			if person in ["Seira", "Shohei", "Akira", "Taro"] or Cast.ROLES.has(person) or town.EXTRA_DIALOGUE.has(person) or person in preload("res://SchoolLife.gd").NAMES:
 				friendship[person] = clampi(int(stored[person]), 0, 100)
 	var stored_days = parsed.get("talked_on_day", {})
-	if stored_days is Dictionary: talked_on_day = stored_days
+	talked_on_day = stored_days if stored_days is Dictionary else {}
 	var scenes = parsed.get("seen_scenes", [])
-	if scenes is Array: seen_scenes = scenes
+	seen_scenes = scenes if scenes is Array else []
 	set_character(str(parsed.get("character", "boy")))
 	harvests = maxi(0, int(parsed.get("harvests", 0)))
 	day = maxi(1, int(parsed.get("day", 1)))
@@ -1734,7 +1735,7 @@ func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 	name_label.add_theme_color_override("font_color", Color("493b2d"))
 	column.add_child(name_label)
 	if portrait and Cast.is_love_interest(title,character_choice):
-		name_label.text=title+"       "+preload("res://Relationships.gd").stage(self,title)
+		name_label.text=title+"\n"+preload("res://Relationships.gd").stage(self,title)
 		name_label.add_theme_color_override("font_color",Color("a34261"))
 		var heart=preload("res://RomanceHeart.gd").new();heart.color=preload("res://Relationships.gd").color(self,title);name_label.add_child(heart)
 		name_label.resized.connect(func(): heart.position=Vector2(name_label.get_theme_font("font").get_string_size(title,HORIZONTAL_ALIGNMENT_LEFT,-1,23).x+22,16))
@@ -2223,10 +2224,11 @@ func check_walk_exits() -> void:
 				walk_to_area("farm", FARM_EXIT + Vector2(0, 100))
 func open_map() -> void:
 	if choosing_character or confirming_sleep or sleep_in_progress or dialogue_open: return
-	var column := make_modal("Walking Routes")
-	dialogue_panel.get_child(0).offset_top = -340
-	dialogue_text.text = "Farm → Town walkway → Main Town.\n\nFrom town: north to the Highlands (mountains, tea country, mine and onsen); west to the Harbor; northwest through the large torii to Shrine Grounds and Moonveil Falls.\n\nHarbor: return east toward town. Tea Country: return west to the Highlands. Shrine Grounds: return south. Mountains: return south. Moonveil Falls shares the Shrine Grounds; follow the garden path left of the shrine. Outdoor paths stay continuous as the camera follows you; doors lead indoors. The library is beside Town Hall. Follow the signed tea trail in the Highlands arrival clearing."
-	column.add_child(make_button("Close", close_dialogue))
+	var column := make_modal("World map")
+	dialogue_panel.get_child(0).offset_top=-minf(440,get_viewport_rect().size.y-30)
+	dialogue_text.text="You are here · "+("Home" if inside_house else shop_name if location=="shop" else location.capitalize())
+	var map=preload("res://WorldMiniMap.gd").new();map.farm=self;map.expanded=true;map.custom_minimum_size=Vector2(360,260);map.size_flags_horizontal=Control.SIZE_EXPAND_FILL;column.add_child(map)
+	column.add_child(make_button("Close",close_dialogue))
 
 func open_guide() -> void:
 	if choosing_character or confirming_sleep or sleep_in_progress or dialogue_open: return

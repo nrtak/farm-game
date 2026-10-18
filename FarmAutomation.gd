@@ -27,7 +27,7 @@ static func morning(f):
  if s.get("tractor",false):
   for plot in f.plots:
    if harvested>=12:break
-   if plot.stage!=3 or int(f.stored_items.get(plot.crop,0))>=999:continue
+   if plot.stage!=3 or int(f.stored_items.get(plot.crop,0))>=f.storage_limit():continue
    f.stored_items[plot.crop]=int(f.stored_items.get(plot.crop,0))+1
    s.harvest_route.append([plot.position.x,plot.position.y])
    plot.stage=0;plot.growth=0;f.harvests+=1;harvested+=1

@@ -9,11 +9,11 @@ static func corridor(area:String,p:Vector2)->bool:
   "harbor":return p.x>1450 and p.x<1640 and absf(p.y-585)<78
   "historic":return p.y>1050 and p.y<1240 and absf(p.x-1440)<78
  return false
-static func cross(f)->bool:
- if f.location not in AREAS or f.inside_house:return false
- var p=f.player.position-f.polish.area_origin()
+static func exit_at(f,area:String,world:Vector2)->String:
+ var origin=Vector2.ZERO if area=="farm" else (f.TOWN_ORIGIN if area=="town" else f.REGION_ORIGINS[area])
+ var p=world-origin
  var target=""
- match f.location:
+ match area:
   "farm":
    if p.y<140 and absf(p.x-1485)<78:target="town"
   "town":
@@ -31,6 +31,11 @@ static func cross(f)->bool:
    if p.x>=1600 and absf(p.y-585)<78:target="town"
   "historic":
    if p.y>=1200 and absf(p.x-1440)<78:target="town"
+ return target
+
+static func cross(f)->bool:
+ if f.location not in AREAS or f.inside_house:return false
+ var target=exit_at(f,f.location,f.player.position)
  if target.is_empty():return false
  if f.festival_active:f.end_festival()
  f.location=target
@@ -42,13 +47,13 @@ static func cross(f)->bool:
  return true
 
 static func route(f,target:Vector2)->Array:
- if f.polish.area_node().is_walkable(target-f.polish.area_origin()):return []
+ if exit_at(f,f.location,target).is_empty() and f.polish.area_node().is_walkable(target-f.polish.area_origin()):return []
  var origins={"farm":Vector2.ZERO,"town":f.TOWN_ORIGIN}
  for area in ["mountain","tea","harbor","historic"]:origins[area]=f.REGION_ORIGINS[area]
  var destination=""
  for area in AREAS:
   var node=f if area=="farm" else (f.town if area=="town" else f.regions[area])
-  if node.is_walkable(target-origins[area]):destination=area;break
+  if exit_at(f,area,target).is_empty() and node.is_walkable(target-origins[area]):destination=area;break
  if destination.is_empty() or destination==f.location:return []
  var graph={"farm":["town"],"town":["farm","mountain","historic","harbor"],"mountain":["town","tea"],"tea":["mountain"],"historic":["town"],"harbor":["town"]}
  var queue=[[f.location]]

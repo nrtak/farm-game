@@ -33,9 +33,9 @@ func _ready():
  place_sign("Events",Vector2(930,710))
  for segment in [[Vector2(1900,610),Vector2(1900,780)],[Vector2(1900,890),Vector2(1900,1060)],[Vector2(1900,1170),Vector2(1900,1340)]]:add_garden(segment[0],segment[1])
  var texture=load("res://world/angled/village-expansion-v1.png");var cell=texture.get_size()/2.0
- var playground=Sprite2D.new();var a=AtlasTexture.new();a.atlas=texture;a.region=Rect2(665,25,589,610)
- playground.texture=a;playground.centered=false;playground.scale=Vector2.ONE*(195.0/cell.x)
+ var playground=Sprite2D.new();playground.texture=load("res://world/angled/playground-open-v2.png");playground.centered=false;playground.scale=Vector2.ONE*(195.0/playground.texture.get_width())
  var foot=G.project(Vector2(900,350));playground.position=foot-Vector2(97,145);playground.z_index=int(foot.y/10)-1;add_child(playground)
+
 func follow_player(point:Vector2):
  var basis=Transform2D(Vector2(.558,-.207),Vector2(.378,.315),Vector2.ZERO)
  point=basis*point+G.ORIGIN

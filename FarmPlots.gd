@@ -10,6 +10,7 @@ static func fill(farm, level: int) -> void:
 			var point:=Vector2(x,y)
 			if not positions.has(point): positions.append(point)
 	for n in range(clampi(level,0,3)*3): positions.append(Vector2(1120+n*100,1450))
+	if farm.plots.size()>positions.size():farm.plots.resize(positions.size())
 	# Relocate beds by stable index; preserve crops, stages and growth on old saves.
 	for i in range(positions.size()):positions[i]+=Vector2(0,80)
 	for i in range(mini(farm.plots.size(),positions.size())):farm.plots[i].position=positions[i]

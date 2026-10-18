@@ -8,7 +8,7 @@ var actions: HFlowContainer
 var portrait_margin:=140
 func setup(box: PanelContainer, content: VBoxContainer, portrait: Texture2D, dismiss: Callable) -> void:
 	panel=box
-	portrait_margin=140 if portrait!=null else 18
+	portrait_margin=175 if portrait!=null else 18
 	column=content
 	var anchor:=Node2D.new()
 	panel.add_child(anchor)
@@ -66,6 +66,6 @@ func fit() -> void:
 	panel.offset_left=-width/2;panel.offset_right=width/2
 	panel.offset_top=-body_height-38;panel.offset_bottom=-18
 	var ratio=picture.texture.get_width()/float(picture.texture.get_height()) if picture.texture else 1.0
-	var height=minf(125/ratio,minf(210,body_height+28))
+	var height=minf(160/ratio,minf(250,body_height+38))
 	picture.size=Vector2(height*ratio,height)
 	picture.position=Vector2(8,panel.size.y-8-height)

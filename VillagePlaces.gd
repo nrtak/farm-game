@@ -1,12 +1,10 @@
 extends Node2D
 const PLACES=[
- ["town",Vector2(1300,570),"Library bench","Sit and watch the town","The pages rustle in the breeze. Haruka says every old map has a story."],
  ["town",Vector2(1530,440),"School noticeboard","Read","This week: growing beans, drawing the village, and an afternoon nature walk. Lessons end at two."],
  ["town",Vector2(1120,1240),"Restaurant menu","Read","Today's kitchen uses local vegetables. Ask inside for a warm seasonal meal."],
  ["harbor",Vector2(1310,445),"Harbor bench","Sit and watch the tide","A gull circles the boats while someone sorts a net along the quay."],
  ["harbor",Vector2(800,260),"Catch board","Read","Take only what you need. Small fish and tide-pool creatures stay in the sea."],
- ["historic",Vector2(1320,790),"Shrine wishes","Read","For a gentle year. For someone far away. For the courage to begin again."],
- ["tea",Vector2(1150,600),"Tea garden bench","Sit and listen","Warm leaves and damp soil scent the air. Sachiko says good tea starts with patience."]]
+ ["historic",Vector2(1320,790),"Shrine wishes","Read","For a gentle year. For someone far away. For the courage to begin again."]]
 var farm
 var marks=[]
 var previous=Vector2.ZERO

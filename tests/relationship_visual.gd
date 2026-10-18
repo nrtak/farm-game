@@ -20,9 +20,9 @@ func run():
   root.get_texture().get_image().save_png(OS.get_cmdline_user_args()[0]+"/moment-"+occasion.to_snake_case()+".png")
  f.close_dialogue()
  var places=f.get_node("VillagePlaces")
- f.travel_to("town",f.town.G.project(places.PLACES[0][1]),false)
- f.player.position=places.point(places.PLACES[0])+Vector2(0,20);places.interact()
- label.text="REVIEW PHOTO 22 | LIBRARY BENCH"
+ f.travel_to("town",f.town.G.project(Vector2(1300,570)),false)
+ # Show the cleared library walking lane after removing the bench.
+ label.text="REVIEW PHOTO 22 | CLEAR LIBRARY WALKWAY"
  await create_timer(.7).timeout;await RenderingServer.frame_post_draw
  root.get_texture().get_image().save_png(OS.get_cmdline_user_args()[0]+"/moment-bench.png")
  f.close_dialogue();f.travel_to("farm",Vector2(1780,400),false)

@@ -55,8 +55,8 @@ func _process(_delta):
   var s=sprites[i]
   s.visible=s.visible and not farm.inside_house
   if not s.visible:continue
-  var b=farm.perspective.BASIS;var ratio=52.0/s.region_rect.size.y
-  s.transform=b.affine_inverse()*Transform2D(0,Vector2.ONE*ratio,0,b*points[i]-Vector2(s.region_rect.size.x*ratio/2,50+sin(idle_time*1.6+i*1.7)*1.5))
+  var b=farm.perspective.BASIS;var ratio=28.0/s.region_rect.size.y
+  s.transform=b.affine_inverse()*Transform2D(0,Vector2.ONE*ratio,0,b*points[i]-Vector2(s.region_rect.size.x*ratio/2,27+sin(idle_time*1.6+i*1.7)*1.5))
   s.z_as_relative=false;s.z_index=farm.perspective.depth(points[i])
  queue_redraw()
 func welcome_garden():

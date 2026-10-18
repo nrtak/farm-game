@@ -16,9 +16,8 @@ func begin(f,person:String,occasion:String,words:String):
  if occasion=="Tea":
   f.enter_shop("Café",true)
   f.player.position=f.SHOP_ORIGIN+Vector2(550,520)
- elif occasion=="Wedding" and f.is_rainy_day():
-  f.enter_shop("Shrine Residence",true)
-  f.player.position=f.SHOP_ORIGIN+Vector2(550,440)
+ elif occasion=="Wedding":
+  f.travel_to("town",f.town.G.project(Vector2(810,700)),false)
  else:
   f.travel_to("harbor" if occasion=="Beach walk" else "historic",Vector2(1070,700) if occasion=="Beach walk" else Vector2(1410,650),false)
  # Hide only residents in the scene's host, leaving their schedules intact.
@@ -32,7 +31,7 @@ func begin(f,person:String,occasion:String,words:String):
  f.update_walk(0,false,Vector2.RIGHT)
  var column=f.make_modal(person,true)
  f.dialogue_text.text=words
- column.add_child(f.make_button("Return",f.close_dialogue))
+ # The portrait panel already supplies the single close control.
  f.perspective._process(0)
 func _process(_delta):
  if finished:return

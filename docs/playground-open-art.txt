@@ -1,0 +1,4 @@
+Built-in imagegen edit, October 18 2026. Reference: world/angled/village-expansion-v1.png. Output: world/angled/playground-open-v2.png.
+Prompt: Isolated revised playground, same cozy painted isometric style, blue slide, two swings, sandbox, rear hedge and flowering tree. Remove all front fencing and bench; broad accessible sandy entrance with irregular grass edges. Fence only rear and far sides. Transparent background, no text or people.
+
+Tea hills, built-in imagegen: wide lush terraced tea hillside with dense neat green rows, soft grassy terraces, forested mountains behind, elevated isometric cozy painted style, transparent silhouette, no buildings/people/text. Output world/angled/tea-hills-v2.png.

@@ -12,7 +12,7 @@ func run():
 		"mountain":[[Vector2(830,1080),Vector2(830,540)],[Vector2(620,540),Vector2(1260,540)],[Vector2(830,760),Vector2(1450,760)]],
 		"historic":[[Vector2(420,550),Vector2(1050,550)],[Vector2(420,700),Vector2(1050,700)],[Vector2(406,363),Vector2(406,600)]],
 		"harbor":[[Vector2(1480,660),Vector2(500,660)],[Vector2(1480,585),Vector2(1480,660)],[Vector2(600,660),Vector2(600,990)],[Vector2(665,550),Vector2(665,660)],[Vector2(1016,610),Vector2(1016,660)]],
-		"tea":[[Vector2(80,665),Vector2(1510,665)],[Vector2(453,665),Vector2(453,330)],[Vector2(1042,630),Vector2(1042,665)],[Vector2(860,700),Vector2(860,1050)],[Vector2(1333,700),Vector2(1333,1000)]]}
+		"tea":[[Vector2(80,665),Vector2(1260,665)],[Vector2(453,665),Vector2(453,330)],[Vector2(1042,630),Vector2(1042,665)],[Vector2(860,700),Vector2(860,1050)],[Vector2(1200,700),Vector2(1200,1000)]]}
 	routes.town=f.town.street_routes()
 	for area in routes:
 		f.travel_to(area,routes[area][0][0],false)

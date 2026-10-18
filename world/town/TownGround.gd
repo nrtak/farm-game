@@ -15,6 +15,7 @@ func _draw():
  for vertex in vertices:uv.append((basis.affine_inverse()*(vertex-G.ORIGIN)+get_parent().get_parent().position)/grass.get_size())
  draw_polygon(vertices,PackedColorArray([Color(.95,.98,.90,.58)]),uv,grass)
  quad(Rect2(310,275,100,195),Color("d9c8a3"))
+ quad(Rect2(850,350,100,260),Color("d9c8a3"))
  # Low planting beds occupy the unused backs of the blocks, never the streets.
  for row in [500,780,1060,1340]:
   for x in [1080,1430,1770]:

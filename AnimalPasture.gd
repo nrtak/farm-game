@@ -1,7 +1,7 @@
 extends Node2D
-const BOUNDS:=Rect2(1700,480,940,190)
-const GATE:=Vector2(2420,480)
-const FENCES:=[Rect2(1700,480,625,8),Rect2(2515,480,125,8),Rect2(1700,480,8,190),Rect2(2632,480,8,190),Rect2(1700,662,940,8)]
+const BOUNDS:=Rect2(2560,470,220,290)
+const GATE:=Vector2(2560,555)
+const FENCES:=[Rect2(2560,470,220,8),Rect2(2560,470,8,30),Rect2(2560,630,8,130),Rect2(2772,470,8,290),Rect2(2560,752,220,8)]
 var farm
 var elapsed:=0.0
 var redraw_clock:=0.0
@@ -11,7 +11,7 @@ func setup(f):
 static func outside(f) -> bool:
  return bool(f.BarnLife.state(f).get("pasture",false)) and f.clock_minutes>=540 and f.clock_minutes<1020 and preload("res://WeatherLife.gd").forecast(f.day)=="Normal"
 static func point(index:int) -> Vector2:
- return Vector2(1790+(index%4)*230,550+int(index/4)*72)
+ return Vector2(2610+(index%3)*60,525+int(index/3)*90)
 static func nearest(f) -> int:
  if f.location!="farm" or f.inside_house or not outside(f): return -1
  var index:=-1;var distance:=78.0

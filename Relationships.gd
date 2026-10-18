@@ -110,7 +110,7 @@ static func confirm(f,person:String,status:String):
 
  var c=panel(f,person)
 
- f.dialogue_text.text={"interested":"I'd like to explore something more than friendship, if you would too.","dating":"Would you like us to be a couple?","engaged":"I'd like to build a future together. Shall we get engaged?","married":"Shall we exchange our vows at the shrine? We will both keep our work and friendships."}[status]
+ f.dialogue_text.text={"interested":"I'd like to explore something more than friendship, if you would too.","dating":"Would you like us to be a couple?","engaged":"I'd like to build a future together. Shall we get engaged?","married":"Shall we exchange our vows in the village square? We will both keep our work and friendships."}[status]
 
  c.add_child(f.make_button("Yes",commit.bind(f,person,status)));c.add_child(f.make_button("Not yet",menu.bind(f,person)))
 
@@ -132,7 +132,7 @@ static func commit(f,person:String,status:String):
 
  load("res://EverydayLife.gd").remember(f,stage(f,person)+" with "+person,"You chose this next step together.")
 
- var c=panel(f,person);f.dialogue_text.text="Yes. Let's see where this takes us, together." if status!="married" else "Beneath the shrine trees, you exchange vows with your neighbors beside you. Tomorrow brings familiar work, and a shared future."
+ var c=panel(f,person);f.dialogue_text.text="Yes. Let's see where this takes us, together." if status!="married" else "In the village square, you exchange vows with your neighbors beside you. Tomorrow brings familiar work, and a shared future."
 
  c.add_child(f.make_button("Close",f.close_dialogue))
 
