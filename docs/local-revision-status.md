@@ -93,3 +93,6 @@ Official reference galleries: https://www.stardewvalley.net/media/ and https://m
 - Geometry/collisions and route centers are unchanged. open_regions and angled_world_regressions passed using isolated saves; source screenshot suites passed. Inspected Tea Country at gameplay zoom. Local package refresh follows; no upload.
 
 - Soil color follow-up: replaced faint grass-style tint on dirt with a cached seamless four-color earth palette (dark brown, warm brown, sand and pale dry soil), plus intermittent brown banks. No collision changes. Local export and packaged phone_revision/home_recovery/farm_systems passed.
+
+- Soil refinement: replaced high-contrast multi-octave brown patches with broad continuous periodic gradients between nearby warm-earth shades. Removed the dark segmented bank strokes and softened shoulder opacity. Decorative rendering only; local review rebuild/capture requested.
+- Soft-gradient local export and all three packaged checks passed; packaged screenshots captured successfully. Visually checked Tea Country and Highlands at gameplay zoom. No remote upload.
