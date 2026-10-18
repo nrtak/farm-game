@@ -91,3 +91,5 @@ Official reference galleries: https://www.stardewvalley.net/media/ and https://m
 ## World terrain finish — October 18
 - Shared TerrainFinish painter adds cached seamless low-frequency green/earth tone variation, rounded path outlines, feathered shoulders and small irregular dirt intrusions. Applied to farm, outdoor regions, town ground/aprons and inter-region connections; harbor sand also gains tonal variation. Stone street tiles retain their readable grid.
 - Geometry/collisions and route centers are unchanged. open_regions and angled_world_regressions passed using isolated saves; source screenshot suites passed. Inspected Tea Country at gameplay zoom. Local package refresh follows; no upload.
+
+- Soil color follow-up: replaced faint grass-style tint on dirt with a cached seamless four-color earth palette (dark brown, warm brown, sand and pale dry soil), plus intermittent brown banks. No collision changes. Local export and packaged phone_revision/home_recovery/farm_systems passed.
