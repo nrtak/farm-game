@@ -29,7 +29,8 @@ func _ready():
   fill_yard(b)
  place_decoration("garden",Rect2(690,0,564,625),Vector2(282,578),Vector2(680,650),90)
  place_decoration("garden",Rect2(610,640,644,614),Vector2(322,550),Vector2(360,300),190)
- for e in G.EXITS:place_sign(e[0],e[1]+Vector2(38,0))
+ for e in G.EXITS:
+  if e[0]!="Farm":place_sign(e[0],e[1]+Vector2(38,0))
  place_sign("Festival Square",Vector2(850,625))
  place_sign("Events",Vector2(930,710))
  for segment in [[Vector2(1900,610),Vector2(1900,780)],[Vector2(1900,890),Vector2(1900,1060)],[Vector2(1900,1170),Vector2(1900,1340)]]:add_garden(segment[0],segment[1])

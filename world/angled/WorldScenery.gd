@@ -115,6 +115,11 @@ func home_prop(index:int,foot:Vector2,width:float):
 	add_child(sprite);props.append(sprite)
 func build_props():
 	if kind=="farm":
+		var ranch_sign=preload("res://world/angled/RanchSign.gd").new()
+		var sign_foot=Vector2(1485,240)
+		ranch_sign.transform=B.affine_inverse()*Transform2D(0,Vector2.ONE*.85,0,B*sign_foot)
+		ranch_sign.z_as_relative=false;ranch_sign.z_index=1000+int((B*sign_foot).y*.1)
+		add_child(ranch_sign)
 		farm_prop(0,farm.SHIPPING_BOX,105)
 		farm_prop(1,preload("res://FarmResources.gd").WELL-Vector2(0,73),90)
 		prop(landmarks,0,3,Vector2(775,530),410,"Home")
@@ -463,7 +468,7 @@ func _draw():
 	if kind=="mountain":
 		draw_sign(Vector2(1510,1000),"Tea Country →")
 	if kind=="historic":draw_sign(Vector2(780,790),"Moonveil Falls")
-	if signs.has(kind):draw_sign(signs[kind][0],signs[kind][1])
+	if signs.has(kind) and kind!="farm":draw_sign(signs[kind][0],signs[kind][1])
 func draw_room():
 	var floor_rect:Rect2=host.FLOOR if kind=="home" else Rect2(110,170,880,620)
 	var name:String="Home" if kind=="home" else host.kind
