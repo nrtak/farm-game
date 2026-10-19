@@ -7,6 +7,8 @@ checks = ["town_integration", "town_connected_walk", "world_smoke", "farming_loo
 checks[:0] = ["photo_revision", "navigation_edges", "reload_equipment_audit", "connected_save_audit", "world_connections", "outdoor_seam", "relationship_moments", "bench_pose", "village_interactions", "relationships", "local_expansion", "resident_routines", "outdoor_flow", "shrine_falls", "phone_revision", "deep_review", "angled_world", "angled_world_regressions", "phone_feedback"]
 try:
     checks.append("outdoor_finish")
+    checks.append("deep_scan_regressions")
+    checks.append("dialogue_resize")
     start = os.environ.get("FARM_CHECK_START", "")
     if start:
         checks = checks[checks.index(start):]

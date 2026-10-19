@@ -5,6 +5,17 @@ func run():
 	var f=load("res://Main.tscn").instantiate();root.add_child(f);await process_frame
 	f.set_physics_process(false);f.choose_character("boy");f.interior_progress.story={"intro":true};f.window_focused=true;f.day=1;f.clock_minutes=800
 	f.sound.set_process(false)
+	f.sound.switch_theme("farm")
+	var seasonal_slot=f.sound.slot
+	f.sound.fade=.6
+	for area in ["town","nature","farm"]:
+		f.sound.switch_theme(area)
+		assert(f.sound.slot==seasonal_slot and f.sound.fade==.6,"Crossing daytime areas preserves the seasonal track and fade")
+	f.sound.switch_theme("interior")
+	var indoor_slot=f.sound.slot
+	f.day=29;f.sound.switch_theme("interior")
+	assert(f.sound.slot==indoor_slot,"Season changes do not restart a nonseasonal indoor score")
+	f.day=1
 	for pair in [["farm","farm"],["town","town"],["tea","nature"],["waterfall","falls"]]:
 		f.travel_to(pair[0],Vector2(800,950),false);f.sound.poll=0;f.sound._process(2)
 		assert(f.sound.current==pair[1]);assert(f.sound.players[f.sound.slot].stream!=null)

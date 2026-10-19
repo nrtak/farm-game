@@ -1323,6 +1323,9 @@ func load_game() -> void:
 			destination = saved_position
 	interior.apply_upgrade(int(interior_progress.get("home",0)))
 	var crops = parsed.get("plots", [])
+	# Reload replaces crop state, including beds absent from older save formats.
+	for plot in plots:
+		plot.stage=0;plot.growth=0.0;plot.crop="Turnip";plot.last_growth_day=day
 	if crops is Array:
 		for i in range(mini(crops.size(), plots.size())):
 			if crops[i] is Dictionary:
@@ -2579,7 +2582,7 @@ func open_storage(category: String = "Crops") -> void:
 	clear_item_moment()
 	var column := make_modal("Farmhouse Storage")
 	dialogue_panel.get_child(0).offset_top = -410
-	dialogue_text.text = "Bag %d / %d · Chest holds 999 of each item. Stored goods stay safe overnight." % [backpack_count(), BACKPACK_SIZES[backpack_level]]
+	dialogue_text.text = "Bag %d / %d · Chest holds %d of each item. Stored goods stay safe overnight." % [backpack_count(), BACKPACK_SIZES[backpack_level], storage_limit()]
 	var tabs := HBoxContainer.new()
 	column.add_child(tabs)
 	for group in STORAGE_GROUPS:
