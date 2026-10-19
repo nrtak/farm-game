@@ -2,6 +2,22 @@ extends RefCounted
 # Shared, world-anchored ground tones. Decorative only: routes and collisions stay unchanged.
 static var tones:Texture2D
 static var soil_tones:Texture2D
+static var water_tones:Texture2D
+static func water_texture()->Texture2D:
+ if water_tones==null:
+  var image=Image.create(128,128,false,Image.FORMAT_RGBA8)
+  for y in range(128):
+   for x in range(128):
+    var u=TAU*x/128.0;var v=TAU*y/128.0
+    var broad=.5+.20*sin(u+sin(v))+.16*cos(v*2+sin(u))
+    var ripple=pow(maxf(0,sin(u*7+sin(v*5))*cos(v*6+sin(u*4))),6)*.12
+    image.set_pixel(x,y,Color("397f94").lerp(Color("80bfbe"),clampf(broad+ripple,0,1)))
+  water_tones=ImageTexture.create_from_image(image)
+ return water_tones
+static func water(canvas:CanvasItem,poly:PackedVector2Array,origin:Vector2=Vector2.ZERO):
+ var uv=PackedVector2Array()
+ for p in poly:uv.append((p+origin)/380.0)
+ canvas.draw_polygon(poly,PackedColorArray([Color.WHITE]),uv,water_texture())
 static func texture() -> Texture2D:
  if tones==null:
   var noise=FastNoiseLite.new();noise.seed=307;noise.frequency=.035;noise.fractal_octaves=3
@@ -31,11 +47,11 @@ static func soil_texture() -> Texture2D:
  return soil_tones
 static func rounded(poly:PackedVector2Array) -> PackedVector2Array:
  var result=poly
- for iteration in range(2):
+ for iteration in range(3):
   var next=PackedVector2Array()
   for i in range(result.size()):
    var a=result[i];var b=result[(i+1)%result.size()]
-   var amount=minf(.25,30.0/maxf(1,a.distance_to(b)))
+   var amount=minf(.25,48.0/maxf(1,a.distance_to(b)))
    next.append(a.lerp(b,amount));next.append(a.lerp(b,1-amount))
   result=next
  return result
@@ -57,3 +73,27 @@ static func dirt(canvas:CanvasItem,poly:PackedVector2Array,origin:Vector2=Vector
  var uv=PackedVector2Array()
  for p in poly:uv.append((p+origin)/900.0)
  canvas.draw_polygon(poly,PackedColorArray([Color.WHITE]),uv,soil_texture())
+
+# Low ground cover is painted before paths, water, and cultivated beds. It never
+# creates collision or covers crops. Broad clusters leave deliberate quiet areas.
+static func meadow(canvas:CanvasItem,bounds:Rect2,origin:Vector2=Vector2.ZERO):
+ var rng=RandomNumberGenerator.new();rng.seed=4187
+ for i in range(int(bounds.get_area()/2500)):
+  var p=bounds.position+Vector2(rng.randf()*bounds.size.x,rng.randf()*bounds.size.y)
+  var world=p+origin
+  var patch=sin(world.x*.008+sin(world.y*.005))*cos(world.y*.009)
+  if patch<.20:continue
+  var radius=rng.randf_range(9,24)
+  canvas.draw_circle(p,radius,Color(.31,.43,.17,.065))
+  for blade in range(3):
+   var root=p+Vector2(rng.randf_range(-12,12),rng.randf_range(-8,8))
+   canvas.draw_line(root,root+Vector2(-3,-6),Color(.32,.46,.20,.48),1.5,true)
+   canvas.draw_line(root,root+Vector2(2,-9),Color(.66,.74,.36,.58),1.5,true)
+  if patch>.58:
+   for bloom in range(3):
+    var flower=p+Vector2(rng.randf_range(-15,15),rng.randf_range(-9,9))
+    canvas.draw_circle(flower,2.6,Color("eee1b0") if i%3 else Color("d4b2c1"))
+    canvas.draw_circle(flower,1,Color("bba05c"))
+  elif i%9==0:
+   canvas.draw_line(p,p+Vector2(9,3),Color(.43,.40,.27,.40),3,true)
+   canvas.draw_line(p+Vector2(1,-1),p+Vector2(7,1),Color(.77,.74,.52,.65),1,true)

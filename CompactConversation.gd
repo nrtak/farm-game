@@ -8,8 +8,11 @@ var actions: HFlowContainer
 var portrait_margin:=140
 func setup(box: PanelContainer, content: VBoxContainer, portrait: Texture2D, dismiss: Callable) -> void:
 	panel=box
-	portrait_margin=175 if portrait!=null else 18
+	portrait_margin=18
 	column=content
+	var paper=StyleBoxFlat.new();paper.bg_color=Color("f1d6a4");paper.border_color=Color("fff0d0");paper.set_border_width_all(3)
+	paper.shadow_color=Color(0.19,0.14,0.07,.28);paper.shadow_size=3;paper.shadow_offset=Vector2(2,3)
+	panel.add_theme_stylebox_override("panel",paper)
 	var anchor:=Node2D.new()
 	panel.add_child(anchor)
 	picture=TextureRect.new()
@@ -54,18 +57,18 @@ func fit() -> void:
 			child.reparent(actions)
 			child.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	var viewport=get_viewport().get_visible_rect().size
-	var width=minf(590,viewport.x-48)
+	var width=minf(820,viewport.x-64)
 	var text_height=0.0
 	for child in column.get_children():
 		if child is Label:
 			var font=child.get_theme_font("font");var font_size=child.get_theme_font_size("font_size")
 			text_height+=font.get_multiline_string_size(child.text,HORIZONTAL_ALIGNMENT_LEFT,width-portrait_margin-70,font_size).y+12
-	var body_height=clampf(text_height+actions.get_combined_minimum_size().y,140,viewport.y-110)
+	var body_height=clampf(text_height+actions.get_combined_minimum_size().y,110,minf(205,viewport.y-165))
 	scroll.custom_minimum_size.y=body_height
 	panel.anchor_left=.5;panel.anchor_right=.5
 	panel.offset_left=-width/2;panel.offset_right=width/2
 	panel.offset_top=-body_height-38;panel.offset_bottom=-18
 	var ratio=picture.texture.get_width()/float(picture.texture.get_height()) if picture.texture else 1.0
-	var height=minf(160/ratio,minf(250,body_height+38))
+	var height=minf(180/ratio,minf(190,viewport.y-body_height-70))
 	picture.size=Vector2(height*ratio,height)
-	picture.position=Vector2(8,panel.size.y-8-height)
+	picture.position=Vector2(12,3-height)

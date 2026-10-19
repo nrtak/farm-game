@@ -13,11 +13,13 @@ func setup(_area: String,_people: Array) -> void:
 	ambience=AudioStreamPlayer.new();ambience.stream=load("res://assets/audio/waterfall.wav");ambience.volume_db=-20;add_child(ambience)
 	queue_redraw()
 func _process(_delta:float) -> void:
-	if ambience==null: return
+	if ambience==null or DisplayServer.get_name()=="headless": return
 	var f=get_parent()
 	if preload("res://ShrineFalls.gd").nearby(f) and f.window_focused and not f.paused_by_player:
 		if not ambience.playing: ambience.play()
 	elif ambience.playing: ambience.stop()
+func _exit_tree() -> void:
+	if is_instance_valid(ambience): ambience.stop();ambience.stream=null
 func is_walkable(point: Vector2) -> bool:
 	for offset in [Vector2.ZERO,Vector2(16,0),Vector2(-16,0),Vector2(0,16),Vector2(0,-16)]:
 		if not Geometry2D.is_point_in_polygon(point+offset,PackedVector2Array(GROUND)): return false

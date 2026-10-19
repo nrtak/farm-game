@@ -9,6 +9,13 @@ func run():
 		f.travel_to(pair[0],Vector2(800,950),false);f.sound.poll=0;f.sound._process(2)
 		assert(f.sound.current==pair[1]);assert(f.sound.players[f.sound.slot].stream!=null)
 		assert(f.sound.players[1-f.sound.slot].stream==null,"Old music released after fade")
+	for season in range(4):
+		f.day=1+season*28
+		f.sound.switch_theme("farm")
+		assert(f.sound.current_season==season)
+		var expected=["spring","summer","autumn","winter"][season]
+		assert(f.sound.players[f.sound.slot].stream.resource_path.ends_with("music-"+expected+".wav"),"Season change selects its original score even without changing location")
+		assert(f.sound.players[f.sound.slot].stream.get_length()>65,"Seasonal phrases have breathing room before looping")
 	f.enter_shop("Inn",true);assert(Audio.theme(f)=="interior")
 	f.travel_to("town",Vector2(1100,940),false);f.clock_minutes=1200;assert(Audio.theme(f)=="night")
 	for d in range(1,40):

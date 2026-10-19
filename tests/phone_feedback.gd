@@ -28,7 +28,16 @@ func run():
 	assert(f.produce.Turnip==1,"Daily gift guard preserves the second item")
 	f.close_dialogue();f.start_conversation(npc);await process_frame;await process_frame
 	assert(f.dialogue_text.text=="\n\n".join(f.dialogue_lines),"Ordinary dialogue has every line in one panel")
-	assert(f.dialogue_panel.get_child(0).size.x<700,"Compact conversation width")
+	var panel=f.dialogue_panel.get_child(0)
+	var viewport=f.get_viewport_rect().size
+	assert(panel.size.x>viewport.x*.55 and panel.size.x<viewport.x-40,"Wide dialogue panel retains side margins")
+	assert(panel.size.y<viewport.y*.48,"Dialogue leaves the scene visible")
+	var conversation
+	for child in panel.get_children():
+		if child.get_script()==preload("res://CompactConversation.gd"):conversation=child
+	assert(conversation.picture.get_global_rect().end.y<=panel.get_global_rect().position.y+5,"Portrait rises above the text panel")
+	var close=panel.find_child("DialogueClose",true,false)
+	assert(close.size.x>=44 and close.size.y>=44 and panel.get_global_rect().encloses(close.get_global_rect()),"Close control remains a visible touch target")
 	f.close_dialogue();f.enter_shop("Tea Farmhouse",true);f.tea_delivery_stage=0
 	f.start_conversation(f.shops["Tea Farmhouse"].residents[1]);assert(f.tea_delivery_stage==0,"Requests remain opt in")
 	f.close_dialogue();assert(f.tea_delivery_stage==0,"Closing does not accept a request")

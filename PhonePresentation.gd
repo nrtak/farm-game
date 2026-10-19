@@ -29,17 +29,17 @@ func _process(_delta):
 	clock.hide()
 	f.weather_icon.position=f.date_label.position+Vector2(text_width+36,10)
 	var bag=f.hud.get_node("CharacterButton")
-	var panel_width=220.0
-	character_panel.position=Vector2(f.get_viewport_rect().size.x-panel_width-24,100);character_panel.size=Vector2(panel_width,104)
+	var panel_width=196.0
+	character_panel.position=Vector2(f.get_viewport_rect().size.x-panel_width-24,100);character_panel.size=Vector2(panel_width,92)
 	character_panel.visible=not f.dialogue_open and not f.choosing_character
 	f.pocket_label.visible=character_panel.visible
-	avatar.position=Vector2(8,5);avatar.size=Vector2(65,90);avatar.texture=f.farmer.texture
+	avatar.position=Vector2(8,8);avatar.size=Vector2(48,64);avatar.texture=f.farmer.texture
 	# The farmer sprite already holds the current walk-frame region.
 	if f.farmer.region_enabled:
 		avatar_frame.atlas=f.farmer.texture;avatar_frame.region=f.farmer.region_rect;avatar.texture=avatar_frame
-	bag.position=character_panel.position+Vector2(84,10);bag.size=Vector2(120,36)
-	f.pocket_label.position=character_panel.position+Vector2(85,50);f.pocket_label.size=Vector2(120,25)
-	f.health_bar.position=character_panel.position+Vector2(84,80);f.health_bar.size=Vector2(120,16)
+	bag.position=character_panel.position+Vector2(66,8);bag.size=Vector2(116,36)
+	f.pocket_label.position=character_panel.position+Vector2(68,46);f.pocket_label.size=Vector2(112,24)
+	f.health_bar.position=character_panel.position+Vector2(12,74);f.health_bar.size=Vector2(170,14)
 	var map=f.hud.get_node("MapButton");map.hide()
 	minimap.position=Vector2(f.date_label.position.x,132);minimap.size=Vector2(145,115);minimap.visible=character_panel.visible
 	f.quest_label.hide()

@@ -12,7 +12,8 @@ static func fill(farm, level: int) -> void:
 	for n in range(clampi(level,0,3)*3): positions.append(Vector2(1120+n*100,1450))
 	if farm.plots.size()>positions.size():farm.plots.resize(positions.size())
 	# Relocate beds by stable index; preserve crops, stages and growth on old saves.
-	for i in range(positions.size()):positions[i]+=Vector2(0,80)
+	# Keep a generous northern lawn without pushing the last row into the pond.
+	for i in range(positions.size()):positions[i]=Vector2(positions[i].x+100,900+(positions[i].y-700)*.8)
 	for i in range(mini(farm.plots.size(),positions.size())):farm.plots[i].position=positions[i]
 	while farm.plots.size()<positions.size():
 		farm.plots.append({"position":positions[farm.plots.size()],"stage":0,"growth":0.0,"crop":"Turnip","last_growth_day":farm.day})

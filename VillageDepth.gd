@@ -61,20 +61,20 @@ static func waterfall(f) -> void:
 	var stage:int=int(s.get("falls",0))
 	if stage==0:
 		s.falls=1
-		var c=f.make_modal("Moonveil Falls")
+		var c=f.make_modal("Moonveil Falls",false,true)
 		f.dialogue_text.text="Mist curls across the pool. A light glimmers behind the falling water. For a moment, a quiet voice seems to call your name.\n\nThe water settles. Perhaps someone in the village knows this place."
 		c.add_child(f.make_button("Listen to the water",f.close_dialogue));f.save_game(false)
 	elif stage==1:
-		var c=f.make_modal("A voice in the mist")
+		var c=f.make_modal("A voice in the mist",false,true)
 		f.dialogue_text.text="I am the keeper of this spring. Will you share one packet of local tea with the waters? Return whenever you wish; there is no deadline."
 		c.add_child(f.make_button("Accept · bring one Tea packets",accept_falls.bind(f)))
 		c.add_child(f.make_button("Not today",f.close_dialogue))
 	elif stage==2:
-		var c=f.make_modal("The spring's request")
+		var c=f.make_modal("The spring's request",false,true)
 		f.dialogue_text.text="The keeper waits quietly. Offer one packet of tea from your bag to complete the request."
 		c.add_child(f.make_button("Offer Tea packets",finish_falls.bind(f)));c.add_child(f.make_button("Leave quietly",f.close_dialogue))
 	else:
-		var c=f.make_modal("The spring keeper")
+		var c=f.make_modal("The spring keeper",false,true)
 		f.dialogue_text.text="The spring remembers your kindness. Its glow is a little warmer when you visit."
 		c.add_child(f.make_button("Listen to the seasons",preload("res://EverydayLife.gd").falls_seasons.bind(f)))
 		c.add_child(f.make_button("Rest beside the falls",f.close_dialogue))

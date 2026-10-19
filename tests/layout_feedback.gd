@@ -7,8 +7,8 @@ func run():
 	f.set_physics_process(false)
 	f.choose_character("boy")
 	assert(f.plots.size()==112,"Entire main field has planting beds")
-	for y in range(780,1381,100):
-		for x in range(1020,2521,100):
+	for y in range(900,1381,80):
+		for x in range(1120,2621,100):
 			var found:=false
 			for plot in f.plots:
 				if plot.position==Vector2(x,y): found=true

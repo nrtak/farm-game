@@ -28,7 +28,7 @@ func _ready():
   plant_frontage(b)
   fill_yard(b)
  place_decoration("garden",Rect2(690,0,564,625),Vector2(282,578),Vector2(680,650),90)
- place_decoration("garden",Rect2(610,640,644,614),Vector2(322,550),Vector2(360,300),140)
+ place_decoration("garden",Rect2(610,640,644,614),Vector2(322,550),Vector2(360,300),190)
  for e in G.EXITS:place_sign(e[0],e[1]+Vector2(38,0))
  place_sign("Festival Square",Vector2(850,625))
  place_sign("Events",Vector2(930,710))

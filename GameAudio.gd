@@ -9,6 +9,7 @@ var effects:AudioStreamPlayer
 var steps:AudioStreamPlayer
 var ambience:AudioStreamPlayer
 var current:=""
+var current_season:=-1
 var ambient_key:=""
 var slot:=0
 var fade:=1.0
@@ -60,9 +61,12 @@ func loop_stream(path:String) -> AudioStreamWAV:
 		stream.loop_begin=0;stream.loop_end=int(stream.get_length()*stream.mix_rate)
 	return stream
 func switch_theme(key:String) -> void:
-	if current==key: return
+	var season=clampi(int((farm.day-1)/28)%4,0,3)
+	if current==key and current_season==season: return
+	current_season=season
 	current=key;slot=1-slot;initial=gains.duplicate();gains[slot]=0;initial[slot]=0;fade=0
-	players[slot].stop();players[slot].stream=loop_stream("res://assets/audio/music-"+key+".wav");players[slot].volume_db=-80;start_player(players[slot])
+	var score=["spring","summer","autumn","winter"][season] if key in ["farm","town","nature"] else key
+	players[slot].stop();players[slot].stream=loop_stream("res://assets/audio/music-"+score+".wav");players[slot].volume_db=-80;start_player(players[slot])
 func _process(delta:float) -> void:
 	if farm==null: return
 	suspended=not farm.window_focused or farm.paused_by_player or farm.choosing_character

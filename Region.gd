@@ -133,7 +133,7 @@ func is_walkable(point: Vector2) -> bool:
 		if not walk_outline.is_empty() and not Geometry2D.is_point_in_polygon(foot,walk_outline): return false
 		for water in water_polygons:
 			if Geometry2D.is_point_in_polygon(foot,water): return false
-		if kind=="harbor" and not Geometry2D.is_point_in_polygon(foot,land_outline) and not pier_area.has_point(foot): return false
+		if kind=="harbor" and not Geometry2D.is_point_in_polygon(foot,land_outline) and not pier_area.has_point(foot) and not Rect2(130,510,330,90).has_point(foot): return false
 		if kind=="tea" and Geometry2D.is_point_in_polygon(foot,pond_outline) and not pier_area.has_point(foot): return false
 	if not Rect2(Vector2(24, 24), SIZE - Vector2(48, 48)).has_point(point): return false
 	for polygon in scenery_polygons:

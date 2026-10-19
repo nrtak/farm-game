@@ -521,7 +521,7 @@ func layout_ui() -> void:
 	action_button.position = Vector2(view.x - right - 138, view.y - bottom - 128)
 	action_button.size = Vector2(138, 72)
 	tool_bar.position = Vector2((view.x - 430) / 2, view.y - bottom - 126)
-	var message_width=minf(620,view.x-margin.x-right-150)
+	var message_width=minf(460,view.x-margin.x-right-150)
 	message_label.position = Vector2((view.x-message_width)/2, view.y-bottom-58)
 	message_label.size = Vector2(message_width,48)
 	for i in range(2):
@@ -1700,7 +1700,7 @@ func accept_story_request() -> void:
 	save_game(false)
 	say("Request accepted. Open Bag > Requests to review your objective.")
 
-func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
+func make_modal(title: String, portrait: bool = false, narrative: bool = false) -> VBoxContainer:
 	# Replace only the panel, preserving an active conversation and its request.
 	if is_instance_valid(dialogue_panel):
 		dialogue_panel.hide()
@@ -1710,7 +1710,7 @@ func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 	player.velocity = Vector2.ZERO
 	joystick.reset_stick()
 	dialogue_panel = ColorRect.new()
-	dialogue_panel.color = Color.TRANSPARENT if portrait else Color(0.06, 0.09, 0.06, 0.28)
+	dialogue_panel.color = Color.TRANSPARENT if portrait or narrative else Color(0.06, 0.09, 0.06, 0.28)
 	hud.add_child(dialogue_panel)
 	dialogue_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var panel := PanelContainer.new()
@@ -1745,12 +1745,12 @@ func make_modal(title: String, portrait: bool = false) -> VBoxContainer:
 	dialogue_text.add_theme_font_size_override("font_size", 25 if portrait and preload("res://PlayerComfort.gd").settings(self).get("large_text",false) else 21)
 	dialogue_text.add_theme_color_override("font_color", Color("493b2d"))
 	column.add_child(dialogue_text)
-	if portrait:
+	if portrait or narrative:
 		name_label.add_theme_font_size_override("font_size",23)
 		var compact=preload("res://CompactConversation.gd").new()
 		panel.add_child(compact)
-		compact.setup(panel,column,preload("res://CharacterArt.gd").portrait(title),close_dialogue)
-	if not portrait: preload("res://MenuTiles.gd").arrange.call_deferred(self,column)
+		compact.setup(panel,column,preload("res://CharacterArt.gd").portrait(title) if portrait else null,close_dialogue)
+	if not portrait and not narrative: preload("res://MenuTiles.gd").arrange.call_deferred(self,column)
 	refresh_hud()
 	return column
 

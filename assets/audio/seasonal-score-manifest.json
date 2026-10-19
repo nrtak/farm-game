@@ -1,0 +1,52 @@
+{
+  "author": "Original compositions for Tea Blossom Hills",
+  "source_audio_used": false,
+  "sample_rate": 22050,
+  "channels": 2,
+  "tracks": [
+    {
+      "season": "spring",
+      "file": "music-spring.wav",
+      "bpm": 98,
+      "seconds": 78.37,
+      "peak": 0.2113,
+      "melody_midi_range": [
+        57,
+        69
+      ]
+    },
+    {
+      "season": "summer",
+      "file": "music-summer.wav",
+      "bpm": 108,
+      "seconds": 71.11,
+      "peak": 0.2287,
+      "melody_midi_range": [
+        55,
+        67
+      ]
+    },
+    {
+      "season": "autumn",
+      "file": "music-autumn.wav",
+      "bpm": 86,
+      "seconds": 89.3,
+      "peak": 0.1999,
+      "melody_midi_range": [
+        55,
+        65
+      ]
+    },
+    {
+      "season": "winter",
+      "file": "music-winter.wav",
+      "bpm": 74,
+      "seconds": 103.78,
+      "peak": 0.1859,
+      "melody_midi_range": [
+        50,
+        65
+      ]
+    }
+  ]
+}

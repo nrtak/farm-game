@@ -70,7 +70,11 @@ func _process(_delta):
 		zoom=farm.camera.zoom.x
 	var ground=BASIS if angled else Transform2D.IDENTITY
 	var view=ground.scaled(Vector2.ONE*zoom)
-	view.origin=farm.get_viewport_rect().size/2+Vector2(0,65)-view*farm.player.position
+	var camera_target:Vector2=farm.player.position
+	if farm.location=="shop":
+		var entrance_blend=clampf((farm.player.position.y-farm.SHOP_ORIGIN.y-500)/280,0,.55)
+		camera_target=camera_target.lerp(farm.SHOP_ORIGIN+Vector2(550,480),entrance_blend)
+	view.origin=farm.get_viewport_rect().size/2+Vector2(0,65)-view*camera_target
 	if travel_left>0:view.origin+=travel_pan*pow(travel_left/.42,2)
 	farm.get_viewport().canvas_transform=view
 	if farm.location=="town" and not farm.inside_house:farm.town.visuals.follow_player(farm.player.position-farm.TOWN_ORIGIN)
