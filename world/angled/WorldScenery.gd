@@ -61,6 +61,9 @@ func prop(texture: Texture2D, index: int, rows: int, foot: Vector2, width: float
 		wood.content_margin_left=5;wood.content_margin_right=5;sign.add_theme_stylebox_override("normal",wood);s.add_child(sign)
 	return s
 func tree_clear(foot:Vector2)->bool:
+	if kind=="farm" and foot.y<300:return false
+	if kind=="mountain" and foot.distance_to(Vector2(1600,900))<260:return false
+	if kind=="tea" and foot.distance_to(Vector2(0,675))<240:return false
 	var world=foot+position
 	var g=preload("res://world/town/TownDisplayGeometry.gd")
 	if kind=="farm" and g.WORLD.grow(90).has_point(g.unproject(world-farm.TOWN_ORIGIN)):return false
@@ -188,16 +191,20 @@ func build_props():
 		else:
 			solid_list.assign(host.solids)
 			choices={"General Store":[2,5,5,1],"Blacksmith":[6,7,6],"Carpentry":[6,6,1],"Mountain Carpentry":[6,6,1],"Clinic":[9,8,8],"Veterinarian":[8,1,9],"Ranch":[12,12,2],"Barn":[12],"Mine":[14],"Archive":[1],"Shrine Residence":[13,1,3],"Tea Processing Shed":[11],"Tea Farmhouse":[11,3,1],"Café":[2,3,4],"Restaurant":[3,3,4],"Police Box":[9,1],"Fire Station":[10,9],"Town Hall":[9,1],"Greenhouse":[5,15],"Upper Floor":[0,1,3],"School":[1,1,9,9,9,9],"Inn":[2,1,0,3,3]}.get(host.kind,[2,0,3,1])
-			var specific={"Shrine Residence":[13,13,15,3],"Mountain Lodge":[2,4,0,3],"Tea Farmhouse":[3,11,3,15],"Harbor Homes":[3,0,4,15],"Fishing Shop":[2,5,6,5],"Hiro Cabin":[6,0,4,3],"Onsen Resort":[2,15,3,15],"Carpentry":[6,6,6,6],"Mountain Carpentry":[6,6,6,6],"Fire Station":[9,10,10,10]}
+			var specific={"Shrine Residence":[13,13,15,3],"Mountain Lodge":[2,4,0,3],"Tea Farmhouse":[3,11,3,15],"Harbor Homes":[3,0,4,15],"Fishing Shop":[2,6,6,6],"Hiro Cabin":[6,0,4,3],"Onsen Resort":[2,15,3,15],"Carpentry":[6,6,6,6],"Mountain Carpentry":[6,6,6,6],"Fire Station":[9,10,10,10]}
 			if specific.has(host.kind):choices=specific[host.kind]
 		for i in range(solid_list.size()):
 			if kind=="home" and i<5:continue
 			var r: Rect2=solid_list[i]
 			var foot=Vector2(r.get_center().x,r.end.y)
 			var width=clampf((r.size.x*.46+r.size.y*.28),55,150)
-			if kind=="room" and host.kind=="Onsen Resort" and i==2:continue
+			if kind=="room" and host.kind=="Onsen Resort" and r.intersects(Rect2(760,400,220,260)):continue
 			if kind=="room" and host.kind=="Tea Processing Shed":tea_machine(i%4,foot,maxf(width,125))
 			elif kind=="room" and host.kind=="Tea Farmhouse" and i==0:tea_machine(3,foot,width)
+			elif kind=="room" and host.kind=="Fishing Shop" and i>0:
+				var display=preload("res://world/angled/FishingDisplay.gd").new()
+				display.transform=B.affine_inverse()*Transform2D(0,Vector2.ONE*(width/100.0),0,B*foot)
+				display.z_as_relative=false;display.z_index=1000+int((B*foot).y*.1);add_child(display)
 			elif kind=="room" and host.kind=="School" and i>=2:school_desk(foot)
 			else:prop(furniture,choices[i%choices.size()],4,foot,width)
 func tea_machine(index:int,foot:Vector2,width:float):
@@ -382,7 +389,10 @@ func _draw():
 		road(Vector2(800,1240),Vector2(800,580),230)
 	elif kind=="road":road(Vector2(500,40),Vector2(500,960),250)
 	if kind!="harbor":
-		for route in Roads.ROUTES.get(kind,[]):road(route[0],route[1],180)
+		for route in Roads.ROUTES.get(kind,[]):
+			if kind=="farm" and route[0].x<1000:continue
+			if kind=="mountain" and route[0]==Vector2(800,1200):road(Vector2(800,1250),route[1],145)
+			else:road(route[0],route[1],180)
 	# Continue the exit scenery beyond the trigger without advertising an out-of-bounds route.
 	if kind=="tea":road(Vector2(0,675),Vector2(180,675),180)
 	for door: Vector2 in ([] if kind=="harbor" else Layout.doors(kind).values()):
@@ -430,16 +440,22 @@ func _draw():
 			if host.fishing_state==2:draw_circle(bob,20,Color("ffe18c"),false,4)
 	if kind=="farm":
 		road(Vector2(1485,140),Vector2(1485,530),140)
-		road(Vector2(775,550),Vector2(1485,550),140)
-		road(Vector2(775,550),Vector2(850,1430),130)
 		water(farm.world_outline(farm.SOLID_OUTLINES[8]))
-		road(Vector2(1020,620),Vector2(1490,620),100)
 		# Continuous cultivated soil joins adjacent planting cells without grass seams.
 		for plot in farm.plots:
 			draw_rect(Rect2(plot.position-Vector2(50,40),Vector2(100,80)),Color("a18053"))
 			for furrow in [-24,-8,8,24]:
 				draw_line(plot.position+Vector2(-48,furrow),plot.position+Vector2(48,furrow),Color(.38,.27,.14,.15),2,true)
 	flush_roads()
+	if kind=="farm":
+		var rise=B.affine_inverse()*Vector2(0,-28)
+		for ends in [[Vector2(180,190),Vector2(1380,190)],[Vector2(1590,190),Vector2(2780,190)]]:
+			preload("res://world/angled/YardFence.gd").paint(self,ends[0],ends[1],rise)
+		for y in range(135,221,22):
+			for x in range(1405,1565,32):draw_rect(Rect2(x,y,30,20),Color("d9c8a5"))
+	if kind=="mountain":
+		for y in range(1180,1241,20):
+			for x in range(725,875,30):draw_rect(Rect2(x,y,28,18),Color("d9c8a5"))
 	if kind=="mountain":
 		for i in range(5):
 			draw_rect(Rect2(500+i*20,535,18,40),Color("b5ac91"));draw_rect(Rect2(500+i*20,535,18,40),Color("d3c9ae"),false,2)
@@ -567,10 +583,21 @@ func draw_beach_details():
 		draw_circle(p,1.5 if i%4 else 2.5,Color("c8b77d"))
 		if i%17==0:
 			draw_arc(p,5,PI,TAU,8,Color("fff0d1"),2,true)
+	# Wind ripples, shell fragments and driftwood across the open dry sand.
+	var sand_rng=RandomNumberGenerator.new();sand_rng.seed=6209
+	for i in range(360):
+		var p=Vector2(sand_rng.randf_range(300,1550),sand_rng.randf_range(390,750))
+		var end=p+Vector2(sand_rng.randf_range(7,24),sand_rng.randf_range(-2,5))
+		if not Geometry2D.is_point_in_polygon(p,host.land_outline) or not Geometry2D.is_point_in_polygon(end,host.land_outline):continue
+		draw_line(p,end,Color(.65,.53,.32,.17),1.5,true)
+		draw_line(p+Vector2(0,2),end+Vector2(0,2),Color(.99,.93,.74,.38),1.5,true)
+		if i%19==0:
+			draw_circle(p,3,Color("a79778"));draw_circle(p+Vector2(-1,-1),2,Color("f2dfb3"))
+		if i%71==0:draw_line(p,p+Vector2(18,-5),Color("aa8c62"),4,true)
 	# Wooden boardwalk along the north-side shops.
 	for x in range(470,1420,22):
-		draw_rect(Rect2(x,275,20,62),Color("b89360"))
-		draw_line(Vector2(x,275),Vector2(x,337),Color("d9b981"),1)
+		draw_rect(Rect2(x,245,20,125),Color("b89360"))
+		draw_line(Vector2(x,245),Vector2(x,370),Color("d9b981"),1)
 	# Pier rails, lamps and flags sit outside its open central walking lane.
 	for x in [host.pier_area.position.x+8,host.pier_area.end.x-8]:
 		for y in range(740,1000,72):

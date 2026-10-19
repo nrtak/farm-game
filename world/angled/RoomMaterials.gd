@@ -54,6 +54,11 @@ static func floor_detail(canvas:CanvasItem,room:String,r:Rect2):
   var bath=Rect2(790,425,175,210)
   canvas.draw_rect(bath,Color("8b9687"));canvas.draw_rect(bath.grow(-13),Color("659fa6"))
   canvas.draw_rect(bath.grow(-5),Color("c3c5a7"),false,5)
+  for x in range(798,960,22):
+   for y in [432,628]:
+    canvas.draw_circle(Vector2(x,y),11,Color("76857d"));canvas.draw_circle(Vector2(x-2,y-2),8,Color("b5b9a4"))
+  for y in range(450,615,24):
+   for x in [798,957]:canvas.draw_circle(Vector2(x,y),10,Color("9ba796"))
   for y in range(455,615,30):canvas.draw_line(Vector2(815,y),Vector2(940,y+4),Color(.80,.94,.86,.6),2,true)
 
 static func wall_detail(canvas:CanvasItem,room:String,a:Vector2,b:Vector2,d:Vector2,rise:Vector2):

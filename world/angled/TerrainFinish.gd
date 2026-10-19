@@ -73,6 +73,22 @@ static func dirt(canvas:CanvasItem,poly:PackedVector2Array,origin:Vector2=Vector
  var uv=PackedVector2Array()
  for p in poly:uv.append((p+origin)/900.0)
  canvas.draw_polygon(poly,PackedColorArray([Color.WHITE]),uv,soil_texture())
+ # Scattered wear is clipped to the road and anchored in world coordinates.
+ var bounds=Rect2(poly[0],Vector2.ZERO)
+ for point in poly:bounds=bounds.expand(point)
+ for x in range(int(bounds.position.x),int(bounds.end.x),23):
+  for y in range(int(bounds.position.y),int(bounds.end.y),25):
+   var seed_value=sin((x+origin.x)*12.9898+(y+origin.y)*78.233)*43758.5453
+   var t=seed_value-floor(seed_value)
+   var p=Vector2(x+t*20,y+sin(seed_value)*10)
+   var end=p+Vector2(7+t*13,2+t*3)
+   if not Geometry2D.is_point_in_polygon(p,poly) or not Geometry2D.is_point_in_polygon(end,poly):continue
+   canvas.draw_line(p,end,Color(.49,.37,.23,.12+t*.10),1.6,true)
+   canvas.draw_line(p+Vector2(0,2),end+Vector2(0,2),Color(.96,.85,.64,.23),1,true)
+   if t>.70:
+    canvas.draw_circle(p,1.6+t,Color(.53,.45,.32,.34))
+    canvas.draw_circle(p+Vector2(-.5,-1),1.1,Color(.87,.78,.58,.55))
+
 
 # Low ground cover is painted before paths, water, and cultivated beds. It never
 # creates collision or covers crops. Broad clusters leave deliberate quiet areas.
