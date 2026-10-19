@@ -21,7 +21,7 @@ func _draw():
   for y in [-85,-39]:
    draw_circle(Vector2(x,y),3,Color("423d32"));draw_circle(Vector2(x-1,y-1),1,Color("d2c292"))
  var font=ThemeDB.fallback_font
- for entry in [["TEA BLOSSOM",-76,17],["FARM",-48,27]]:
+ for entry in [["Town",-62,33]]:
   var text:String=entry[0];var size:int=entry[2];var w=font.get_string_size(text,HORIZONTAL_ALIGNMENT_LEFT,-1,size).x
   draw_string(font,Vector2(-w/2+1,entry[1]+2),text,HORIZONTAL_ALIGNMENT_LEFT,-1,size,Color("533822"))
   draw_string(font,Vector2(-w/2,entry[1]),text,HORIZONTAL_ALIGNMENT_LEFT,-1,size,Color("f4dfaa"))

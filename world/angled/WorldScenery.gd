@@ -117,7 +117,7 @@ func build_props():
 	if kind=="farm":
 		var ranch_sign=preload("res://world/angled/RanchSign.gd").new()
 		var sign_foot=Vector2(1485,240)
-		ranch_sign.transform=B.affine_inverse()*Transform2D(0,Vector2.ONE*.85,0,B*sign_foot)
+		ranch_sign.transform=B.affine_inverse()*Transform2D(Vector2(.85,-.85*.207/.558),Vector2(0,.85),B*sign_foot)
 		ranch_sign.z_as_relative=false;ranch_sign.z_index=1000+int((B*sign_foot).y*.1)
 		add_child(ranch_sign)
 		farm_prop(0,farm.SHIPPING_BOX,105)
